@@ -1,0 +1,152 @@
+/** @mainpage Polymorphic data structures using the C preprocessor
+
+<h1>Introduction</h1>
+
+One of the more frustrating aspects of non-Object-Oriented languages like C is
+the apparent lack of re-usable code. For example, a primitive data manipulation
+structure (like a tree, queue, or list) that has been implemented in one
+structure cannot manipulate another structure without some workarounds by the
+programmer. There are several frequently-used workarounds, including the following:
+
+- <b>Copy and paste</b>: This solution is as common as it is painful. With this 
+solution, programmers simply copy the organizational algorithm into each data 
+structure that uses it, changing the names and types to match those of the new 
+structure. This system has a great deal of time efficiency and preserves C's
+typing system. Unfortunately, maintenance can be unbearably difficult; a flaw
+in the original algorithm can propagate across the entire architecture in
+dozens of copies!
+
+- <b>Generalized data manipulation structures</b>: Constructing a generic
+structure (such as struct LinkedList or struct Tree) is a frequently used
+solution, but it comes with a price. Since the structure is generalized, it
+frequently only accepts data to organize as type void *; this weakens the
+limited type safety that C provides a programmer, and allows for bugs of a
+particularly difficult-to-find variety (explicit but incorrect typecasting) 
+to creep into the code. Also, since the system frequently has to execute twice
+as many memory management calls to maintain both the data and the
+organizational constructs, performance can suffer.
+
+- <b>Specialized structure design</b>: This solution allows for greater
+efficiency than generalized structures, but can be tricky to implement. In this
+style, a programmer makes a ``contract'' with a set of data management
+functions (such as ``Every structure you will manipulate in the tree keeps
+the addresses of its left and right children at memory offsets 0 and 4 from the
+start of the structure). Manipulation functions then assume all structures
+that are manipulated take the form specified in the contract, but otherwise
+generally treat the data as type void *, or a specialized type used by the
+function to find its data organization fields. This solution is more efficient
+(since the data organization fields are allocated simultaneously with the
+strucure), but also breaks C's limited type safety and leads to hard-to-find
+bugs. Also, this solution can be restrictive, since in general it prevents 
+a single piece of data from being in more than one organizational structure
+at a time.
+
+All of the solutions above have their advantages and disadvantages, but none is
+as satisfactory as true object-oriented programming. However, there is another
+solution one can use, a solution that takes advantage of the C preprocessor to
+manipulate the code. This solution gives both efficiency and type safety, and
+makes code much easier to maintain. By leveraging the C preprocessor's text
+manipulation, one can construct the C equivalent of a polymorphic data
+structure. This allows a programmer to take the focus of design off of the 
+organizational scheme used for the data and place it back on the data itself.
+Using the techniques described in this challenge, you can construct a reliable
+toolbox of primitive data structures that can be used in any C program, since
+they take advantage of C syntax and not the specifics of any particular
+implementation.
+
+
+<h1>Overview and methodology</h1>
+
+At the core, the primary function of the C preprocessor is simple text
+substitution; it allows a programmer to construct alias names for various
+aspects of a program. This system doesn't generally care about the meaning of
+strings, and can therefore be used to create constructs that would otherwise
+violate C syntax.
+
+For example, consider the following code snippet:
+
+#define INSTANTIATE(VAR_TYPE,VAR_NAME) VAR_TYPE VAR_NAME<br>
+<br>
+int main(int argc, char **argv)<br>
+{<br>
+INSTANTIATE(int,i);<br>
+i=1<br>
+...
+
+Here, we have constructed a macro that accepts two strings as input: VAR_TYPE
+and VAR_NAME. It then simply places the strings on the same line. When used by
+itself, this macro allows for the construction of a statement that looks like a
+function call, but actually causes a variable to be instantiated at the current
+scope. One can actually think of it as constructing a function that takes a
+type and a name and causes the instantiation of a variable.
+
+As slightly more complex example, here is a macro that generates a structure
+with a type and contents defined by its input arguments.
+
+#define POLYTREE(TREE_TYPE, DATA_TYPE) \ <br>
+struct TREE_TYPE{\ <br>
+struct TREE_TYPE *left;\ <br>
+struct TREE_TYPE *right;\ <br>
+DATA_TYPE data;\ <br>
+}<br>
+<br>
+POLYTREE(p_tree_t,int) myTree;<br>
+myTree.data=5;
+
+The above code generates a unique structure (struct p_tree), where the data
+contained within is of type int. One instance of the structure is creeated
+named myTree. This way of thinking about code might feel somewhat familiar; if
+you're thinking about ML functors or C++ templates, you're on the right
+track.
+
+<h1>The Goal</h1>
+
+Armed with the concepts above, you can construct a macro package that allows
+you to create tail queues to organize structures. Look at the structure
+specified in variable_queue.h and fill out the specified macros. When you've
+finished, you'll have a tool that may prove useful in your kernel
+implementation, and you'll have experience with techniques that can prove
+useful in all of your programming. If you get confused by the variable_queue
+API, take a look at the code contained in vqtest.c; it may help you understand
+how the macros would be practically used.
+
+<h1>Catch-22s</h1>
+
+Having trouble? Here's some things to watch out for when writing complicated
+C preprocessor macros:
+
+- For complicated macros, it is a good idea to split the macro onto multiple
+lines using \[return] at the end of each line, where [return] is the newline
+character. This informs the C preprocessor that the macro you are defining
+continues to the next line. Be sure that the newline follows immediately after
+the backslash.
+
+- Long macros can be tricky to write and debug, since gcc can have difficulties 
+identifying the specific line within a macro on which an error occurs.
+For this reason, it's generally a good idea to try out your macro by putting it
+into some regular C code, then turning it into a macro once you're certain that
+the algorithm itself works.
+
+- Be wary of order of operations on your macro inputs. The C preprocessor
+inserts any inputs to macros directly into the macro without any concept of
+order of operations; this means that you can change the behavior of a section
+of code in unexpected ways. For example, consider the following macro:
+
+#define DOUBLE(x) 2*x
+
+This simple macro generates the correct answer for DOUBLE(2), DOUBLE(5), etc.
+However, DOUBLE(2+3) evaluates to 7, not 10, because cpp will replace the
+statement with the literal code 2*2+3. To avoid such trouble, get in the habit
+of explicitly parenthesizing inputs to macros, for example:
+
+#define DOUBLE(x) 2*(x)
+
+- If a given macro is never used in any C code, the C preprocessor will simply
+remove the macro at compile time. This means that any macros that are never
+used never run through the C compiler, and will therefore never generate any
+compile-time errors. Be sure to test all of your macros to make sure they all
+function correctly.
+
+Good luck!
+
+**/

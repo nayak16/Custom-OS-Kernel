@@ -3,6 +3,7 @@
 *.ko
 *.obj
 *.elf
+*.dep
 
 # Precompiled Headers
 *.gch
@@ -30,3 +31,33 @@
 
 # Debug files
 *.dSYM/
+
+# Python Binaries
+*.pyc
+
+# Test Binaries
+*_test
+*-output
+.md5s
+
+#Swap Files
+*.swp
+*.swo
+*.swn
+*.swm
+*.__*
+
+# User Test binaries
+user/progs/test_[a-z\w]*
+!user/progs/test_[a-z\w]*.c
+
+# Doxygen Files
+doc/
+doxygen.warn
+
+# Kernel/Images
+kernel*
+*.img
+410kern/*
+410user/*
+temp/*
