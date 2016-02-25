@@ -55,9 +55,11 @@ user/progs/test_[a-z\w]*
 doc/
 doxygen.warn
 
-# Kernel/Images
+# Ignored Specifics
 kernel*
 *.img
 410kern/*
 410user/*
 temp/*
+spec/
+update
