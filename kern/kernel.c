@@ -4,8 +4,8 @@
  *  You should initialize things in kernel_main(),
  *  and then run stuff.
  *
- *  @author Harry Q. Bovik (hqbovik)
- *  @author Fred Hacker (fhacker)
+ *  @author Aatish Nayak (aatishn)
+ *  @author Christopher Wei (cjwei)
  *  @bug No known bugs.
  */
 
