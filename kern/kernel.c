@@ -27,6 +27,8 @@
 
 /* idt installers */
 #include <install_handlers.h>
+/* frame manager include */
+#include <frame_manager.h>
 
 /** @brief Kernel entrypoint.
  *  
@@ -46,11 +48,14 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     clear_console();
 
-    // TODO: Build a structure to keep track of which physical frames are
-    // not currently allocated
+    /* create frame manager */
+    //frame_manager_t fm;
+    //frame_manager_init(&fm);
 
     // TODO: Build initial page directory and page tables, direct map kernel
     // VM space
+    page_directory_t pd;
+    page_directory_init(&pd);
 
     // TODO: create idle task
 
@@ -58,7 +63,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     // TODO: set first thread running
 
-    enable_interrupts();
+    //enable_interrupts();
     while (1) {
         continue;
     }
