@@ -57,6 +57,7 @@ doxygen.warn
 
 # Ignored Specifics
 kernel*
+!kernel.c
 *.img
 410kern/*
 410user/*
