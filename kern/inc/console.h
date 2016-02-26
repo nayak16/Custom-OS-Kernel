@@ -1,20 +1,3 @@
-/*
- *
- *  #     #
- *  ##    #   ####    #####     #     ####   ######
- *  # #   #  #    #     #       #    #    #  #
- *  #  #  #  #    #     #       #    #       #####
- *  #   # #  #    #     #       #    #       #
- *  #    ##  #    #     #       #    #    #  #
- *  #     #   ####      #       #     ####   ######
- *
- * Now that it's P3 instead of P1 you are allowed
- * to edit this file if it suits you.
- *
- * Please delete this notice.
- *
- */
-
 /** @file console.h
  *  @brief Function prototypes for the console driver.
  *
@@ -121,7 +104,7 @@ void get_cursor(int* row, int* col);
 void hide_cursor();
 
 /** @brief Shows the cursor.
- *  
+ *
  *  If the cursor is already shown, the function has no effect.
  *
  *  @return Void.
