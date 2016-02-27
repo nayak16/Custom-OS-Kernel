@@ -10,6 +10,8 @@
 
 #include <x86/cr.h>
 
+#include <constants.h>
+
 #define ENABLE_PAGING_BIT 31
 
 #define DISABLE_CACHING_BIT 30
@@ -21,7 +23,7 @@
  *
  * @param address of new page directory (should be page-aligned)
  */
-void set_pdbr(int new_pdbr) {
+void set_pdbr(uint32_t new_pdbr) {
     uint32_t empty_cr3 = get_cr3() & LSB_12_MASK;
     uint32_t new_cr3 = new_pdbr | empty_cr3;
 

@@ -11,7 +11,7 @@
 
 // TODO: Fill in with EFLAGS manipulation functions
 
-void set_pdbr(int new_pdbr);
+void set_pdbr(uint32_t new_pdbr);
 
 void enable_paging(void);
 
