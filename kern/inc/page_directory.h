@@ -24,7 +24,7 @@ typedef struct page_directory {
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
-
+void *pd_get_directory(page_directory_t *pd);
 int pd_initialize_kernel();
 
 #endif /* _PAGE_DIRECTORY_H_ */

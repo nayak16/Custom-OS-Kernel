@@ -29,7 +29,10 @@
 #include <install_handlers.h>
 /* frame manager include */
 #include <frame_manager.h>
+/* page directory include */
 #include <page_directory.h>
+/* control for special register wrapper */
+#include <special_reg_cntrl.h>
 
 /** @brief Kernel entrypoint.
  *  
@@ -65,7 +68,14 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // TODO: set first thread running
 
     //enable_interrupts();
+
+    set_pdbr((uint32_t)pd_get_directory(&pd));
+    enable_pge();
+    enable_paging();
+
+    int i = 0;
     while (1) {
+        i++;
         continue;
     }
 

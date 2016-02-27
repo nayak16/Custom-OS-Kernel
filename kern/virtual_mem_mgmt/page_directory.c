@@ -25,6 +25,10 @@
 
 #define NUM_ENTRIES (PAGE_SIZE/sizeof(uint32_t))
 
+void *pd_get_directory(page_directory_t *pd){
+    return (void *)(&(pd->directory));
+}
+
 int pd_init(page_directory_t *pd){
     /* page align allocation and clear out all present bits */
     pd->directory = memalign(PAGE_SIZE, NUM_ENTRIES * sizeof(uint32_t));
@@ -37,9 +41,9 @@ int set_pte(uint32_t vpn, uint32_t ppn, uint32_t pte_flags, uint32_t pde_flags,
     /* the ppn to be stored in the page table entry */
     uint32_t page_table_entry_value = (ppn << PAGE_SHIFT) | pte_flags;
     /* converts ith page table entry to page directory index */
-    uint32_t page_directory_i = vpn / PAGE_SIZE;
+    uint32_t page_directory_i = vpn / NUM_ENTRIES;
     /* converts ith page table entry to page table index */
-    uint32_t page_table_i = vpn % PAGE_SIZE;
+    uint32_t page_table_i = vpn % NUM_ENTRIES;
     /* get the value stored in the correct page directory entry*/
     uint32_t page_table_value = pd->directory[page_directory_i];
     uint32_t *page_table_addr;
