@@ -16,7 +16,7 @@
 #define RW_FLAG_BIT 1
 #define MODE_FLAG_BIT 2
 #define WRITE_THROUGH_FLAG_BIT 3
-#define CACHING_FLAG_BIT 4
+#define GLOBAL_FLAG_BIT 8
 
 #define NUM_ENTRIES (PAGE_SIZE/sizeof(void *))
 
