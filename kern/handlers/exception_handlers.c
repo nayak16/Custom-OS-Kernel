@@ -12,7 +12,7 @@
 #include <simics.h>
 
 int page_fault_handler(void){
-    lprintf("cr2: %d", get_cr2());
+    lprintf("cr2: %u", (unsigned int)get_cr2());
     MAGIC_BREAK;
     return 0;
 }

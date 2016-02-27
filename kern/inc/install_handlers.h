@@ -13,4 +13,6 @@ int install_syscall_handlers(void);
 
 int install_peripheral_handlers(void);
 
+int install_exception_handlers(void);
+
 #endif /* _INSTALL_HANDLERS_H_ */
