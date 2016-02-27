@@ -13,6 +13,8 @@
 #include <malloc.h>
 /* memset */
 #include <string.h>
+/* flag sets */
+#include <constants.h>
 
 #include <page_directory.h>
 
@@ -60,7 +62,7 @@ int pd_initialize_kernel(page_directory_t *pd){
     /* present, rw enabled, supervisor mode, dont flush */
     uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET);
     /* present, rw enabled, supervisor mode */
-    uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONTCARE);
+    uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONT_CARE);
     uint32_t i;
     /* for the first num_kernel_entries, set the vpn==ppn for direct map */
     for (i = 0; i < num_kernel_entries; i++){
