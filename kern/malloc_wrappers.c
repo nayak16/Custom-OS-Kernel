@@ -1,20 +1,22 @@
 #include <stddef.h>
 #include <malloc.h>
+#include <malloc_internal.h>
+#include <stdlib.h>
 
 /* safe versions of malloc functions */
 void *malloc(size_t size)
 {
-  return NULL;
+  return _malloc(size);
 }
 
 void *memalign(size_t alignment, size_t size)
 {
-  return NULL;
+  return _memalign(alignment, size);
 }
 
 void *calloc(size_t nelt, size_t eltsize)
 {
-  return NULL;
+  return _calloc(nelt, eltsize);
 }
 
 void *realloc(void *buf, size_t new_size)
