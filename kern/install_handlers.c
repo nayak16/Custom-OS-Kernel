@@ -15,6 +15,7 @@
 /* idt_base() */
 #include <x86/asm.h>
 
+#include <idt_handlers.h>
 /**
  * CONSTANTS
  */
@@ -82,7 +83,7 @@ void idt_install_entry(uint32_t offset, uint16_t seg_sel, uint8_t p,
     offset_l = (uint16_t)(offset & C_L2B_MASK);
     offset_h = (uint16_t)((offset >> C_2BYTE_WIDTH) & C_L2B_MASK);
     /* assemble flag byte */
-    flags = (flag_base | (p << FLAG_PRESENT_OFFSET) 
+    flags = (flag_base | (p << FLAG_PRESENT_OFFSET)
         | (dpl << FLAG_DPL_OFFSET) | (d << FLAG_D_OFFSET)) << C_BYTE_WIDTH;
 
     /* save lower offset */
@@ -102,6 +103,12 @@ void idt_install_entry(uint32_t offset, uint16_t seg_sel, uint8_t p,
 int install_syscall_handlers(){
     /*idt_install_entry((uint32_t)syscall_gettid_handler, SEGSEL_KERNEL_CS,
         FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, entryid, FLAG_TRAP_GATE)*/
+    return 0;
+}
+
+int install_exception_handlers() {
+    idt_install_entry((uint32_t) page_fault_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, entryid, FLAG_INTERRUPT_GATE)
     return 0;
 }
 

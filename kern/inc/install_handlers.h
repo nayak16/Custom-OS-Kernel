@@ -6,6 +6,11 @@
  *  @bug No known bugs.
  */
 
+#ifndef _INSTALL_HANDLERS_H_
+#define _INSTALL_HANDLERS_H_
+
 int install_syscall_handlers(void);
 
 int install_peripheral_handlers(void);
+
+#endif /* _INSTALL_HANDLERS_H_ */

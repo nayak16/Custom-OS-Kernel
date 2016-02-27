@@ -35,7 +35,7 @@
 #include <special_reg_cntrl.h>
 
 /** @brief Kernel entrypoint.
- *  
+ *
  *  This is the entrypoint for the kernel.
  *
  * @return Does not return
@@ -43,12 +43,15 @@
 int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 {
     lprintf("Hello from ShrekOS");
-    
+
     /* install IDT entries for system calls */
     install_syscall_handlers();
 
     /* install IDT entries for peripherals */
     install_peripheral_handlers();
+
+    /* Install IDT entres for exceptions */
+    install_exception_handlers();
 
     clear_console();
 
