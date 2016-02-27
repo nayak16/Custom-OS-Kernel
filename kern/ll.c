@@ -77,7 +77,7 @@ int ll_add(ll_t *ll, void *value){
  * @return 0 on success, -1 on error
  */
 int ll_deq(ll_t *ll, void **val){
-    if (ll == NULL){
+    if (ll == NULL || val == NULL){
         return -1;
     }
     /* save head of queue */

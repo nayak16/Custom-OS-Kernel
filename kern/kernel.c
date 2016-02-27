@@ -28,7 +28,7 @@
 /* idt installers */
 #include <install_handlers.h>
 /* frame manager include */
-//#include <frame_manager.h>
+#include <frame_manager.h>
 #include <page_directory.h>
 
 /** @brief Kernel entrypoint.
@@ -50,8 +50,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     clear_console();
 
     /* create frame manager */
-    //frame_manager_t fm;
-    //frame_manager_init(&fm);
+    frame_manager_t fm;
+    fm_init(&fm);
 
     /* initialize new page directory and map the kernel */
     page_directory_t pd;

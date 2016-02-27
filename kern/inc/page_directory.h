@@ -11,6 +11,7 @@
 
 /* PAGE SIZE */
 #include <x86/page.h>
+#include <stdint.h>
 
 #define PRESENT_FLAG_BIT 0
 #define RW_FLAG_BIT 1
@@ -18,10 +19,8 @@
 #define WRITE_THROUGH_FLAG_BIT 3
 #define GLOBAL_FLAG_BIT 8
 
-#define NUM_ENTRIES (PAGE_SIZE/sizeof(void *))
-
 typedef struct page_directory {
-    int directory[NUM_ENTRIES];
+    uint32_t *directory;
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
