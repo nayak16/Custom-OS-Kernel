@@ -9,6 +9,17 @@
 #ifndef _PAGE_DIRECTORY_H_
 #define _PAGE_DIRECTORY_H_
 
+#define PRESENT_FLAG_BIT 0
+
+#define RW_FLAG_BIT 1
+
+#define MODE_FLAG_BIT 2
+
+#define WRITE_THROUGH_FLAG_BIT 3
+
+#define CACHING_FLAG_BIT 4
+
+
 typedef struct page_directory {
     int directory[1024];
 } page_directory_t;
