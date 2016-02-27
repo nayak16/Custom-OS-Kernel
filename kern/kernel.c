@@ -60,6 +60,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     page_directory_t pd;
     pd_init(&pd);
     pd_initialize_kernel(&pd);
+    pd_print(&pd);
 
     // TODO: create idle task
 

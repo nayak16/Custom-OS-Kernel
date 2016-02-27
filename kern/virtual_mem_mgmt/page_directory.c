@@ -80,3 +80,23 @@ int pd_initialize_kernel(page_directory_t *pd){
     }
     return 0;
 }
+
+void pd_print(page_directory_t *pd){
+    uint32_t *directory = pd->directory;
+    int i;
+    for (i = 5; i >= 0; i--){
+        if ((directory[i] & 1) == 0){
+            lprintf("i:%d NOT PRESENT", i);
+        } else {
+            lprintf("i:%d %p", i, (void *)directory[i]);
+            unsigned int *temp =
+                (unsigned int *)((unsigned int)directory[i] & MSB_20_MASK);
+            lprintf("-->[%x]", temp[1023]);
+            lprintf("-->[%x]", temp[1022]);
+            lprintf("   ....");
+            lprintf("-->[%x]", temp[2]);
+            lprintf("-->[%x]", temp[1]);
+            lprintf("-->[%x]", temp[0]);
+        }
+    }
+}
