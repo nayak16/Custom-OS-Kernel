@@ -18,6 +18,8 @@
 
 #include <page_directory.h>
 
+#include <simics.h>
+
 #define NTH_BIT(v,n) (((uint32_t)v >> n) & 1)
 
 #define NEW_FLAGS(p,rw,md,glb) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
@@ -32,6 +34,7 @@ void *pd_get_directory(page_directory_t *pd){
 int pd_init(page_directory_t *pd){
     /* page align allocation and clear out all present bits */
     pd->directory = memalign(PAGE_SIZE, NUM_ENTRIES * sizeof(uint32_t));
+    if (pd->directory == NULL) return -1;
     memset(pd->directory, 0, NUM_ENTRIES * sizeof(uint32_t));
     return 0;
 }
@@ -45,15 +48,17 @@ int set_pte(uint32_t vpn, uint32_t ppn, uint32_t pte_flags, uint32_t pde_flags,
     /* converts ith page table entry to page table index */
     uint32_t page_table_i = vpn % NUM_ENTRIES;
     /* get the value stored in the correct page directory entry*/
-    uint32_t page_table_value = pd->directory[page_directory_i];
+    uint32_t page_directory_value = pd->directory[page_directory_i];
     uint32_t *page_table_addr;
-    if (NTH_BIT(page_table_value, 0) == 0){
+    if (NTH_BIT(page_directory_value, 0) == 0){
         /* page table does not exist, create it and assign it to pd */
-        page_table_addr = memalign(PAGE_SIZE, sizeof(uint32_t) * PAGE_SIZE);
+        page_table_addr = memalign(PAGE_SIZE, sizeof(uint32_t) * NUM_ENTRIES);
+        memset(page_table_addr, 0, sizeof(uint32_t) * NUM_ENTRIES);
+        if (page_table_addr == NULL) return -1;
         pd->directory[page_directory_i] = ((uint32_t)page_table_addr | pde_flags);
     } else {
         /* get address of page table from page directory */
-        page_table_addr = (uint32_t *)(page_table_value & 0xFFFFF000);
+        page_table_addr = (uint32_t *)(page_directory_value & MSB_20_MASK);
     }
     /* assign page table entry */
     page_table_addr[page_table_i] = page_table_entry_value;
@@ -68,6 +73,7 @@ int pd_initialize_kernel(page_directory_t *pd){
     /* present, rw enabled, supervisor mode */
     uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONT_CARE);
     uint32_t i;
+    MAGIC_BREAK;
     /* for the first num_kernel_entries, set the vpn==ppn for direct map */
     for (i = 0; i < num_kernel_entries; i++){
         set_pte(i, i, pte_flags, pde_flags, pd);

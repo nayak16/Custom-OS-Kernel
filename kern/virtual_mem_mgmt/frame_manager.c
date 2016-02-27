@@ -47,7 +47,7 @@ int fm_init(frame_manager_t *fm){
     /* not enough memory to store up to USER_MEM_START */
     if (n < i) return -1;
 
-    ll_init(&(fm->free_frames));
+    if (ll_init(&(fm->free_frames)) < 0) return -1;
     for (; i < n; i++){
         void *addr = (void *)(i * PAGE_SIZE);
         ll_add(&(fm->free_frames), addr);
