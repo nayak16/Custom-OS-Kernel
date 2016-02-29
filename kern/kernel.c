@@ -82,7 +82,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     print_control_regs();
 
     enable_paging();
-    MAGIC_BREAK;
 
     int i = 0;
     while (1) {

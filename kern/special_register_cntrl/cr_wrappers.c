@@ -34,7 +34,7 @@ void set_pdbr(uint32_t new_pdbr) {
 }
 
 void enable_paging(void) {
-    uint32_t new_cr0 = (SET << ENABLE_PAGING_BIT) | (SET << DISABLE_CACHING_BIT);
+    uint32_t new_cr0 = get_cr0() | (SET << ENABLE_PAGING_BIT) | (SET << DISABLE_CACHING_BIT);
 
     MAGIC_BREAK;
 

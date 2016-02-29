@@ -67,14 +67,15 @@ int set_pte(uint32_t vpn, uint32_t ppn, uint32_t pte_flags, uint32_t pde_flags,
 
 int pd_initialize_kernel(page_directory_t *pd){
     /* 4 page tables worth of entries = 4096 entries */
-    uint32_t num_kernel_entries = (USER_MEM_START >> PAGE_SHIFT);
+    uint32_t num_kernel_ptes = (USER_MEM_START >> PAGE_SHIFT);
     /* present, rw enabled, supervisor mode, dont flush */
     uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET);
     /* present, rw enabled, supervisor mode */
     uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONT_CARE);
     uint32_t i;
     /* for the first num_kernel_entries, set the vpn==ppn for direct map */
-    for (i = 0; i < num_kernel_entries; i++){
+    /* Leave 0th page unmapped */
+    for (i = 1; i < num_kernel_ptes; i++){
         set_pte(i, i, pte_flags, pde_flags, pd);
     }
 

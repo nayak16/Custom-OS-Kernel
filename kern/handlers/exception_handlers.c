@@ -7,16 +7,17 @@
  */
 
 #include <x86/cr.h>
+#include <panic.h>
 
 #include <simics.h>
+#include <debug.h>
 
 void page_fault_c_handler(void){
     lprintf("Page fault occured!");
-    lprintf("cr2: %u", (unsigned int) get_cr2());
 }
 
 void double_fault_c_handler(void){
+    print_control_regs();
     lprintf("Double fault occured!");
-    lprintf("cr2: %u", (unsigned int) get_cr2());
     MAGIC_BREAK;
 }
