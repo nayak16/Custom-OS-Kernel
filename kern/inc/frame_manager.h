@@ -17,6 +17,9 @@ typedef struct frame_manager{
 } frame_manager_t;
 
 int fm_alloc(frame_manager_t *fm, void **addr);
+
+int fm_nxt_free_frame(frame_manager_t *fm, void **addr);
+
 int fm_dealloc(frame_manager_t *fm, void *addr);
 int fm_init(frame_manager_t *fm);
 void fm_destroy(frame_manager_t *fm);

@@ -77,7 +77,7 @@ int ll_add(ll_t *ll, void *value){
  * @return 0 on success, -1 on error
  */
 int ll_deq(ll_t *ll, void **val){
-    if (ll == NULL || val == NULL){
+    if (ll == NULL){
         return -1;
     }
     /* save head of queue */
@@ -90,9 +90,25 @@ int ll_deq(ll_t *ll, void **val){
     /* update head of queue */
     ll->head = head->next;
     /* save value before freeing struct */
-    *val = head->e;
+    if (val != NULL) *val = head->e;
     free(head);
     ll->size--;
+    return 0;
+}
+
+/**
+ * @brief Peek and return the last element of the linked list
+ *
+ * @param ll Pointer to linked list to dequeue from
+ * @param val Address to put the dequeued value
+ *
+ * @return 0 on success, -1 on error
+ */
+int ll_peek(ll_t *ll, void **val){
+    if (ll == NULL || val == NULL || ll->size == 0){
+        return -1;
+    }
+    *val = head->e;
     return 0;
 }
 

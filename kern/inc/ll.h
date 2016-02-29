@@ -44,6 +44,8 @@ int ll_init(ll_t *ll);
 int ll_add(ll_t *ll, void *value);
 int ll_deq(ll_t *ll, void **value_ptr);
 void ll_destroy(ll_t *ll);
+int ll_peek(ll_t *ll, void **value_ptr);
+
 
 int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr);
 int ll_remove(ll_t *ll, void* data);

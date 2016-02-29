@@ -20,10 +20,14 @@
 
 /** @brief Allocates a frame
  *  @param fm The frame manager
- *  @param addr Result pointer to be stored to
+ *  @param addr Result pointer to be stored to if needed
  *  @return 0 on success, 1 on failure */
 int fm_alloc(frame_manager_t *fm, void **addr){
     return ll_deq(&(fm->free_frames), addr);
+}
+
+int fm_nxt_free_frame(frame_manager_t *fm, void **addr) {
+    return ll_peek(&(fm->free_frames), addr);
 }
 
 /** @brief Deallocates a frame
@@ -43,7 +47,7 @@ int fm_init(frame_manager_t *fm){
     if (fm == NULL) return -1;
     int i = USER_MEM_START/PAGE_SIZE;
     int n = machine_phys_frames();
-    
+
     /* not enough memory to store up to USER_MEM_START */
     if (n < i) return -1;
 

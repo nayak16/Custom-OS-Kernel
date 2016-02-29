@@ -17,6 +17,7 @@
 #include <constants.h>
 
 #include <page_directory.h>
+#include <virtual_mem_manager.h>
 
 #include <simics.h>
 
@@ -39,32 +40,6 @@ int pd_init(page_directory_t *pd){
     return 0;
 }
 
-int set_pte(uint32_t vpn, uint32_t ppn, uint32_t pte_flags, uint32_t pde_flags,
-            page_directory_t *pd){
-    /* the ppn to be stored in the page table entry */
-    uint32_t page_table_entry_value = (ppn << PAGE_SHIFT) | pte_flags;
-    /* converts ith page table entry to page directory index */
-    uint32_t page_directory_i = vpn / NUM_ENTRIES;
-    /* converts ith page table entry to page table index */
-    uint32_t page_table_i = vpn % NUM_ENTRIES;
-    /* get the value stored in the correct page directory entry*/
-    uint32_t page_directory_value = pd->directory[page_directory_i];
-    uint32_t *page_table_addr;
-    if (NTH_BIT(page_directory_value, 0) == 0){
-        /* page table does not exist, create it and assign it to pd */
-        page_table_addr = memalign(PAGE_SIZE, sizeof(uint32_t) * NUM_ENTRIES);
-        memset(page_table_addr, 0, sizeof(uint32_t) * NUM_ENTRIES);
-        if (page_table_addr == NULL) return -1;
-        pd->directory[page_directory_i] = ((uint32_t)page_table_addr | pde_flags);
-    } else {
-        /* get address of page table from page directory */
-        page_table_addr = (uint32_t *)(page_directory_value & MSB_20_MASK);
-    }
-    /* assign page table entry */
-    page_table_addr[page_table_i] = page_table_entry_value;
-    return 0;
-}
-
 int pd_initialize_kernel(page_directory_t *pd){
     /* 4 page tables worth of entries = 4096 entries */
     uint32_t num_kernel_ptes = (USER_MEM_START >> PAGE_SHIFT);
@@ -76,7 +51,7 @@ int pd_initialize_kernel(page_directory_t *pd){
     /* for the first num_kernel_entries, set the vpn==ppn for direct map */
     /* Leave 0th page unmapped */
     for (i = 1; i < num_kernel_ptes; i++){
-        set_pte(i, i, pte_flags, pde_flags, pd);
+        create_mapping(i, i, pte_flags, pde_flags, pd);
     }
 
     return 0;
