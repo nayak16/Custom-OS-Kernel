@@ -7,7 +7,6 @@
  */
 
 #include <x86/cr.h>
-#include <panic.h>
 
 #include <simics.h>
 #include <debug.h>
