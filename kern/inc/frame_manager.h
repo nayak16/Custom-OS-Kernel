@@ -20,5 +20,6 @@ int fm_alloc(frame_manager_t *fm, void **addr);
 int fm_dealloc(frame_manager_t *fm, void *addr);
 int fm_init(frame_manager_t *fm);
 void fm_destroy(frame_manager_t *fm);
+int fm_get_size(frame_manager_t *fm);
 
 #endif /* _FRAME_MANAGER_H_ */

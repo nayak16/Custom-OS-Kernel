@@ -176,4 +176,7 @@ int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr){
     return -1; /* not found */
 }
 
-
+int ll_size(ll_t *ll){
+    if (ll == NULL) return -1;
+    return (ll->size);
+}

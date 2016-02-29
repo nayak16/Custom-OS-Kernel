@@ -35,12 +35,7 @@
  */
 int getbytes( const char *filename, int offset, int size, char *buf )
 {
-
-    /*
-     * You fill in this function.
-     */
-
-  return -1;
+    return -1;
 }
 
 /*@}*/

@@ -28,8 +28,8 @@
 #include <install_handlers.h>
 /* frame manager include */
 #include <frame_manager.h>
-/* page directory include */
-#include <page_directory.h>
+/* process control block include */
+#include <pcb.h>
 /* control for special register wrapper */
 #include <special_reg_cntrl.h>
 
@@ -62,13 +62,13 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     frame_manager_t fm;
     fm_init(&fm);
 
-    /* initialize new page directory and map the kernel */
-    page_directory_t pd;
-    pd_init(&pd);
-    pd_initialize_kernel(&pd);
-
-    print_page_directory(&pd);
-    // TODO: create idle task
+    /* initialize idle_pcb */
+    pcb_t idle_pcb;
+    pcb_init(&idle_pcb);
+    /* load idle program */
+    pcb_load(&idle_pcb, &fm, "idle");
+    /* enables our pcb, sets active page directory to pcb's pd */
+    pcb_set_running(&idle_pcb);
 
     // TODO: create and load init task
 
@@ -76,11 +76,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     //enable_interrupts();
 
-    set_pdbr((uint32_t)pd_get_base_addr(&pd));
     enable_pge();
-
-    print_control_regs();
-
     enable_paging();
 
     int i = 0;
