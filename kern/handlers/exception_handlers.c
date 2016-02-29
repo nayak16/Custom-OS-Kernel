@@ -6,13 +6,17 @@
  *  @bug No known bugs.
  */
 
-#include <idt_handlers.h>
 #include <x86/cr.h>
 
 #include <simics.h>
 
-int page_fault_handler(void){
-    lprintf("cr2: %u", (unsigned int)get_cr2());
+void page_fault_c_handler(void){
+    lprintf("Page fault occured!");
+    lprintf("cr2: %u", (unsigned int) get_cr2());
+}
+
+void double_fault_c_handler(void){
+    lprintf("Double fault occured!");
+    lprintf("cr2: %u", (unsigned int) get_cr2());
     MAGIC_BREAK;
-    return 0;
 }

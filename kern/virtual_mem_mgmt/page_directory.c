@@ -27,8 +27,8 @@
 
 #define NUM_ENTRIES (PAGE_SIZE/sizeof(uint32_t))
 
-void *pd_get_directory(page_directory_t *pd){
-    return (void *)(&(pd->directory));
+void *pd_get_base_addr(page_directory_t *pd){
+    return (void *)(pd->directory);
 }
 
 int pd_init(page_directory_t *pd){
@@ -73,30 +73,11 @@ int pd_initialize_kernel(page_directory_t *pd){
     /* present, rw enabled, supervisor mode */
     uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONT_CARE);
     uint32_t i;
-    MAGIC_BREAK;
     /* for the first num_kernel_entries, set the vpn==ppn for direct map */
     for (i = 0; i < num_kernel_entries; i++){
         set_pte(i, i, pte_flags, pde_flags, pd);
     }
+
     return 0;
 }
 
-void pd_print(page_directory_t *pd){
-    uint32_t *directory = pd->directory;
-    int i;
-    for (i = 5; i >= 0; i--){
-        if ((directory[i] & 1) == 0){
-            lprintf("i:%d NOT PRESENT", i);
-        } else {
-            lprintf("i:%d %p", i, (void *)directory[i]);
-            unsigned int *temp =
-                (unsigned int *)((unsigned int)directory[i] & MSB_20_MASK);
-            lprintf("-->[%x]", temp[1023]);
-            lprintf("-->[%x]", temp[1022]);
-            lprintf("   ....");
-            lprintf("-->[%x]", temp[2]);
-            lprintf("-->[%x]", temp[1]);
-            lprintf("-->[%x]", temp[0]);
-        }
-    }
-}

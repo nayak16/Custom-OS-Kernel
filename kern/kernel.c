@@ -13,7 +13,6 @@
 
 /* libc includes. */
 #include <stdio.h>
-#include <simics.h>                 /* lprintf() */
 
 /* multiboot header file */
 #include <multiboot.h>              /* boot_info */
@@ -33,6 +32,10 @@
 #include <page_directory.h>
 /* control for special register wrapper */
 #include <special_reg_cntrl.h>
+
+/* Debugging */
+#include <simics.h>                 /* lprintf() */
+#include <debug.h>
 
 /** @brief Kernel entrypoint.
  *
@@ -63,8 +66,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     page_directory_t pd;
     pd_init(&pd);
     pd_initialize_kernel(&pd);
-    pd_print(&pd);
 
+    print_page_directory(&pd);
     // TODO: create idle task
 
     // TODO: create and load init task
@@ -73,9 +76,13 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     //enable_interrupts();
 
-    set_pdbr((uint32_t)pd_get_directory(&pd));
+    set_pdbr((uint32_t)pd_get_base_addr(&pd));
     enable_pge();
+
+    print_control_regs();
+
     enable_paging();
+    MAGIC_BREAK;
 
     int i = 0;
     while (1) {

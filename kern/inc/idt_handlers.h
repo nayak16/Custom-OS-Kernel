@@ -8,7 +8,11 @@
 #ifndef _IDT_HANDLERS_H_
 #define _IDT_HANDLERS_H_
 
-int page_fault_handler(void);
+/* Exception Handlers */
+
+void page_fault_handler(void);
+
+void double_fault_handler(void);
 
 // TODO: Add more
 

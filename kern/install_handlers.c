@@ -109,8 +109,15 @@ int install_syscall_handlers(){
 }
 
 int install_exception_handlers() {
+
+    /* Page Fault */
     idt_install_entry((uint32_t) page_fault_handler, SEGSEL_KERNEL_CS,
         FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_PF, FLAG_INTERRUPT_GATE);
+
+    /* Double Fault */
+    idt_install_entry((uint32_t) double_fault_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_DF, FLAG_INTERRUPT_GATE);
+
     return 0;
 }
 
