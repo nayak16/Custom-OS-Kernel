@@ -108,7 +108,7 @@ int ll_peek(ll_t *ll, void **val){
     if (ll == NULL || val == NULL || ll->size == 0){
         return -1;
     }
-    *val = head->e;
+    *val = ll->head->e;
     return 0;
 }
 

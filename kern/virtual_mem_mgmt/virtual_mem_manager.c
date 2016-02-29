@@ -11,16 +11,21 @@
 #include <malloc.h>
 /* memset */
 #include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 /* Page constants */
 #include <x86/page.h>
+
+#include <constants.h>
+#include <page_directory.h>
 
 #define NTH_BIT(v,n) (((uint32_t)v >> n) & 1)
 
 #define NUM_ENTRIES (PAGE_SIZE/sizeof(uint32_t))
 
 
-int create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
+int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
                    uint32_t pde_flags, page_directory_t *pd){
     /* the ppn to be stored in the page table entry */
     uint32_t page_table_entry_value = (ppn << PAGE_SHIFT) | pte_flags;

@@ -22,9 +22,10 @@
 /** @brief copies size bytes from f_src to memory and maps v_dest
  *
  */
+/*
 int load_and_map_section(unsigned long f_src, unsigned long v_dest,
     unsigned long size, pcb_t *pcb, fm_t *fm, const char *filename){
-    
+
     char buf[size];
     int bytes;
     if ((bytes = getbytes(filename, f_src, size, buf)) != size) return -1;
@@ -50,7 +51,7 @@ int load_sections(elf_t *elf, pcb_t *pcb, fm_t *fm, const char *filename){
     // TODO: load section from buf into physical memory, map physical memory to
     // virtual memory, allocate physical memory from fm
 }
-
+*/
 int pcb_init(pcb_t *pcb){
     if (pcb == NULL) return -1;
     //TODO: how to choose pid
@@ -73,14 +74,13 @@ int pcb_destroy(pcb_t *pcb){
     return 0;
 }
 
-int pcb_load(pcb_t *pcb, fm_t *fm, const char *filename){
+int pcb_load(pcb_t *pcb, frame_manager_t *fm, const char *filename){
     if (pcb == NULL || filename == NULL || fm == NULL) return -1;
     simple_elf_t elf;
     if (elf_check_header(filename) != ELF_SUCCESS) return -1;
     if (elf_load_helper(&elf, filename) != ELF_SUCCESS) return -1;
     /* for each section, load the appropriate section */
-    if (load_sections(&elf, pcb, fm, filename) < 0) return -1;
+    //if (load_sections(&elf, pcb, fm, filename) < 0) return -1;
     // set first tcb
-    MAGIC_BREAK;
     return -1;
 }
