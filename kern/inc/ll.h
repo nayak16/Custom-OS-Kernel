@@ -46,6 +46,8 @@ int ll_deq(ll_t *ll, void **value_ptr);
 void ll_destroy(ll_t *ll);
 
 int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr);
-int ll_remove(ll_t *tt, void* data);
+int ll_remove(ll_t *ll, void* data);
+
+int ll_size(ll_t *ll);
 
 #endif /* _LL_H_ */
