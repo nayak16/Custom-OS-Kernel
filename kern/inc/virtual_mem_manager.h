@@ -18,6 +18,8 @@
 #define NEW_FLAGS(p,rw,md,glb) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
     | (md << MODE_FLAG_BIT) | (glb << GLOBAL_FLAG_BIT))
 
+#define NUM_ENTRIES (PAGE_SIZE/sizeof(uint32_t))
+
 int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
                    uint32_t pde_flags, page_directory_t *pd);
 
