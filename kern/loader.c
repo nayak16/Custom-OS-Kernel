@@ -19,6 +19,7 @@
 #include <loader.h>
 #include <elf_410.h>
 
+#include <simics.h>
 
 /* --- Local function prototypes --- */
 
@@ -36,8 +37,12 @@
 int getbytes( const char *filename, int offset, int size, char *buf )
 {
     int i;
+    lprintf("Searching through exec2bj entries...");
     for (i = 0; i < exec2obj_userapp_count; i++){
         exec2obj_userapp_TOC_entry entry = exec2obj_userapp_TOC[i];
+
+        lprintf(entry.execname);
+
         if (strcmp(entry.execname, filename) == 0){
             int execlen = entry.execlen;
             /* check if we have enough bytes  */

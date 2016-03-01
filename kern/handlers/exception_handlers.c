@@ -15,7 +15,9 @@
 
 void page_fault_c_handler(void){
     lprintf("Page fault occured!");
+    print_control_regs();
     panic("page_fault_c_handler: Not yet implemented");
+
 }
 
 void double_fault_c_handler(void){

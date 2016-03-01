@@ -7,6 +7,8 @@
  */
 #include <x86/cr.h>
 
+#include <elf_410.h>
+
 #include <page_directory.h>
 #include <constants.h>
 
@@ -40,5 +42,13 @@ void print_page_directory(page_directory_t *pd){
             lprintf("-->[%x]", temp[0]);
         }
     }
+}
+
+void print_elf(simple_elf_t *elf) {
+    lprintf("---- Elf containing '%s' ----", elf->e_fname);
+    lprintf("Text section starts at %x", (unsigned int) elf->e_txtstart);
+    lprintf("Data section starts at %x", (unsigned int) elf->e_datstart);
+    lprintf("Bss section starts at %x", (unsigned int) elf->e_bssstart);
+
 }
 

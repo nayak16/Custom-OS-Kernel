@@ -22,6 +22,8 @@
 #include <frame_manager.h>
 #include <mem_section.h>
 
+#include <simics.h>
+
 #define NTH_BIT(v,n) (((uint32_t)v >> n) & 1)
 
 #define NUM_ENTRIES (PAGE_SIZE/sizeof(uint32_t))
@@ -116,6 +118,7 @@ int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
             len -= PAGE_SIZE;
         }
         /* Copy over contents of section into newly mapped virtual address */
+        MAGIC_BREAK;
         memcpy((void*) ms.v_addr_start, ms.src_data, ms.len);
 
     }

@@ -12,8 +12,8 @@
 #include <stdint.h>
 
 typedef struct mem_section_t {
-    uint32_t v_addr_start;
-    uint32_t len;
+    unsigned long v_addr_start;
+    unsigned long len;
     void *src_data;
     uint32_t pde_f;
     uint32_t pte_f;

@@ -22,6 +22,9 @@
 #include <elf/elf_410.h>
 #include <elf_410.h>
 
+#include <debug.h>
+#include <simics.h>
+
 /* TODO: Should this go here?? */
 #define DIVROUNDUP(num, den) ((num + den-1) / den)
 
@@ -52,8 +55,9 @@ int load_sections(simple_elf_t *elf, pcb_t *pcb, frame_manager_t *fm){
 
     mem_section_t secs[NUM_ELF_SECTIONS];
 
-    mem_section_init(&secs[0], elf->e_txtstart,
-                     elf->e_txtlen, (void*) text_sec, USER_RO, USER_RO);
+    MAGIC_BREAK;
+    secs[0] = (mem_section_t) { .v_addr_start=elf->e_txtstart, .len=elf->e_txtlen, .src_data=text_sec,
+                .pde_f=USER_RO, .pte_f=USER_RO};
 
     mem_section_init(&secs[1], elf->e_datstart,
                      elf->e_datlen, (void*) dat_sec, USER_WR, USER_WR);
@@ -64,6 +68,7 @@ int load_sections(simple_elf_t *elf, pcb_t *pcb, frame_manager_t *fm){
     mem_section_init(&secs[3], elf->e_bssstart,
                      elf->e_bsslen, (void *) bss_sec, USER_WR, USER_WR);
 
+    MAGIC_BREAK;
     if (vmm_user_mem_alloc(&(pcb->pd), fm, secs, NUM_ELF_SECTIONS) < 0) return -1;
 
     // TODO: load section from buf into physical memory, map physical memory to
@@ -97,7 +102,9 @@ int pcb_load(pcb_t *pcb, frame_manager_t *fm, const char *filename){
     simple_elf_t elf;
     if (elf_check_header(filename) != ELF_SUCCESS) return -1;
     if (elf_load_helper(&elf, filename) != ELF_SUCCESS) return -1;
+    print_elf(&elf);
     /* for each section, load the appropriate section */
+    MAGIC_BREAK;
     if (load_sections(&elf, pcb, fm) < 0) return -1;
     // set first tcb
     return -1;
