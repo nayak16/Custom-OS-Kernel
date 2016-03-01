@@ -19,6 +19,7 @@
 #include <page_directory.h>
 #include <virtual_mem_manager.h>
 
+#include <simics.h>
 
 #define NTH_BIT(v,n) (((uint32_t)v >> n) & 1)
 
@@ -46,6 +47,7 @@ int pd_initialize_kernel(page_directory_t *pd){
     uint32_t i;
     /* for the first num_kernel_entries, set the vpn==ppn for direct map */
     /* Leave 0th page unmapped */
+    MAGIC_BREAK;
     for (i = 1; i < num_kernel_ptes; i++){
         vmm_create_mapping(i, i, pte_flags, pde_flags, pd);
     }
