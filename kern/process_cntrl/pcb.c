@@ -35,44 +35,18 @@
 #define USER_WR NEW_FLAGS(SET, SET, SET, UNSET)
 
 int load_sections(simple_elf_t *elf, pcb_t *pcb, frame_manager_t *fm){
-    char text_sec[elf->e_txtlen];
-    char dat_sec[elf->e_datlen];
-    char rodat_sec[elf->e_rodatlen];
-    char bss_sec[elf->e_bsslen];
-    /* Set bss contents to 0 */
-    memset(bss_sec, 0, sizeof(bss_sec));
-
-    int bytes;
-    if ((bytes = getbytes(elf->e_fname, elf->e_txtoff,
-                            sizeof(text_sec), text_sec)) != sizeof(text_sec))
-                                                                return -1;
-    if ((bytes = getbytes(elf->e_fname, elf->e_datoff,
-                            sizeof(dat_sec), dat_sec)) != sizeof(dat_sec))
-                                                                return -1;
-    if ((bytes = getbytes(elf->e_fname, elf->e_rodatoff,
-                            sizeof(rodat_sec), rodat_sec)) != sizeof(rodat_sec))
-                                                                return -1;
-
     mem_section_t secs[NUM_ELF_SECTIONS];
 
-    MAGIC_BREAK;
-    secs[0] = (mem_section_t) { .v_addr_start=elf->e_txtstart, .len=elf->e_txtlen, .src_data=text_sec,
-                .pde_f=USER_RO, .pte_f=USER_RO};
+    mem_section_init(&secs[0], elf->e_txtstart, elf->e_txtlen, NULL, USER_RO, USER_RO);
+    mem_section_init(&secs[1], elf->e_datstart, elf->e_datlen, NULL, USER_WR, USER_WR);
+    mem_section_init(&secs[2], elf->e_rodatstart, elf->e_rodatlen, NULL, USER_RO, USER_RO);
+    mem_section_init(&secs[3], elf->e_bssstart, elf->e_bsslen, NULL, USER_WR, USER_WR);
 
-    mem_section_init(&secs[1], elf->e_datstart,
-                     elf->e_datlen, (void*) dat_sec, USER_WR, USER_WR);
-
-    mem_section_init(&secs[2], elf->e_rodatstart,
-                     elf->e_rodatlen, (void*) rodat_sec, USER_RO, USER_RO);
-
-    mem_section_init(&secs[3], elf->e_bssstart,
-                     elf->e_bsslen, (void *) bss_sec, USER_WR, USER_WR);
-
-    MAGIC_BREAK;
     if (vmm_user_mem_alloc(&(pcb->pd), fm, secs, NUM_ELF_SECTIONS) < 0) return -1;
 
-    // TODO: load section from buf into physical memory, map physical memory to
-    // virtual memory, allocate physical memory from fma
+    MAGIC_BREAK;
+    //TODO: copy over contents using getbytes into newly mapped sections
+
     return 0;
 }
 
@@ -104,7 +78,6 @@ int pcb_load(pcb_t *pcb, frame_manager_t *fm, const char *filename){
     if (elf_load_helper(&elf, filename) != ELF_SUCCESS) return -1;
     print_elf(&elf);
     /* for each section, load the appropriate section */
-    MAGIC_BREAK;
     if (load_sections(&elf, pcb, fm) < 0) return -1;
     // set first tcb
     return -1;

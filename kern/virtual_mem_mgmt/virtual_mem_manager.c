@@ -108,7 +108,7 @@ int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
                 if(vmm_map_mem_region(pd, cur_addr, (uint32_t) p_addr,
                                     len, ms.pde_f, ms.pte_f) < 0)
                     return -3;
-
+                break;
             } else {
                 if(vmm_map_mem_region(pd, cur_addr, (uint32_t) p_addr,
                                     PAGE_SIZE, ms.pde_f, ms.pte_f) < 0)
@@ -118,9 +118,9 @@ int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
             len -= PAGE_SIZE;
         }
         /* Copy over contents of section into newly mapped virtual address */
-        MAGIC_BREAK;
-        memcpy((void*) ms.v_addr_start, ms.src_data, ms.len);
-
+        if (ms.src_data != NULL){
+            memcpy((void*) ms.v_addr_start, ms.src_data, ms.len);
+        }
     }
     return 0;
 
