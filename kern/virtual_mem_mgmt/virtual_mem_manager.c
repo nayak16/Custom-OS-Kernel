@@ -56,19 +56,6 @@ int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
     return 0;
 }
 
-int vmm_map_mem_region(page_directory_t *pd, uint32_t s_vaddr,
-                       uint32_t s_paddr, uint32_t len, uint32_t pde_f,
-                       uint32_t pte_f) {
-
-    int i;
-    /* Create memory region mapping of size len */
-    for (i = 0 ; i < len ; i++) {
-        int ret = vmm_create_mapping(s_vaddr + i, s_paddr + i, pte_f, pde_f, pd);
-        if (ret < 0) return -1;
-    }
-    return 0;
-
-}
 
 int is_sufficient_memory(frame_manager_t *fm,
                          mem_section_t *secs, uint32_t num_secs) {
@@ -87,7 +74,7 @@ int is_sufficient_memory(frame_manager_t *fm,
 int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
                        mem_section_t *secs, uint32_t num_secs) {
 
-
+    MAGIC_BREAK;
     if(!is_sufficient_memory(fm, secs, num_secs)) return -1;
 
     int s;
@@ -99,22 +86,19 @@ int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
         uint32_t cur_addr = ms.v_addr_start;
         /* Allocate and map each page */
         while(len > 0) {
-
+            //TODO: handle for errors (revert)
             void *p_addr;
             if (fm_alloc(fm, &p_addr) < 0) //Should never happen
                 return -2;
 
+            if (vmm_create_mapping(cur_addr, (uint32_t)p_addr,
+                        ms.pde_f, ms.pte_f, pd) < 0) return -1;
+
+            /* note: len is unsigned so we must check for underflow */
             if (len < PAGE_SIZE) {
-                if(vmm_map_mem_region(pd, cur_addr, (uint32_t) p_addr,
-                                    len, ms.pde_f, ms.pte_f) < 0)
-                    return -3;
                 break;
-            } else {
-                if(vmm_map_mem_region(pd, cur_addr, (uint32_t) p_addr,
-                                    PAGE_SIZE, ms.pde_f, ms.pte_f) < 0)
-                    return -3;
-                cur_addr += PAGE_SIZE;
             }
+            cur_addr += PAGE_SIZE;
             len -= PAGE_SIZE;
         }
         /* Copy over contents of section into newly mapped virtual address */
