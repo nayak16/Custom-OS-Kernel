@@ -65,6 +65,6 @@ void fm_destroy(frame_manager_t *fm){
     return;
 }
 
-int fm_get_size(frame_manager_t *fm){
+int fm_num_free_frames(frame_manager_t *fm){
     return ll_size(&(fm->free_frames));
 }

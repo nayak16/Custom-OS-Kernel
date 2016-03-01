@@ -33,6 +33,8 @@
 /* control for special register wrapper */
 #include <special_reg_cntrl.h>
 
+
+
 /* Debugging */
 #include <simics.h>                 /* lprintf() */
 #include <debug.h>
@@ -65,6 +67,13 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* initialize idle_pcb */
     pcb_t idle_pcb;
     pcb_init(&idle_pcb);
+
+    set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb.pd));
+    /* Enable Page Global Flag */
+    enable_pge();
+    /* Enable Paging */
+    enable_paging();
+
     /* load idle program */
     pcb_load(&idle_pcb, &fm, "idle");
     /* enables our pcb, sets active page directory to pcb's pd */
@@ -76,8 +85,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     //enable_interrupts();
 
-    enable_pge();
-    enable_paging();
 
     int i = 0;
     while (1) {

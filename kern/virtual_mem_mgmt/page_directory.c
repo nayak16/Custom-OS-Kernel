@@ -22,9 +22,6 @@
 
 #define NTH_BIT(v,n) (((uint32_t)v >> n) & 1)
 
-#define NEW_FLAGS(p,rw,md,glb) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
-    | (md << MODE_FLAG_BIT) | (glb << GLOBAL_FLAG_BIT))
-
 #define NUM_ENTRIES (PAGE_SIZE/sizeof(uint32_t))
 
 void *pd_get_base_addr(page_directory_t *pd){
