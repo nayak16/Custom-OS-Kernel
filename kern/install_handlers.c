@@ -11,6 +11,7 @@
 
 /* some common byte masks and offsets */
 #include <constants.h>
+#include <syscall_int.h>
 
 /* idt_base() */
 #include <x86/asm.h>
@@ -103,8 +104,8 @@ void idt_install_entry(uint32_t offset, uint16_t seg_sel, uint8_t p,
 /* Implementation */
 
 int install_syscall_handlers(){
-    /*idt_install_entry((uint32_t)syscall_gettid_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, entryid, FLAG_TRAP_GATE)*/
+    idt_install_entry((uint32_t)syscall_gettid_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, GETTID_INT, FLAG_TRAP_GATE);
     return 0;
 }
 

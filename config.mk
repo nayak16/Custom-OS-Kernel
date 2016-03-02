@@ -57,7 +57,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS =
+410TESTS = getpid_test1
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -65,7 +65,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS =
+STUDENTTESTS = foo
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk
@@ -99,7 +99,7 @@ THREAD_OBJS = malloc.o panic.o
 ###########################################################################
 # Object files for your syscall wrappers
 ###########################################################################
-SYSCALL_OBJS = syscall.o
+SYSCALL_OBJS = syscall_fork.o syscall_exec.o syscall_set_status.o syscall_vanish.o syscall_wait.o syscall_task_vanish.o syscall_gettid.o syscall_yield.o syscall_deschedule.o syscall_make_runnable.o syscall_get_ticks.o syscall_sleep.o syscall_swexn.o syscall_new_pages.o syscall_remove_pages.o syscall_getchar.o syscall_readline.o syscall_print.o syscall_set_term_color.o syscall_set_cursor_pos.o syscall_get_cursor_pos.o syscall_readfile.o syscall_halt.o syscall_misbehave.o
 
 ###########################################################################
 # Object files for your automatic stack handling
