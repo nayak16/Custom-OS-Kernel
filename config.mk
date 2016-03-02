@@ -149,4 +149,4 @@ KERNEL_OBJS = console.o kernel.o loader/loader.o malloc_wrappers.o install_handl
 # kernel in, or else your tweaked version will run and the test harness
 # won't.
 #
-STUDENTREQPROGS =
+STUDENTREQPROGS = test_gettid
