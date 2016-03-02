@@ -11,6 +11,7 @@
 #include <malloc.h>
 #include <special_reg_cntrl.h>
 
+#include <simics.h>
 /*
 typedef struct tcb{
     uint32_t eax;
@@ -56,9 +57,11 @@ int tcb_init(tcb_t *tcb, int tid, int pid, uint32_t s_top, uint32_t eip) {
     tcb->tid = tid;
     tcb->pid = pid;
 
-    tcb->k_stack = malloc(PAGE_SIZE);
 
-    if (tcb->k_stack == NULL) return -1;
+    void *k_stack_bot = malloc(sizeof(void*) * PAGE_SIZE);
+    if (k_stack_bot == NULL) return -1;
+
+    tcb->k_stack = (void *)(((uint32_t) k_stack_bot) + PAGE_SIZE);
 
     return 0;
 }
