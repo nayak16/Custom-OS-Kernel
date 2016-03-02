@@ -20,4 +20,8 @@ void double_fault_handler(void);
 
 int syscall_gettid_handler(void);
 
+/* Hardware handlers */
+
+void timer_handler(void);
+
 #endif /* IDT_HANDLERS_H_ */

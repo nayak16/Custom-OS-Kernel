@@ -17,6 +17,7 @@
 #include <x86/asm.h>
 #include <x86/seg.h>
 #include <x86/idt.h>
+#include <x86/timer_defines.h>
 
 #include <idt_handlers.h>
 /**
@@ -123,23 +124,23 @@ int install_exception_handlers() {
 }
 
 int install_peripheral_handlers(){
-    //char lsb, msb;
+    char lsb, msb;
 
     /* set tickback */
     //timer_callback = tickback;
 
     /* install IDT entry for timer*/
-    /*
-    idt_install_entry((uint32_t)timer_asm_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, TIMER_IDT_ENTRY); */
+
+    idt_install_entry((uint32_t)timer_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, TIMER_IDT_ENTRY, FLAG_INTERRUPT_GATE);
 
     /* setup timer */
-    /*
+
     outb(TIMER_SQUARE_WAVE, TIMER_MODE_IO_PORT);
     lsb = TIMER_CYCLES & C_BYTE_MASK;
     msb = (TIMER_CYCLES >> C_BYTE_WIDTH) & C_BYTE_MASK;
     outb(lsb, TIMER_PERIOD_IO_PORT);
-    outb(msb, TIMER_PERIOD_IO_PORT);*/
+    outb(msb, TIMER_PERIOD_IO_PORT);
 
     /* install IDT entry for keyboard */
     /*

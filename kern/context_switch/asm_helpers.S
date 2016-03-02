@@ -18,7 +18,7 @@ restore_context_asm:
     // eflags: 36(%esp), eflags
     push 36(%esp) // Push ss
     push 52(%esp) // Push esp
-    pushf         // Push eflags
+    push $0x3282         // Push eflags
     push 52(%esp) // Push cs
     push 60(%esp) // Push eip
     iret
