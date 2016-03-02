@@ -35,9 +35,9 @@ int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
     /* the ppn to be stored in the page table entry */
     uint32_t page_table_entry_value = (ppn << PAGE_SHIFT) | pte_flags;
     /* converts ith page table entry to page directory index */
-    uint32_t page_directory_i = vpn / NUM_ENTRIES;
+    uint32_t page_directory_i = (vpn >> 10) & 0x3FF;
     /* converts ith page table entry to page table index */
-    uint32_t page_table_i = vpn % NUM_ENTRIES;
+    uint32_t page_table_i = vpn & 0x3FF;
     /* get the value stored in the correct page directory entry*/
     uint32_t page_directory_value = pd->directory[page_directory_i];
     uint32_t *page_table_addr;
@@ -83,6 +83,7 @@ int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
         mem_section_t ms = secs[s];
 
         uint32_t len = ms.len;
+        /* cur_addr must be page aligned */
         uint32_t cur_addr = ms.v_addr_start;
         /* Allocate and map each page */
         while(len > 0) {
@@ -91,7 +92,8 @@ int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
             if (fm_alloc(fm, &p_addr) < 0) //Should never happen
                 return -2;
 
-            if (vmm_create_mapping(cur_addr, (uint32_t)p_addr,
+            if (vmm_create_mapping(cur_addr >> PAGE_SHIFT,
+                        ((uint32_t)p_addr) >> PAGE_SHIFT,
                         ms.pde_f, ms.pte_f, pd) < 0) return -1;
 
             /* note: len is unsigned so we must check for underflow */

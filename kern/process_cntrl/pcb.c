@@ -44,7 +44,6 @@ int load_sections(simple_elf_t *elf, pcb_t *pcb, frame_manager_t *fm){
 
     if (vmm_user_mem_alloc(&(pcb->pd), fm, secs, NUM_ELF_SECTIONS) < 0) return -1;
 
-    MAGIC_BREAK;
     //TODO: copy over contents using getbytes into newly mapped sections
 
     return 0;
