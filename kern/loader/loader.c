@@ -108,10 +108,10 @@ int load_user_stack(frame_manager_t *fm, pcb_t *pcb) {
 
     /* Setup user stack for entry point */
     uint32_t *stack_top = (uint32_t *) USER_STACK_TOP;
-    stack_top[0] = pcb->argc;
-    stack_top[-1] = (uint32_t) pcb->argv;
-    stack_top[-2] = USER_STACK_TOP;
-    stack_top[-3] = USER_STACK_BOTTOM;
+    stack_top[-3] = pcb->argc;
+    stack_top[-2] = (uint32_t) pcb->argv;
+    stack_top[-1] = USER_STACK_TOP;
+    stack_top[0] = USER_STACK_BOTTOM;
 
     /* Specify dummy return address */
     stack_top[-4] = 0;
