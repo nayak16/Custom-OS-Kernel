@@ -57,7 +57,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS = getpid_test1
+410TESTS = getpid_test1 ck1
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -65,7 +65,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = foo
+STUDENTTESTS =
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk

@@ -7,5 +7,5 @@
  */
 
 int syscall_gettid_c_handler(){
-    return 0;
+    return 42;
 }

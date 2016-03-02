@@ -52,6 +52,9 @@ int tcb_init(tcb_t *tcb, int tid, int pid, uint32_t s_top, uint32_t eip) {
     // TODO: Assign to proper value
     tcb->ss = SEGSEL_USER_DS;
     tcb->ds = SEGSEL_USER_DS;
+    tcb->es = SEGSEL_USER_DS;
+    tcb->fs = SEGSEL_USER_DS;
+    tcb->gs = SEGSEL_USER_DS;
 
     /* These should be set by the scheduler */
     tcb->tid = tid;

@@ -27,7 +27,11 @@ typedef struct tcb{
     uint32_t cs;
     uint32_t eip;
     uint32_t esp;
+
     uint32_t ds;
+    uint32_t es;
+    uint32_t fs;
+    uint32_t gs;
 
     int pid;
     int tid;
