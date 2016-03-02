@@ -32,7 +32,7 @@
 #include <pcb.h>
 /* control for special register wrapper */
 #include <special_reg_cntrl.h>
-
+#include <scheduler.h>
 
 
 /* Debugging */
@@ -70,7 +70,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* initialize a scheduler */
     scheduler_t sched;
-    scheduer_init(&sched);
+    scheduler_init(&sched);
 
     /* setup first page table so paging works in pcb_load */
     set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb.pd));
@@ -80,10 +80,10 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     enable_paging();
 
     /* load idle program */
-    pcb_load(&idle_pcb, &fm, "idle");
+    pcb_load_prog(&idle_pcb, &fm, "idle");
 
     /* add idle process to scheduler */
-    scheduler_add_process(&sched, &pcb_t);
+    scheduler_add_process(&sched, &idle_pcb);
 
     // TODO: create and load init task
 

@@ -5,9 +5,9 @@
 /* page directory include */
 #include <page_directory.h>
 /* frame manager include */
-#include <frame_manager.h>a
-
-#include <malloc,h>
+#include <frame_manager.h>
+#include <tcb.h>
+#include <malloc.h>
 
 /*
 typedef struct tcb{
@@ -46,14 +46,16 @@ int tcb_init(tcb_t *tcb) {
     tcb->tid = -1;
     tcb->pid = -1;
     // TODO: Figure this out
-    k_stack = malloc(PAGE_SIZE);
-    if (k_stack == NULL) return -1;
+    tcb->k_stack = malloc(PAGE_SIZE);
+    if (tcb->k_stack == NULL) return -1;
 
+    return 0;
 }
 
 int tcb_destroy(tcb_t *tcb) {
-    free(k_stack);
+    free(tcb->k_stack);
     // TODO: Clean up other shit
+    return 0;
 
 }
 

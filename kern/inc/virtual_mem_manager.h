@@ -23,7 +23,7 @@
 int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
                    uint32_t pde_flags, page_directory_t *pd);
 
-int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
+int vmm_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
                      mem_section_t *secs, uint32_t num_secs);
 
 #endif /* _VIRTUAL_MEM_MANAGER_H_ */
