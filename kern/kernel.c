@@ -68,6 +68,11 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     pcb_t idle_pcb;
     pcb_init(&idle_pcb);
 
+    /* initialize a scheduler */
+    scheduler_t sched;
+    scheduer_init(&sched);
+
+    /* setup first page table so paging works in pcb_load */
     set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb.pd));
     /* Enable Page Global Flag */
     enable_pge();
@@ -76,14 +81,15 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* load idle program */
     pcb_load(&idle_pcb, &fm, "idle");
-    /* enables our pcb, sets active page directory to pcb's pd */
-    pcb_set_running(&idle_pcb);
+
+    /* add idle process to scheduler */
+    scheduler_add_process(&sched, &pcb_t);
 
     // TODO: create and load init task
 
     // TODO: set first thread running
 
-    //enable_interrupts();
+    //scheduler_start(&sched); // enable intterupts
 
 
     int i = 0;
