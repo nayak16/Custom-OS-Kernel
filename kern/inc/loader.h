@@ -14,7 +14,9 @@
 #include <frame_manager.h>
 #include <x86/page.h>
 
-#define USER_STACK_TOP 0xffffffff
+#define USER_STACK_TOP 0xfffffff0
+
+#define USER_STACK_BOTTOM 0xfffff000
 
 #define USER_STACK_SIZE PAGE_SIZE
 

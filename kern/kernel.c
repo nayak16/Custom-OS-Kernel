@@ -89,7 +89,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     // TODO: set first thread running
 
-    //scheduler_start(&sched); // enable intterupts
+    scheduler_start(&sched); // enable intterupts
 
 
     int i = 0;

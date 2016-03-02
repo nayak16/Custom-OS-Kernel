@@ -98,17 +98,26 @@ int load_user_stack(frame_manager_t *fm, pcb_t *pcb) {
     if (fm == NULL || pcb == NULL) return -1;
 
     /* Calculate user stack bottom */
-    uint32_t stack_bot = USER_STACK_TOP - USER_STACK_SIZE;
     mem_section_t stack_secs[1];
 
-    mem_section_init(&stack_secs[0], stack_bot,
+    mem_section_init(&stack_secs[0], USER_STACK_BOTTOM,
                         USER_STACK_SIZE, NULL, USER_WR, USER_WR);
 
     /* Allocate and map space for stack in virtual memory */
     if (vmm_mem_alloc(&(pcb->pd), fm, stack_secs, 1) < 0) return -2;
 
-    /* Set stack top of new process */
-    pcb->stack_top = USER_STACK_TOP;
+    /* Setup user stack for entry point */
+    uint32_t *stack_top = (uint32_t *) USER_STACK_TOP;
+    stack_top[0] = pcb->argc;
+    stack_top[-1] = (uint32_t) pcb->argv;
+    stack_top[-2] = USER_STACK_TOP;
+    stack_top[-3] = USER_STACK_BOTTOM;
+
+    /* Specify dummy return address */
+    stack_top[-4] = 0;
+
+    /* Set pcb stack */
+    pcb->stack_top = (uint32_t) &(stack_top[-4]);
 
     return 0;
 }

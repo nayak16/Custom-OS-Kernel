@@ -36,6 +36,7 @@ int pcb_init(pcb_t *pcb){
     if (pcb == NULL) return -1;
     //TODO: how to choose pid
     pcb->pid = 1;
+
     pd_init(&(pcb->pd));
     pd_initialize_kernel(&(pcb->pd));
     return 0;
@@ -56,14 +57,18 @@ int pcb_destroy(pcb_t *pcb){
 int pcb_load_prog(pcb_t *pcb, frame_manager_t *fm, const char *filename){
     if (pcb == NULL || filename == NULL || fm == NULL) return -1;
     simple_elf_t elf;
-    if (elf_check_header(filename) != ELF_SUCCESS) return -1;
-    if (elf_load_helper(&elf, filename) != ELF_SUCCESS) return -1;
+    if (elf_check_header(filename) != ELF_SUCCESS) return -2;
+    if (elf_load_helper(&elf, filename) != ELF_SUCCESS) return -3;
 
     /* Load elf sections into memory */
-    if (load_elf_sections(&elf, pcb, fm) < 0) return -1;
+    if (load_elf_sections(&elf, pcb, fm) < 0) return -4;
 
     /* Load user stack into memory */
-    if (load_user_stack(fm, pcb) < 0) return -1;
+    if (load_user_stack(fm, pcb) < 0) return -5;
 
-    return -1;
+    /* TODO: Change this to be actual args */
+    pcb->argc = 0;
+    pcb->argv = NULL;
+
+    return 0;
 }

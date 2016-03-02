@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include <x86/cr.h>
+#include <x86/eflags.h>
 
 #include <constants.h>
 
@@ -20,6 +21,10 @@
 
 #define PGE_FLAG_BIT 7
 
+#define EFLAGS_RESERVED_BIT 1
+#define EFLAGS_AC_BIT 18
+#define EFLAGS_IF_BIT 9
+#define EFLAGS_IOPL_BIT 12
 /**
  * @brief Sets top 20 bit of cr3 to page directory base address
  *
@@ -43,5 +48,15 @@ void enable_pge(void) {
     uint32_t new_cr4 = get_cr4() | (SET << PGE_FLAG_BIT);
 
     set_cr4(new_cr4);
+}
+
+uint32_t get_user_eflags() {
+    uint32_t cur_eflags = get_eflags();
+
+    uint32_t e_f = cur_eflags | (UNSET << EFLAGS_AC_BIT) |
+                    (SET << EFLAGS_RESERVED_BIT) | (SET << EFLAGS_IF_BIT);
+
+    return e_f;
+
 }
 

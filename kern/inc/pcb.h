@@ -13,6 +13,10 @@
 typedef struct pcb{
     int pid;
     uint32_t stack_top;
+
+    int argc;
+    char **argv;
+
     unsigned long entry_point;
     page_directory_t pd;
 } pcb_t;

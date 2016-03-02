@@ -17,6 +17,7 @@ void enable_paging(void);
 
 void enable_pge(void);
 
+uint32_t get_user_eflags(void);
 
 #endif /* SPECIAL_REG_CNTRL_H_ */
 
