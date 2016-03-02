@@ -12,6 +12,8 @@
 
 typedef struct pcb{
     int pid;
+    uint32_t esp;
+    unsigned long entry_point;
     page_directory_t pd;
 } pcb_t;
 
