@@ -73,7 +73,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     enable_pge();
     /* Enable Paging */
     enable_paging();
-    MAGIC_BREAK;
 
     /* load idle program */
     pcb_load(&idle_pcb, &fm, "idle");

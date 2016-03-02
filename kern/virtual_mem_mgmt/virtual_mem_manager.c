@@ -74,7 +74,6 @@ int is_sufficient_memory(frame_manager_t *fm,
 int vmm_user_mem_alloc(page_directory_t *pd, frame_manager_t *fm,
                        mem_section_t *secs, uint32_t num_secs) {
 
-    MAGIC_BREAK;
     if(!is_sufficient_memory(fm, secs, num_secs)) return -1;
 
     int s;

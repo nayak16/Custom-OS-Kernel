@@ -42,9 +42,23 @@ int load_sections(simple_elf_t *elf, pcb_t *pcb, frame_manager_t *fm){
     mem_section_init(&secs[2], elf->e_rodatstart, elf->e_rodatlen, NULL, USER_RO, USER_RO);
     mem_section_init(&secs[3], elf->e_bssstart, elf->e_bsslen, NULL, USER_WR, USER_WR);
 
+    /* Map all appropriate elf binary sections into user space */
     if (vmm_user_mem_alloc(&(pcb->pd), fm, secs, NUM_ELF_SECTIONS) < 0) return -1;
 
-    //TODO: copy over contents using getbytes into newly mapped sections
+    /* Fill in .text section */
+    if (getbytes(elf->e_fname, elf->e_txtoff, elf->e_txtlen,
+                 (char*)elf->e_txtstart) != elf->e_txtlen) return -1;
+
+    /* Fill in .data section */
+    if (getbytes(elf->e_fname, elf->e_datoff, elf->e_datlen,
+                 (char*)elf->e_datstart) != elf->e_datlen) return -1;
+
+    /* Fill in .rodata section */
+    if (getbytes(elf->e_fname, elf->e_rodatoff, elf->e_rodatlen,
+                 (char*)elf->e_rodatstart) != elf->e_rodatlen) return -1;
+
+    /* Clear .bss section */
+    memset((void *)elf->e_bssstart, 0, elf->e_bsslen);
 
     return 0;
 }
