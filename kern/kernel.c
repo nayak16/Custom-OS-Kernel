@@ -80,7 +80,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     enable_paging();
 
     /* load idle program */
-    pcb_load_prog(&idle_pcb, &fm, "idle");
+    pcb_load_prog(&idle_pcb, &fm, "foo");
 
     /* add idle process to scheduler */
     scheduler_add_process(&sched, &idle_pcb);

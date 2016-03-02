@@ -1,0 +1,17 @@
+/** @file syscall_sleep.c
+ *
+ *  @brief
+ *  @author Christopher Wei (cjwei), Aatish Nayak (aatishn)
+ *  @bug
+ */
+
+#include <syscall_int.h>
+
+.globl sleep
+
+sleep:
+    push %esi          /* save context */
+    mov 8(%esp), %esi   /* store 1st argument into esi */
+    int $SLEEP_INT /* call trap */
+    pop %esi           /* restore context */
+    ret
