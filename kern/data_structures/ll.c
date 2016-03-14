@@ -121,7 +121,7 @@ int ll_peek(ll_t *ll, void **val){
  * @return 0 on success, negative error code if node not found or error
  *
  */
-int ll_remove(ll_t *ll, void* data) {
+int ll_remove_node(ll_t *ll, void* data) {
     if (ll == NULL) return -1;
     ll_node_t *node = ll->head;
     while(node != NULL && node->next != NULL && node->next->e != data) {
@@ -142,8 +142,38 @@ int ll_remove(ll_t *ll, void* data) {
     }
     ll->size--;
     return 0;
-
 }
+
+/**
+ * @brief Finds data in the linked list that satisfies the condition
+ * func(data) == c_val and removes that node
+ *
+ * @param ll Pointer to linked list
+ * @param func Generic function that transforms data into form desired
+ * @param c_val Value to match with return value of func
+ *
+ * @return 0 on success, negative if error or data not found
+ *
+ */
+int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val){
+    if (ll == NULL || func == NULL){
+        return -1;
+    }
+    ll_node_t *node = ll->head;
+
+    /* Loop through linked list */
+    while (node != NULL){
+        if ((*func)(node->e) == c_val){
+            break;
+            return 0;
+        }
+        node = node->next;
+    }
+    if (node == NULL) return -1; /* not found */
+
+    return ll_remove_node(ll, node->e);
+}
+
 
 /**
  * @brief Destroys and frees all nodes of a linked list

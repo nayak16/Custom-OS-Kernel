@@ -48,7 +48,7 @@ int ll_peek(ll_t *ll, void **value_ptr);
 
 
 int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr);
-int ll_remove(ll_t *ll, void* data);
+int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val);
 
 int ll_size(ll_t *ll);
 

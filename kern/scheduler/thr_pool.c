@@ -23,14 +23,13 @@ void *get_tid_from_tcb(void *tcb){
 /** @brief */
 int thr_pool_get_tcb(thr_pool_t *tp, int tid, tcb_t **tcb){
     if (tp == NULL || tcb == NULL || tid < 0) return -1;
-    return ll_find(&(tp->pool), &get_tid_from_tcb, tid, tcb);
+    return ll_find(&(tp->pool), &get_tid_from_tcb, (void *)tid, (void*)tcb);
 }
 
 /** @brief */
 int thr_pool_remove_tcb(thr_pool_t *tp, int tid){
     if (tp == NULL || tid == -1) return -1;
-    return ll_remove(*(tp->pool),
+    return ll_remove(&(tp->pool), &get_tid_from_tcb, (void *) tid);
 }
 
 
-#endif /* _THR_POOL_H_ */
