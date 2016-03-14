@@ -11,10 +11,14 @@
 
 #include <queue.h>
 #include <stdbool.h>
+#include <mutex.h>
 
 typedef struct frame_manager{
+    mutex_t m;
     queue_t free_frames;
 } frame_manager_t;
+
+
 
 int fm_alloc(frame_manager_t *fm, void **addr);
 

@@ -22,8 +22,10 @@ extern frame_manager_t fm;
  */
 extern scheduler_t sched;
 
-
-
+/**
+ * @brief atomically exchanges val into lock and returns previous value of lock
+ */
+int xchng(int* lock, int val);
 
 #endif /* _KERN_INTERNALS_H_ */
 

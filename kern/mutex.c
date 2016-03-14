@@ -15,12 +15,12 @@
 
 /* C Standard Lib specific Includes */
 #include <stdlib.h>
-#include <syscall.h>
 #include <simics.h>
 
 
 /* P3 Specific includes */
 #include <mutex.h>
+#include <kern_internals.h>
 
 /** @brief Initializes a mutex
  *  @param mp Pointer to mutex to be intialized

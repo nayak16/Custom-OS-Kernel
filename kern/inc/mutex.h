@@ -1,11 +1,11 @@
-/** @file mutex_type.h
- *  @brief This file defines the type for mutexes.
+/** @file mutex.h
+ *  @brief This file defines mutexes.
  *  @author Christopher Wei (cjwei), Aatish Nayak (aatishn)
  *  @bug No known bugs
  */
 
-#ifndef _MUTEX_TYPE_H
-#define _MUTEX_TYPE_H
+#ifndef _MUTEX_H
+#define _MUTEX_H
 
 /* C Standard Lib includes */
 #include <stdbool.h>
@@ -16,4 +16,9 @@ typedef struct mutex {
     int lock;
 } mutex_t;
 
-#endif /* _MUTEX_TYPE_H */
+int mutex_init( mutex_t *mp );
+void mutex_destroy( mutex_t *mp );
+void mutex_lock( mutex_t *mp );
+void mutex_unlock( mutex_t *mp );
+
+#endif /* _MUTEX_H */
