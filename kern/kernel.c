@@ -34,10 +34,18 @@
 #include <special_reg_cntrl.h>
 #include <scheduler.h>
 
+/* Kernel global variables and internals */
+#include <kern_internals.h>
+
 
 /* Debugging */
 #include <simics.h>                 /* lprintf() */
 #include <debug.h>
+
+
+scheduler_t sched;
+
+frame_manager_t fm;
 
 /** @brief Kernel entrypoint.
  *
@@ -47,7 +55,7 @@
  */
 int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 {
-    lprintf("Hello from ShrekOS");
+    lprintf("Shrek is love, Shrek is life");
 
     /* install IDT entries for system calls */
     install_syscall_handlers();
@@ -61,7 +69,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     clear_console();
 
     /* create frame manager */
-    frame_manager_t fm;
     fm_init(&fm);
 
     /* initialize idle_pcb */
@@ -69,7 +76,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     pcb_init(&idle_pcb);
 
     /* initialize a scheduler */
-    scheduler_t sched;
     scheduler_init(&sched);
 
     /* setup first page table so paging works in pcb_load */
