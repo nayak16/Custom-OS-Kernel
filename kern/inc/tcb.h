@@ -11,6 +11,10 @@
 #include <frame_manager.h>
 
 typedef struct tcb{
+    /************************************************************************
+     * WARNING: changes in our typedef will mess up assembly functions that *
+     * rely on the layout of tcb                                            *
+     ************************************************************************/
     uint32_t eax; /* Side note: lowest stack addr when pushed */
     uint32_t ebx;
     uint32_t ecx;

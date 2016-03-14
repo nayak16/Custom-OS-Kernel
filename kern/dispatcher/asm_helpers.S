@@ -1,10 +1,10 @@
 
 #include <simics.h>
 
-.globl restore_context_asm
+.globl initial_mode_switch_asm
 
 /* Struct tcb_t passed in */
-restore_context_asm:
+initial_mode_switch_asm:
     /* Save vars on stack */
 
     movl 4(%esp), %eax

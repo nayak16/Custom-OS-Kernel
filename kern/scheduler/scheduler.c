@@ -7,7 +7,7 @@
 #include <pcb.h>
 #include <tcb.h>
 #include <scheduler.h>
-#include <context_switch.h>
+#include <dispatcher.h>
 
 int scheduler_init(scheduler_t *sched){
     if (sched == NULL) return -1;
@@ -38,7 +38,7 @@ int scheduler_start(scheduler_t *sched){
     // set page directory of current pcb
     //
     // enable_interrupts
-    restore_context(sched->current_tcb);
+    initial_mode_switch(sched->current_tcb);
 
     return 0;
 }
