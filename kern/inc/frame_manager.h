@@ -9,11 +9,11 @@
 #ifndef _FRAME_MANAGER_H_
 #define _FRAME_MANAGER_H_
 
-#include <ll.h>
+#include <queue.h>
 #include <stdbool.h>
 
 typedef struct frame_manager{
-    ll_t free_frames;
+    queue_t free_frames;
 } frame_manager_t;
 
 int fm_alloc(frame_manager_t *fm, void **addr);

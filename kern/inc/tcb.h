@@ -42,5 +42,6 @@ typedef struct tcb{
 
 int tcb_init(tcb_t *tcb, int tid, int pid, uint32_t s_top, uint32_t eip);
 int tcb_destroy(tcb_t *tcb);
+int tcb_gettid(tcb_t *tcb, int *tid);
 
 #endif /* _TCB_H_ */

@@ -76,3 +76,9 @@ int tcb_destroy(tcb_t *tcb) {
 
 }
 
+int tcb_gettid(tcb_t *tcb, int *tid){
+    if (tcb == NULL) return -1;
+    *tid = tcb->tid;
+    return 0;
+}
+
