@@ -18,6 +18,7 @@
  */
 typedef struct thr_pool {
     ll_t pool;
+    mutex_t m;
 } thr_pool_t;
 
 int add_tcb(thr_pool_t *tp, tcb_t *tcb);
