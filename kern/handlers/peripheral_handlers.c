@@ -9,7 +9,9 @@
 
 void c_timer_handler(void) {
 
-    // Save context
+    // TODO: Save context
+    // Get next tcb
+    // TODO: Restore context or enter user mode for first time
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
     return;
 }

@@ -62,3 +62,17 @@ int scheduler_start(scheduler_t *sched){
 
     return 0;
 }
+
+int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
+
+    int tid;
+    if(queue_deq(&(sched->runnable_pool), (void**) &tid) < 0) {
+        /* TODO: FATAL ERROR */
+        return -1;
+    }
+    if(thr_pool_get_tcb(&(sched->thr_pool), tid, tcbp) < 0) {
+        /* TODO: FATAL ERROR */
+        return -2;
+    }
+    return 0;
+}
