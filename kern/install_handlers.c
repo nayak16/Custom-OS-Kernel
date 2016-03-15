@@ -18,6 +18,7 @@
 #include <x86/seg.h>
 #include <x86/idt.h>
 #include <x86/timer_defines.h>
+#include <x86/keyhelp.h>
 
 #include <idt_handlers.h>
 /**
@@ -144,9 +145,8 @@ int install_peripheral_handlers(){
     outb(msb, TIMER_PERIOD_IO_PORT);
 
     /* install IDT entry for keyboard */
-    /*
-    idt_install_entry((uint32_t)keyboard_asm_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, KEY_IDT_ENTRY);*/
+    idt_install_entry((uint32_t)keyboard_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, KEY_IDT_ENTRY, FLAG_INTERRUPT_GATE);
 
     return 0;
 }

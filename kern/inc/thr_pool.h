@@ -21,9 +21,10 @@ typedef struct thr_pool {
     mutex_t m;
 } thr_pool_t;
 
-int add_tcb(thr_pool_t *tp, tcb_t *tcb);
-int get_tcb(thr_pool_t *tp, int tid, tcb_t **tcb);
-int remove_tcb(thr_pool_t, int tid);
+int thr_pool_init(thr_pool_t *tp);
+int thr_pool_add_tcb(thr_pool_t *tp, tcb_t *tcb);
+int thr_pool_get_tcb(thr_pool_t *tp, int tid, tcb_t **tcb);
+int thr_pool_remove_tcb(thr_pool_t *tp, int tid);
 
 
 #endif /* _THR_POOL_H_ */

@@ -9,6 +9,13 @@
 #include <thr_pool.h>
 #include <stdlib.h>
 
+int thr_pool_init(thr_pool_t *tp) {
+    if (tp == NULL) return -1;
+
+    if (mutex_init(&(tp->m)) < 0 || ll_init(&(tp->pool)) < 0) return -1;
+    return 0;
+}
+
 /** @brief */
 int thr_pool_add_tcb(thr_pool_t *tp, tcb_t *tcb){
     if (tp == NULL || tcb == NULL) return -1;

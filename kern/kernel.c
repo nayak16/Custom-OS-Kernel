@@ -68,7 +68,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     clear_console();
 
-    /* create frame manager */
+    /* init frame manager */
     fm_init(&fm);
 
     /* initialize idle_pcb */
@@ -96,7 +96,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // TODO: set first thread running
 
     scheduler_start(&sched); // enable intterupts
-
 
     int i = 0;
     while (1) {

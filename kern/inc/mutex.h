@@ -7,9 +7,6 @@
 #ifndef _MUTEX_H
 #define _MUTEX_H
 
-/* C Standard Lib includes */
-#include <stdbool.h>
-
 /** @brief Defines a mutex struct and type */
 typedef struct mutex {
 	/** @brief Represents whether or not mutex is free or taken */
