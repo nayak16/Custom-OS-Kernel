@@ -11,6 +11,10 @@
 #include <dispatcher.h>
 #include <queue.h>
 #include <cb_pool.h>
+/* pdbr */
+#include <special_reg_cntrl.h>
+/* set_esp0 */
+#include <x86/cr.h>
 
 int scheduler_init(scheduler_t *sched){
     if (sched == NULL) return -1;
@@ -44,7 +48,7 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb){
 
     /* Add pcb and tcb to respective pools */
     if (cb_pool_add_cb(&(sched->thr_pool), (void*)tcb) < 0
-            || cb_pool_add_cb(&(sched->process_pool), (void*)tcb) < 0) {
+            || cb_pool_add_cb(&(sched->process_pool), (void*)pcb) < 0) {
 
         return -3;
     }
@@ -92,7 +96,11 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
     *new_esp = tcb->esp;
 
     /* Set new esp0 */
+    pcb_t *pcb;
+    cb_pool_get_cb(&(sched->process_pool), tcb->pid, (void **)(&pcb));
 
+    set_esp0((uint32_t)tcb->k_stack);
+    set_pdbr((uint32_t) pd_get_base_addr(&(pcb->pd)));
 
     return 0;
 }
