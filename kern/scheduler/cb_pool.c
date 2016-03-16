@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <tcb.h>
 
+#include <simics.h>
+
 int cb_pool_init(cb_pool_t *tp) {
     if (tp == NULL) return -1;
 
@@ -34,7 +36,6 @@ void *get_id_from_cb(void *cb){
 /** @brief */
 int cb_pool_get_cb(cb_pool_t *tp, int id, void **cb){
     if (tp == NULL || cb == NULL || id < 0) return -1;
-
     mutex_lock(&(tp->m));
     int status = ll_find(&(tp->pool), &get_id_from_cb, (void *)id, (void*)cb);
     mutex_unlock(&(tp->m));

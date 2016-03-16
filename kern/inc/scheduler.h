@@ -32,7 +32,7 @@ int scheduler_start(scheduler_t *sched);
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcb);
 int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp);
 
-int scheduler_save_old_tcb(scheduler_t *sched, uint32_t old_esp);
+int scheduler_save_running_tcb(scheduler_t *sched, uint32_t old_esp);
 
 #endif /* _SCHEDULER_H_ */
 

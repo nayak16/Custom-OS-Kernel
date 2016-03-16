@@ -18,10 +18,11 @@ void c_timer_handler(void) {
     return;
 }
 
-void c_keyboard_handler(uint32_t old_esp) {
+uint32_t c_keyboard_handler(uint32_t old_esp) {
     lprintf("Key Pressed!");
-
-    context_switch(old_esp, -1);
+    MAGIC_BREAK;
+    uint32_t new_esp = context_switch(old_esp, -1);
     /*char c = */inb(KEYBOARD_PORT);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
+    return new_esp;
 }

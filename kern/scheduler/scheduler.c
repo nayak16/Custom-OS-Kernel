@@ -16,6 +16,8 @@
 /* set_esp0 */
 #include <x86/cr.h>
 
+#include <simics.h>
+
 int scheduler_init(scheduler_t *sched){
     if (sched == NULL) return -1;
     sched->next_tid = 0;
@@ -68,7 +70,7 @@ int scheduler_start(scheduler_t *sched){
     return 0;
 }
 
-int scheduler_save_old_tcb(scheduler_t *sched, uint32_t old_esp) {
+int scheduler_save_running_tcb(scheduler_t *sched, uint32_t old_esp) {
     if (sched->cur_tid >= 0) {
         /* Get current tcb */
         tcb_t *tcb;
@@ -78,28 +80,33 @@ int scheduler_save_old_tcb(scheduler_t *sched, uint32_t old_esp) {
         }
         /* Save esp */
         tcb->esp = old_esp;
+
+        /* Put current tid back into runnable pool */
+        if(queue_enq(&(sched->runnable_pool), (void*) sched->cur_tid) < 0) {
+            return -1;
+        }
+
     }
     return 0;
 }
 
 int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp) {
 
-    /* Enqueue cur tid back into runnable pool */
-    if(queue_enq(&(sched->runnable_pool), (void*) sched->cur_tid) < 0) {
-        return -1;
-    }
-
     /* Set new current running tid */
     sched->cur_tid = tcb->id;
 
     /* Save new esp  */
-    *new_esp = tcb->esp;
+    *new_esp = (uint32_t)tcb->k_stack;
 
     /* Set new esp0 */
-    pcb_t *pcb;
-    cb_pool_get_cb(&(sched->process_pool), tcb->pid, (void **)(&pcb));
-
     set_esp0((uint32_t)tcb->k_stack);
+
+    pcb_t *pcb;
+    if (cb_pool_get_cb(&(sched->process_pool), tcb->pid, (void **)(&pcb)) < 0) {
+        return -2;
+    }
+
+    /* Set new page directory */
     set_pdbr((uint32_t) pd_get_base_addr(&(pcb->pd)));
 
     return 0;
@@ -110,6 +117,7 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
 
     int tid;
+    /* Dequeue from runnable pool */
     if(queue_deq(&(sched->runnable_pool), (void**) &tid) < 0) {
         /* TODO: FATAL ERROR */
         return -1;
@@ -118,5 +126,10 @@ int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
         /* TODO: FATAL ERROR */
         return -2;
     }
+
     return 0;
+}
+
+int scheduler_is_started(scheduler_t *sched) {
+    return sched->cur_tid >= 0;
 }

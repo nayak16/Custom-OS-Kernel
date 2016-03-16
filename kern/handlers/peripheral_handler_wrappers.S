@@ -22,6 +22,7 @@ keyboard_handler:
     push %esp
     // Call C handler
     call c_keyboard_handler
+    movl %eax, %esp
     // Restore Registers
     pop %gs
     pop %fs

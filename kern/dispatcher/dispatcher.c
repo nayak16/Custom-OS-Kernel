@@ -26,11 +26,10 @@ uint32_t context_switch(uint32_t old_esp, int target_tid) {
     if (target_tid < 0) {
 
         /* Save old TCB */
-        if (scheduler_save_old_tcb(&sched, old_esp) < 0) {
+        if (scheduler_save_running_tcb(&sched, old_esp) < 0) {
             lprintf("Current tid tcb does not exist !!!");
             MAGIC_BREAK;
         }
-
         /* Get next available TCB */
         tcb_t *next_tcb;
         if (scheduler_get_next_tcb(&sched, &next_tcb) < 0) {
@@ -48,7 +47,6 @@ uint32_t context_switch(uint32_t old_esp, int target_tid) {
     } else {
         /* Switch to target_tid tcb (used in yield) */
     }
-
     return new_esp;
 
 }

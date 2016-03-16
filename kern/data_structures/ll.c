@@ -15,6 +15,8 @@
 /* Thread Library includes*/
 #include <ll.h>
 
+#include <simics.h>
+
 /**
  * @brief Initializes a linked list with appropriate values
  *
@@ -219,7 +221,7 @@ int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr){
         }
         node = node->next;
     }
-    return -1; /* not found */
+    return -2; /* not found */
 }
 
 int ll_size(ll_t *ll){
