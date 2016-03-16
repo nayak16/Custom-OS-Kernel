@@ -109,6 +109,8 @@ void idt_install_entry(uint32_t offset, uint16_t seg_sel, uint8_t p,
 int install_syscall_handlers(){
     idt_install_entry((uint32_t)syscall_gettid_handler, SEGSEL_KERNEL_CS,
         FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, GETTID_INT, FLAG_TRAP_GATE);
+    idt_install_entry((uint32_t)syscall_fork_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, FORK_INT, FLAG_TRAP_GATE);
     return 0;
 }
 

@@ -16,9 +16,13 @@ void double_fault_handler(void);
 
 // TODO: Add more
 
-/* Syscall handlers */
+/* Syscall thread management handlers */
 
 int syscall_gettid_handler(void);
+
+/* Syscall life cycle handlers */
+
+int syscall_fork_handler(void);
 
 /* Hardware handlers */
 
