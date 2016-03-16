@@ -4,6 +4,7 @@
 #include <x86/interrupt_defines.h>
 #include <stdio.h>
 #include <scheduler.h>
+#include <dispatcher.h>
 #include <kern_internals.h>
 /* KEYBOARD_PORT define */
 #include <x86/keyhelp.h>
@@ -17,8 +18,10 @@ void c_timer_handler(void) {
     return;
 }
 
-void c_keyboard_handler(void) {
+void c_keyboard_handler(uint32_t old_esp) {
     lprintf("Key Pressed!");
+
+    context_switch(old_esp, -1);
     /*char c = */inb(KEYBOARD_PORT);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
 }

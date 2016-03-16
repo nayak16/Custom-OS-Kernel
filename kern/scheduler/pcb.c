@@ -35,7 +35,7 @@
 int pcb_init(pcb_t *pcb){
     if (pcb == NULL) return -1;
     //TODO: how to choose pid
-    pcb->pid = 1;
+    pcb->id = 1;
 
     pd_init(&(pcb->pd));
     pd_initialize_kernel(&(pcb->pd));

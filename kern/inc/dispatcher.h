@@ -13,6 +13,8 @@ void initial_mode_switch_asm(tcb_t tcb);
 void save_context(tcb_t *tcb);
 void restore_context(tcb_t *tcb);
 
+uint32_t context_switch(uint32_t old_esp, int target_tid);
+
 
 #endif /* _DISPATCHER_H_ */
 

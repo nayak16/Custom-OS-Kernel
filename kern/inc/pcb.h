@@ -11,7 +11,7 @@
 #include <frame_manager.h>
 
 typedef struct pcb{
-    int pid;
+    int id;
     uint32_t stack_top;
 
     int argc;

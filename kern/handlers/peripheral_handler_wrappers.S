@@ -12,10 +12,20 @@ timer_handler:
 .globl keyboard_handler
 
 keyboard_handler:
-    // Save Registers
+    // Save Register Context
     pusha
+    push %ds
+    push %es
+    push %fs
+    push %gs
+    // Pass args
+    push %esp
     // Call C handler
     call c_keyboard_handler
     // Restore Registers
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
     popa
     iret

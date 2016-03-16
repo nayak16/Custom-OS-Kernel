@@ -24,6 +24,6 @@ int syscall_gettid_handler(void);
 
 void timer_handler(void);
 
-void keyboard_handler(void);
+void keyboard_handler(uint32_t old_esp);
 
 #endif /* IDT_HANDLERS_H_ */
