@@ -6,6 +6,14 @@
  *  @bug No known bugs.
  */
 
+#include <kern_internals.h>
+#include <scheduler.h>
+
 int syscall_gettid_c_handler(){
-    return 42;
+    int cur_tid;
+    if(scheduler_get_current_tid(&sched, &cur_tid) < 0) {
+        return -1;
+    }
+    return cur_tid;
 }
+

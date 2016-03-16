@@ -7,15 +7,16 @@
  */
 
 /* Includes */
+#include <syscall.h>
 #include <simics.h>    /* for lprintf */
 #include <report.h>
 
 
 /* Main */
 int main() {
-
+    //int my_tid = gettid();
     while(1){
-        lprintf("Donkey says hello!");
+        //lprintf("Hello my tid is %d", my_tid);
     }
 
 }

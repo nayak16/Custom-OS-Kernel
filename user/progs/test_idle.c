@@ -8,10 +8,12 @@
  */
 
 #include <simics.h>
+#include <syscall.h>
 
 int main()
 {
+    //int mytid = gettid();
     while (1) {
-        lprintf("Idle is chilling");
+        //lprintf("Hello from thread %d", mytid);
     }
 }

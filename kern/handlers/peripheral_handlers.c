@@ -20,7 +20,6 @@ void c_timer_handler(void) {
 
 uint32_t c_keyboard_handler(uint32_t old_esp) {
     lprintf("Key Pressed!");
-    MAGIC_BREAK;
     uint32_t new_esp = context_switch(old_esp, -1);
     /*char c = */inb(KEYBOARD_PORT);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);

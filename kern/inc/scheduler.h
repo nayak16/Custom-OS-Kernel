@@ -34,5 +34,7 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
 
 int scheduler_save_running_tcb(scheduler_t *sched, uint32_t old_esp);
 
+int scheduler_get_current_tid(scheduler_t *sched, int *tidp);
+
 #endif /* _SCHEDULER_H_ */
 

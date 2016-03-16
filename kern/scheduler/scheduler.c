@@ -34,6 +34,11 @@ int scheduler_init(scheduler_t *sched){
 }
 
 
+int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
+    *tidp = sched->cur_tid;
+    return 0;
+}
+
 int scheduler_add_process(scheduler_t *sched, pcb_t *pcb){
     if (sched == NULL) return -1;
     /* Assign next pid */
