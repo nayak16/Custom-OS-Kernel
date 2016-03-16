@@ -11,6 +11,7 @@
 
 #include <scheduler.h>
 #include <frame_manager.h>
+#include <mutex.h>
 
 /**
  * @brief Extern of physical memory manager for the kernel
@@ -21,6 +22,11 @@ extern frame_manager_t fm;
  * @brief Extern of global scheduler that manages all kernel PCBs and TCBs
  */
 extern scheduler_t sched;
+
+/**
+ * @brief Global mutex for the console
+ */
+extern mutex_t console_lock;
 
 /**
  * @brief atomically exchanges val into lock and returns previous value of lock

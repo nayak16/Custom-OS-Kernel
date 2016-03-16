@@ -47,6 +47,8 @@ scheduler_t sched;
 
 frame_manager_t fm;
 
+mutex_t console_lock;
+
 /** @brief Kernel entrypoint.
  *
  *  This is the entrypoint for the kernel.
@@ -70,6 +72,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* init frame manager */
     fm_init(&fm);
+
+    /* init console mutex */
+    mutex_init(&console_lock);
 
     /* initialize idle_pcb */
     pcb_t idle_pcb;

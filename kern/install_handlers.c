@@ -111,6 +111,9 @@ int install_syscall_handlers(){
         FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, GETTID_INT, FLAG_TRAP_GATE);
     idt_install_entry((uint32_t)syscall_fork_handler, SEGSEL_KERNEL_CS,
         FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, FORK_INT, FLAG_TRAP_GATE);
+    idt_install_entry((uint32_t)syscall_print_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, PRINT_INT, FLAG_TRAP_GATE);
+
     return 0;
 }
 

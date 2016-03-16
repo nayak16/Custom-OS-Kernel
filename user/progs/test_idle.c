@@ -12,8 +12,7 @@
 
 int main()
 {
-    //int mytid = gettid();
     while (1) {
-        //lprintf("Hello from thread %d", mytid);
+        print(11 ,"Hello world");
     }
 }

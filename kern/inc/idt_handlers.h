@@ -24,6 +24,10 @@ int syscall_gettid_handler(void);
 
 int syscall_fork_handler(void);
 
+/* Console IO handlers */
+
+int syscall_print_handler(int len, char *buf);
+
 /* Hardware handlers */
 
 void timer_handler(void);
