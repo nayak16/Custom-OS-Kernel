@@ -1,3 +1,4 @@
+/* TODO: share wrapper macro between this file and exception handler */
 .macro wrapper func
     pushl %ecx
     pushl %edx
