@@ -15,8 +15,9 @@
 /* Main */
 int main() {
     //int my_tid = gettid();
+    int j = 5;
     while(1){
-        //lprintf("Hello my tid is %d", my_tid);
+        j++;
     }
 
 }
