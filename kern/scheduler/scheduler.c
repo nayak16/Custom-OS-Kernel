@@ -83,8 +83,8 @@ int scheduler_save_running_tcb(scheduler_t *sched, uint32_t old_esp) {
                          sched->cur_tid, (void**)&tcb) < 0) {
             return -1;
         }
-        /* Save esp */
-        tcb->esp = old_esp;
+        /* Save k_stack esp */
+        tcb->k_stack = (void *) old_esp;
 
         /* Put current tid back into runnable pool */
         if(queue_enq(&(sched->runnable_pool), (void*) sched->cur_tid) < 0) {
