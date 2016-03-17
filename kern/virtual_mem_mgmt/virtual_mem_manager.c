@@ -127,7 +127,7 @@ int vmm_deep_copy_page(void **target_pte, void *v_addr, void **new_phys_addr){
     /* remap our virtual address to new physical address */
     *target_pte = (void *)((uint32_t)(*new_phys_addr) | flags);
     /* flush cached mappings for our virtual address */
-    flush_tlb((uint32_t)new_phys_addr);
+    flush_tlb((uint32_t)v_addr);
     /* copy contents into new phys page */
     memcpy(v_addr, buffer, PAGE_SIZE);
     /* restore mapping */
