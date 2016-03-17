@@ -18,11 +18,17 @@
 
 #include <simics.h>
 
+int is_started(scheduler_t *sched) {
+    return sched->cur_tid >= 0;
+}
+
 int scheduler_init(scheduler_t *sched){
     if (sched == NULL) return -1;
     sched->next_tid = 0;
     sched->next_pid = 0;
     sched->cur_tid = -1;
+    sched->cur_pid = -1;
+
     if(queue_init(&(sched->runnable_pool)) < 0
             || queue_init(&(sched->waiting_pool)) < 0) {
         return -1;
@@ -39,7 +45,33 @@ int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
     return 0;
 }
 
-int scheduler_add_process(scheduler_t *sched, pcb_t *pcb){
+int scheduler_copy_current_pcb(scheduler_t *sched, uint32_t *regs) {
+
+    if (sched == NULL) return -1;
+
+    /* Find current pcb in pool */
+    pcb_t *cur_pcb;
+    if (cb_pool_get_cb(&(sched->process_pool),
+                        sched->cur_tid, (void **)(&cur_pcb)) < 0) {
+        return -2;
+    }
+    /* Create copy of current pcb with duplicate address space */
+    pcb_t duplicate_pcb;
+    if (pcb_copy(cur_pcb, &duplicate_pcb) < 0) {
+        return -3;
+    }
+
+    int tid;
+    /* Add duplicate to scheduler runnable queue */
+    if((tid = scheduler_add_process(sched, &duplicate_pcb, regs)) < 0) {
+        return -4;
+    }
+
+    return tid;
+
+}
+
+int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     if (sched == NULL) return -1;
     /* Assign next pid */
     pcb->id = sched->next_pid++;
@@ -51,7 +83,7 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb){
     sched->next_tid++;
 
     tcb_init(tcb, tid, pcb->id,
-             (uint32_t *)pcb->stack_top, pcb->entry_point);
+             (uint32_t *)pcb->stack_top, pcb->entry_point, regs);
 
     /* Add pcb and tcb to respective pools */
     if (cb_pool_add_cb(&(sched->thr_pool), (void*)tcb) < 0
@@ -63,7 +95,7 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb){
     if (queue_enq(&(sched->runnable_pool), (void *) tid) < 0) return -4;
 
 
-    return 0;
+    return tid;
 }
 
 int scheduler_start(scheduler_t *sched){
@@ -76,7 +108,7 @@ int scheduler_start(scheduler_t *sched){
 }
 
 int scheduler_save_running_tcb(scheduler_t *sched, uint32_t old_esp) {
-    if (sched->cur_tid >= 0) {
+    if (is_started(sched)) {
         /* Get current tcb */
         tcb_t *tcb;
         if(cb_pool_get_cb(&(sched->thr_pool),
@@ -100,6 +132,10 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
     /* Set new current running tid */
     sched->cur_tid = tcb->id;
 
+    /* Set new current running pid */
+    sched->cur_pid = tcb->pid;
+
+
     /* Save new esp  */
     *new_esp = (uint32_t)tcb->k_stack;
 
@@ -118,7 +154,6 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
 }
 
 
-
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
 
     int tid;
@@ -135,6 +170,3 @@ int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
     return 0;
 }
 
-int scheduler_is_started(scheduler_t *sched) {
-    return sched->cur_tid >= 0;
-}

@@ -61,7 +61,11 @@ syscall_gettid_handler:
 
 .globl syscall_fork_handler
 syscall_fork_handler:
-    no_arg_syscall_wrapper syscall_fork_c_handler
+    save_context
+    pushl %esp /* push stack pointer argument*/
+    call syscall_fork_c_handler /* call c handler with 1 argument */
+    addl $4, %esp /* skip argument */
+    restore_context
 
 .globl syscall_print_handler
 syscall_print_handler:

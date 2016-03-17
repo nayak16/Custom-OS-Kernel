@@ -102,7 +102,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* load idle program */
     pcb_load_prog(&idle_pcb, "test_idle");
     /* add idle process to scheduler */
-    scheduler_add_process(&sched, &idle_pcb);
+    scheduler_add_process(&sched, &idle_pcb, NULL);
 
     /* Set next pdbr */
     set_pdbr((uint32_t) pd_get_base_addr(&work_pcb.pd));
@@ -110,7 +110,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     pcb_load_prog(&work_pcb, "test_cs");
 
     /* add work process to scheduler */
-    scheduler_add_process(&sched, &work_pcb);
+    scheduler_add_process(&sched, &work_pcb, NULL);
 
     set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb.pd));
 

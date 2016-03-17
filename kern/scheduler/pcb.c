@@ -53,7 +53,18 @@ int pcb_destroy(pcb_t *pcb){
     return 0;
 }
 
-int pcb_copy(pcb_t *source_pcb, pcb_t **dest_pcbp, unsigned long entry_point) {
+int pcb_copy(pcb_t *source_pcb, pcb_t *dest_pcb) {
+    if(source_pcb == NULL || dest_pcb == NULL) return -1;
+
+    /* Initialize dest pcb */
+    if(pcb_init(dest_pcb) < 0) {
+        return -2;
+    }
+
+    /* Copy address space */
+    if(pd_copy(&(source_pcb->pd), &(dest_pcb->pd)) < 0) {
+        return -3;
+    }
 
     return 0;
 }

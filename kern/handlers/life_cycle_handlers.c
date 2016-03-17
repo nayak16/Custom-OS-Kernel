@@ -6,8 +6,16 @@
  *  @bug No known bugs.
  */
 
-// TODO: Pass in next eip ?
-int syscall_fork_c_handler(){
-    return 42;
+#include <kern_internals.h>
+
+int syscall_fork_c_handler(uint32_t *saved_regs){
+
+
+    /* Copy current pcb */
+    int new_tid = scheduler_copy_current_pcb(&sched, saved_regs);
+
+    // TODO: Flush TLB mappings using INVLPG
+
+    return new_tid;
 }
 

@@ -19,6 +19,8 @@ void enable_pge(void);
 
 uint32_t get_user_eflags(void);
 
+void flush_tlb(uint32_t mem_addr);
+
 #endif /* SPECIAL_REG_CNTRL_H_ */
 
 
