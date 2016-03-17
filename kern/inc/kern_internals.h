@@ -11,6 +11,7 @@
 
 #include <scheduler.h>
 #include <frame_manager.h>
+#include <mutex.h>
 
 /**
  * @brief Extern of physical memory manager for the kernel
@@ -26,6 +27,12 @@ extern scheduler_t sched;
  * @brief atomically exchanges val into lock and returns previous value of lock
  */
 int xchng(int* lock, int val);
+
+/**
+ * @brief lock to protect heap (used in malloc, free, etc)
+ *
+ */
+extern mutex_t heap_lock;
 
 #endif /* _KERN_INTERNALS_H_ */
 

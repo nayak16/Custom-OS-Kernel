@@ -34,8 +34,8 @@
 
 int pcb_init(pcb_t *pcb){
     if (pcb == NULL) return -1;
-    //TODO: how to choose pid
-    pcb->id = 1;
+    /* Temp value before being added to scheduler */
+    pcb->id = -1;
 
     pd_init(&(pcb->pd));
     pd_initialize_kernel(&(pcb->pd));
@@ -51,6 +51,11 @@ int pcb_set_running(pcb_t *pcb){
 int pcb_destroy(pcb_t *pcb){
     panic("pcb_destroy: Not yet implemented");
     if (pcb == NULL) return -1;
+    return 0;
+}
+
+int pcb_copy(pcb_t *source_pcb, pcb_t **dest_pcbp, unsigned long entry_point) {
+
     return 0;
 }
 
