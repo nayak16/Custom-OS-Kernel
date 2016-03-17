@@ -38,7 +38,6 @@ int pcb_init(pcb_t *pcb){
     pcb->id = 1;
 
     pd_init(&(pcb->pd));
-    pd_initialize_kernel(&(pcb->pd));
     return 0;
 }
 

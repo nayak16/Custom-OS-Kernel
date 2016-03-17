@@ -27,8 +27,6 @@
 
 #include <simics.h>
 
-#define NTH_BIT(v,n) (((uint32_t)v >> n) & 1)
-
 #define NUM_ENTRIES (PAGE_SIZE/sizeof(uint32_t))
 
 #define DIV_ROUND_UP(num, den) ((num + den -1) / den)
@@ -44,11 +42,11 @@ int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
     /* get the value stored in the correct page directory entry*/
     uint32_t page_directory_value = pd->directory[page_directory_i];
     uint32_t *page_table_addr;
-    if (NTH_BIT(page_directory_value, 0) == 0){
+    if (pd_entry_present(page_directory_value) != 0){
         /* page table does not exist, create it and assign it to pd */
-        page_table_addr = memalign(PAGE_SIZE, sizeof(uint32_t) * NUM_ENTRIES);
-        memset(page_table_addr, 0, sizeof(uint32_t) * NUM_ENTRIES);
+        page_table_addr = memalign(PAGE_SIZE, PT_SIZE);
         if (page_table_addr == NULL) return -1;
+        memset(page_table_addr, 0, PT_SIZE);
         pd->directory[page_directory_i] = ((uint32_t)page_table_addr | pde_flags);
     } else {
         /* get address of page table from page directory */
@@ -61,16 +59,13 @@ int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
 
 
 int is_sufficient_memory(mem_section_t *secs, uint32_t num_secs) {
-
     int total_pages = 0;
     int s;
     for (s = 0 ; s < num_secs ; s++) {
         int n_pages = DIV_ROUND_UP(secs[s].len, PAGE_SIZE);
         total_pages += n_pages;
     }
-
     return total_pages <= fm_num_free_frames(&fm);
-
 }
 
 int vmm_mem_alloc(page_directory_t *pd,
