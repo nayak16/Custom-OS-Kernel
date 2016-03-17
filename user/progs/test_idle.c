@@ -12,9 +12,7 @@
 
 int main()
 {
-    //int mytid = gettid();
-    int i = 42;
     while (1) {
-        i++;
+        print(11 ,"Hello world");
     }
 }
