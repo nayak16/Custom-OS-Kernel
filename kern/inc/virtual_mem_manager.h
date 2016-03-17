@@ -26,6 +26,8 @@ int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
 int vmm_mem_alloc(page_directory_t *pd,
                      mem_section_t *secs, uint32_t num_secs);
 
+int vmm_deep_copy_page(void **target_pte, void **new_phys_addr);
+
 #endif /* _VIRTUAL_MEM_MANAGER_H_ */
 
 

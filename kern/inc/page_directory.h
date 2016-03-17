@@ -31,6 +31,7 @@ typedef struct page_directory {
 
 int pd_init(page_directory_t *pd);
 int pd_entry_present(uint32_t v);
+int pd_copy(page_directory_t *pd_dest, page_directory_t *pd_src);
 void *pd_get_base_addr(page_directory_t *pd);
 #endif /* _PAGE_DIRECTORY_H_ */
 

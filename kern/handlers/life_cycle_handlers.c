@@ -7,5 +7,5 @@
  */
 
 int syscall_fork_c_handler(){
-    return 42;
+    return 0;
 }
