@@ -27,6 +27,9 @@
 
 #include <simics.h>
 
+/* access to flush_tlb */
+#include <special_reg_cntrl.h>
+
 #define NUM_ENTRIES (PAGE_SIZE/sizeof(uint32_t))
 
 #define DIV_ROUND_UP(num, den) ((num + den -1) / den)
@@ -117,15 +120,20 @@ int vmm_deep_copy_page(void **target_pte, void *v_addr, void **new_phys_addr){
     if (buffer == NULL) return -2;
     /* original page table entry */
     void *original_pte = *target_pte;
+    uint32_t flags = ((uint32_t)original_pte & 0xFFF);
     /* target virtual address */
     memcpy(buffer, v_addr, PAGE_SIZE);
     if (fm_alloc(&fm, new_phys_addr) < 0) return -3;
     /* remap our virtual address to new physical address */
-    *target_pte = *new_phys_addr;
+    *target_pte = (void *)((uint32_t)(*new_phys_addr) | flags);
+    /* flush cached mappings for our virtual address */
+    flush_tlb((uint32_t)new_phys_addr);
     /* copy contents into new phys page */
     memcpy(v_addr, buffer, PAGE_SIZE);
     /* restore mapping */
     *target_pte = original_pte;
+    /* flush out any false mappings */
+    flush_tlb((uint32_t)v_addr);
     free(buffer);
     return 0;
 }

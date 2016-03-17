@@ -79,7 +79,7 @@ int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i){
         if (pt_entry_present(entry) == 0){
             void *p_addr;
             void *v_addr = get_page_address(pd_i, i);
-            vmm_deep_copy_page((void **)&entry, v_addr ,&p_addr);
+            vmm_deep_copy_page((void **)&(pt_src[i]), v_addr ,&p_addr);
             pt_dest[i] = (uint32_t)p_addr | flags;
         }
     }
