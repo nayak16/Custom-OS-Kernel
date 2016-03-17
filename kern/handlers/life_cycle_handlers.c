@@ -6,6 +6,8 @@
  *  @bug No known bugs.
  */
 
+// TODO: Pass in next eip ?
 int syscall_fork_c_handler(){
-    return 0;
+    return 42;
 }
+

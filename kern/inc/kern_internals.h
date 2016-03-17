@@ -33,6 +33,12 @@ extern mutex_t console_lock;
  */
 int xchng(int* lock, int val);
 
+/**
+ * @brief lock to protect heap (used in malloc, free, etc)
+ *
+ */
+extern mutex_t heap_lock;
+
 #endif /* _KERN_INTERNALS_H_ */
 
 

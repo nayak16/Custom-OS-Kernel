@@ -33,6 +33,7 @@
 /* control for special register wrapper */
 #include <special_reg_cntrl.h>
 #include <scheduler.h>
+#include <mutex.h>
 
 /* Kernel global variables and internals */
 #include <kern_internals.h>
@@ -44,6 +45,8 @@
 
 
 scheduler_t sched;
+
+mutex_t heap_lock;
 
 frame_manager_t fm;
 
@@ -69,6 +72,10 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     install_exception_handlers();
 
     clear_console();
+
+    /* Initialize global heap lock */
+    mutex_init(&heap_lock);
+
     /* init frame manager */
     fm_init(&fm);
 
