@@ -24,6 +24,6 @@ typedef struct pcb{
 int pcb_init(pcb_t *pcb);
 int pcb_set_running(pcb_t *pcb);
 int pcb_destroy(pcb_t *pcb);
-int pcb_load_prog(pcb_t *pcb, frame_manager_t *fm, const char *filename);
+int pcb_load_prog(pcb_t *pcb, const char *filename);
 
 #endif /* _PCB_T_H_ */

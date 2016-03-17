@@ -24,8 +24,8 @@
 
 int getbytes( const char *filename, int offset, int size, char *buf );
 
-int load_elf_sections(simple_elf_t *elf, pcb_t *pcb, frame_manager_t *fm);
+int load_elf_sections(simple_elf_t *elf, pcb_t *pcb);
 
-int load_user_stack(frame_manager_t *fm, pcb_t *pcb);
+int load_user_stack(pcb_t *pcb);
 
 #endif /* _LOADER_H */

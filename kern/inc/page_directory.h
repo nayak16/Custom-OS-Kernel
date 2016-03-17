@@ -19,14 +19,19 @@
 #define WRITE_THROUGH_FLAG_BIT 3
 #define GLOBAL_FLAG_BIT 8
 
+#define PD_SIZE PAGE_SIZE
+#define PD_NUM_ENTRIES (PD_SIZE / sizeof(uint32_t))
+
+#define PT_SIZE PAGE_SIZE
+#define PT_NUM_ENTRIES (PT_SIZE / sizeof(uint32_t))
+
 typedef struct page_directory {
     uint32_t *directory;
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
+int pd_entry_present(uint32_t v);
 void *pd_get_base_addr(page_directory_t *pd);
-int pd_initialize_kernel();
-
 #endif /* _PAGE_DIRECTORY_H_ */
 
 
