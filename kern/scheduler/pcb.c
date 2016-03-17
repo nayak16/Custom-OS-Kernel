@@ -54,17 +54,17 @@ int pcb_destroy(pcb_t *pcb){
     return 0;
 }
 
-int pcb_load_prog(pcb_t *pcb, frame_manager_t *fm, const char *filename){
-    if (pcb == NULL || filename == NULL || fm == NULL) return -1;
+int pcb_load_prog(pcb_t *pcb, const char *filename){
+    if (pcb == NULL || filename == NULL) return -1;
     simple_elf_t elf;
     if (elf_check_header(filename) != ELF_SUCCESS) return -2;
     if (elf_load_helper(&elf, filename) != ELF_SUCCESS) return -3;
 
     /* Load elf sections into memory */
-    if (load_elf_sections(&elf, pcb, fm) < 0) return -4;
+    if (load_elf_sections(&elf, pcb) < 0) return -4;
 
     /* Load user stack into memory */
-    if (load_user_stack(fm, pcb) < 0) return -5;
+    if (load_user_stack(pcb) < 0) return -5;
 
     /* TODO: Change this to be actual args */
     pcb->argc = 0;

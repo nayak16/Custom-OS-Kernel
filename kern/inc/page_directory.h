@@ -25,8 +25,7 @@ typedef struct page_directory {
 
 int pd_init(page_directory_t *pd);
 void *pd_get_base_addr(page_directory_t *pd);
-int pd_initialize_kernel();
-
+int pd_initialize_kernel(page_directory_t *pd);
 #endif /* _PAGE_DIRECTORY_H_ */
 
 
