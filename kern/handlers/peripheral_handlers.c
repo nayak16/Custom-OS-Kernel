@@ -29,15 +29,18 @@ int readchar(void){
     return -1;
 }
 
-void c_timer_handler(void) {
+uint32_t c_timer_handler(uint32_t old_esp) {
+    uint32_t new_esp = context_switch(old_esp, -1);
+    outb(INT_CTL_PORT, INT_ACK_CURRENT);
+    return new_esp;
+}
 
-    // TODO: Save contextR(proc_char)
-    // Get next tcb
-    // TODO: Restore context or enter user mode for first time
+void c_keyboard_handler(){
+    inb(KEYBOARD_PORT);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
     return;
 }
-
+/* manual keyboard context switching code
 uint32_t c_keyboard_handler(uint32_t old_esp) {
     char aug_char = inb(KEYBOARD_PORT);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
@@ -48,4 +51,4 @@ uint32_t c_keyboard_handler(uint32_t old_esp) {
         return new_esp;
     }
     return old_esp;
-}
+} */

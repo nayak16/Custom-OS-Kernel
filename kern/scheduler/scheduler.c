@@ -141,9 +141,10 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
 
     /* Save new esp  */
     *new_esp = (uint32_t)tcb->k_stack;
+    lprintf("NEW_ESP: %x", (unsigned int)tcb->k_stack);
 
     /* Set new esp0 */
-    set_esp0((uint32_t)tcb->k_stack);
+    set_esp0((uint32_t)(tcb->k_stack) + 17*4);
 
     pcb_t *pcb;
     if (cb_pool_get_cb(&(sched->process_pool), tcb->pid, (void **)(&pcb)) < 0) {

@@ -100,7 +100,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     enable_paging();
 
     /* load idle program */
-    pcb_load_prog(&idle_pcb, "test_fork1");
+    pcb_load_prog(&idle_pcb, "test_cs");
     /* add idle process to scheduler */
     scheduler_add_process(&sched, &idle_pcb, NULL);
 
@@ -110,9 +110,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     scheduler_start(&sched); // enable intterupts
 
-    int i = 0;
     while (1) {
-        i++;
         continue;
     }
 

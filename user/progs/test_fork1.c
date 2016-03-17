@@ -13,7 +13,7 @@
 
 int main()
 {
-    int id = 1;
+    int id = fork();
     if (id == 0) {
         printf("Hello from child!");
         //id = fork();
@@ -21,6 +21,10 @@ int main()
         printf("Parent made child: %d", id);
     }
     while (1) {
-        printf("My id is %d\n", id);
+        printf("My tid: %d\n", id);
+        int i;
+        for (i = 0; i < 2000000; i++){
+            continue;
+        }
     }
 }

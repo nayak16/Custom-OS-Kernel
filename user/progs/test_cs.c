@@ -10,14 +10,14 @@
 #include <syscall.h>
 #include <simics.h>    /* for lprintf */
 #include <report.h>
-
+#include <stdio.h>
 
 /* Main */
 int main() {
-    //int my_tid = gettid();
     int j = 5;
     while(1){
         j++;
+        printf("j = %d\n", j);
     }
 
 }

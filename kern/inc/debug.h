@@ -11,7 +11,7 @@
 #include <page_directory.h>
 #include <elf/elf_410.h>
 
-void print_page_directory(page_directory_t *pd, int s, int l);
+void print_page_directory(page_directory_t *pd, int s, int l, int v);
 
 void print_control_regs(void);
 void translate_addr(page_directory_t *pd, uint32_t addr);

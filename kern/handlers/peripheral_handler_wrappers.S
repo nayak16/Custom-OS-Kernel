@@ -1,17 +1,17 @@
-.globl timer_handler
 
-timer_handler:
+
+.globl keyboard_handler
+keyboard_handler:
     // Save Registers
     pusha
     // Call C handler
-    call c_timer_handler
+    call c_keyboard_handler
     // Restore Registers
     popa
     iret
 
-.globl keyboard_handler
-
-keyboard_handler:
+.globl timer_handler
+timer_handler:
     // Save Register Context
     pusha
     push %ds
@@ -21,7 +21,7 @@ keyboard_handler:
     // Pass args
     push %esp
     // Call C handler
-    call c_keyboard_handler
+    call c_timer_handler
     movl %eax, %esp
     // Restore Registers
     pop %gs

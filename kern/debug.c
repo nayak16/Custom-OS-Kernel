@@ -24,21 +24,29 @@ void print_control_regs(void) {
 
 }
 
-void print_page_directory(page_directory_t *pd, int start, int len){
+void print_page_directory(page_directory_t *pd, int start, int len, int verbose){
     uint32_t *directory = pd->directory;
+    lprintf("----- Page Directory -----");
     lprintf("Page Directory Base Address: %p", directory);
-    int i;
-    for (i = start+len; i >= start; i--){
+    int i, j;
+    for (i = start+len-1; i >= start; i--){
         if ((directory[i] & 1) != 0){
-            lprintf("i:%d %p", i, (void *)directory[i]);
+            lprintf("PDE #%d <%p>", i, (void *)directory[i]);
             unsigned int *temp =
                 (unsigned int *)((unsigned int)directory[i] & MSB_20_MASK);
-            lprintf("-->[%x]", temp[1023]);
-            lprintf("-->[%x]", temp[1022]);
-            lprintf("   ....");
-            lprintf("-->[%x]", temp[2]);
-            lprintf("-->[%x]", temp[1]);
-            lprintf("-->[%x]", temp[0]);
+            if (verbose){
+                for (j = 1023; j >= 0; j--){
+                    lprintf("> PTE #%d : 0x%x", j, temp[j]);
+                }
+            } else {
+                lprintf("> PTE #1023 : 0x%x", temp[1023]);
+                lprintf("> PTE #1022 : 0x%x", temp[1022]);
+                lprintf("> PTE #1021 : 0x%x", temp[1021]);
+                lprintf("> ....");
+                lprintf("> PTE #0002 : 0x%x", temp[2]);
+                lprintf("> PTE #0001 : 0x%x", temp[1]);
+                lprintf("> PTE #0000 : 0x%x", temp[0]);
+            }
         }
     }
 }
