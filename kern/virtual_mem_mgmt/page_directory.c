@@ -77,7 +77,6 @@ int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i){
         uint32_t flags = entry & 0xFFF;
         /* copy over present mappings */
         if (pt_entry_present(entry) == 0){
-            MAGIC_BREAK;
             void *p_addr;
             void *v_addr = get_page_address(pd_i, i);
             vmm_deep_copy_page((void **)&entry, v_addr ,&p_addr);
