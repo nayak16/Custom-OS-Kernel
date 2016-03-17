@@ -109,21 +109,21 @@ int vmm_mem_alloc(page_directory_t *pd,
 }
 
 
-int vmm_deep_copy_page(void **target_pte, void **new_phys_addr){
-    if (target_pte == NULL || new_phys_addr == NULL) return -1;
+int vmm_deep_copy_page(void **target_pte, void *v_addr, void **new_phys_addr){
+    if (target_pte == NULL || v_addr == NULL || new_phys_addr == NULL)
+        return -1;
     /* allocate a new buffer to hold our page contents locally */
     void *buffer = malloc(PAGE_SIZE);
+    if (buffer == NULL) return -2;
     /* original page table entry */
     void *original_pte = *target_pte;
     /* target virtual address */
-    void *target_v_addr = (void *)((uint32_t)(original_pte) & ~0xFFF);
-    if (buffer == NULL) return -2;
-    memcpy(buffer, target_v_addr, PAGE_SIZE);
+    memcpy(buffer, v_addr, PAGE_SIZE);
     if (fm_alloc(&fm, new_phys_addr) < 0) return -3;
     /* remap our virtual address to new physical address */
     *target_pte = *new_phys_addr;
     /* copy contents into new phys page */
-    memcpy(target_v_addr, buffer, PAGE_SIZE);
+    memcpy(v_addr, buffer, PAGE_SIZE);
     /* restore mapping */
     *target_pte = original_pte;
     free(buffer);

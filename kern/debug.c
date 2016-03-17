@@ -29,9 +29,7 @@ void print_page_directory(page_directory_t *pd, int start, int len){
     lprintf("Page Directory Base Address: %p", directory);
     int i;
     for (i = start+len; i >= start; i--){
-        if ((directory[i] & 1) == 0){
-            lprintf("i:%d NOT PRESENT", i);
-        } else {
+        if ((directory[i] & 1) != 0){
             lprintf("i:%d %p", i, (void *)directory[i]);
             unsigned int *temp =
                 (unsigned int *)((unsigned int)directory[i] & MSB_20_MASK);
