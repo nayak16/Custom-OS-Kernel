@@ -5,7 +5,6 @@
     pushl %ebp
     pushl %esi
     pushl %edi
-    pushl %ss
     pushl %ds
     pushl %es
     pushl %fs
@@ -17,7 +16,6 @@
     popl %fs
     popl %es
     popl %ds
-    popl %ss
     popl %edi
     popl %esi
     popl %ebp

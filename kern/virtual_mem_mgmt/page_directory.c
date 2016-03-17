@@ -87,7 +87,7 @@ int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i){
 }
 
 int pd_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
-    /* TODO: handle errors */
+    if (pd_dest == NULL || pd_src == NULL) return -1;
     /* copy the upper level page directory */
     uint32_t i;
     /* copy over non-kernel space */

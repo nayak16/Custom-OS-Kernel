@@ -34,17 +34,17 @@ typedef struct tcb{
 } tcb_t;
 */
 
-#define SS_IDX 15
-#define ESP_IDX 14
-#define EFLAGS_IDX 13
-#define CS_IDX 12
-#define EIP_IDX 11
-#define ECX_IDX 10
-#define EDX_IDX 9
-#define EBX_IDX 8
-#define EBP_IDX 7
-#define ESI_IDX 6
-#define EDI_IDX 5
+#define SS_IDX 14
+#define ESP_IDX 13
+#define EFLAGS_IDX 12
+#define CS_IDX 11
+#define EIP_IDX 10
+#define ECX_IDX 9
+#define EDX_IDX 8
+#define EBX_IDX 7
+#define EBP_IDX 6
+#define ESI_IDX 5
+#define EDI_IDX 4
 #define DS_IDX 3
 #define ES_IDX 2
 #define FS_IDX 1

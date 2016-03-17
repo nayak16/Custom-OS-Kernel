@@ -23,9 +23,9 @@
 int syscall_print_c_handler(int len, char *buf){
     if (buf == NULL) return -1;
     if (len >= MAX_SYSCALL_PRINT_LEN || len < 0) return -2;
-    mutex_lock(&console_lock);
+    //mutex_lock(&console_lock);
     putbytes(buf, len);
-    mutex_unlock(&console_lock);
+    //mutex_unlock(&console_lock);
     return 0;
 }
 

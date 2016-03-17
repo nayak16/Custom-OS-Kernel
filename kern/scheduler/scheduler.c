@@ -56,14 +56,17 @@ int scheduler_copy_current_pcb(scheduler_t *sched, uint32_t *regs) {
         return -2;
     }
     /* Create copy of current pcb with duplicate address space */
-    pcb_t duplicate_pcb;
-    if (pcb_copy(cur_pcb, &duplicate_pcb) < 0) {
+    pcb_t *duplicate_pcb = malloc(sizeof(pcb_t));
+    if(duplicate_pcb == NULL) return -5;
+    if (pcb_init(duplicate_pcb) < 0) return -6;
+
+    if (pcb_copy(duplicate_pcb, cur_pcb) < 0) {
         return -3;
     }
 
     int tid;
     /* Add duplicate to scheduler runnable queue */
-    if((tid = scheduler_add_process(sched, &duplicate_pcb, regs)) < 0) {
+    if((tid = scheduler_add_process(sched, duplicate_pcb, regs)) < 0) {
         return -4;
     }
 
