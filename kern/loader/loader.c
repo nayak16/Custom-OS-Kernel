@@ -63,11 +63,11 @@ int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
     mem_section_t secs[NUM_ELF_SECTIONS];
 
     mem_section_init(&secs[0], elf->e_txtstart,
-                        elf->e_txtlen, NULL, USER_RO, USER_RO);
+                        elf->e_txtlen, NULL, USER_WR, USER_RO);
     mem_section_init(&secs[1], elf->e_datstart,
                         elf->e_datlen, NULL, USER_WR, USER_WR);
     mem_section_init(&secs[2], elf->e_rodatstart,
-                        elf->e_rodatlen, NULL, USER_RO, USER_RO);
+                        elf->e_rodatlen, NULL, USER_WR, USER_RO);
     mem_section_init(&secs[3], elf->e_bssstart,
                         elf->e_bsslen, NULL, USER_WR, USER_WR);
 
