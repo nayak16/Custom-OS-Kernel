@@ -14,7 +14,6 @@
 /* get_bytes */
 #include <loader.h>
 #include <mem_section.h>
-#include <virtual_mem_manager.h>
 
 
 /* PAGE_SIZE */
@@ -24,13 +23,6 @@
 
 #include <debug.h>
 #include <simics.h>
-
-/* TODO: Should this go here?? */
-#define DIVROUNDUP(num, den) ((num + den-1) / den)
-
-/* TODO: Should this go here?? */
-#define NUM_ELF_SECTIONS 4
-
 
 int pcb_init(pcb_t *pcb){
     if (pcb == NULL) return -1;

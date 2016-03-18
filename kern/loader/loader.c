@@ -15,7 +15,6 @@
 #include <constants.h>
 #include <pcb.h>
 #include <frame_manager.h>
-#include <virtual_mem_manager.h>
 #include <mem_section.h>
 
 #include <simics.h>
@@ -72,7 +71,7 @@ int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
                         elf->e_bsslen, NULL, USER_WR, USER_WR);
 
     /* Map all appropriate elf binary sections into user space */
-    if (vmm_mem_alloc(&(pcb->pd), secs, NUM_ELF_SECTIONS) < 0) return -1;
+    if (pd_map_sections(&(pcb->pd), secs, NUM_ELF_SECTIONS) < 0) return -1;
 
     /* Fill in .text section */
     if (getbytes(elf->e_fname, elf->e_txtoff, elf->e_txtlen,
@@ -105,7 +104,7 @@ int load_user_stack(pcb_t *pcb) {
                         USER_STACK_SIZE, NULL, USER_WR, USER_WR);
 
     /* Allocate and map space for stack in virtual memory */
-    if (vmm_mem_alloc(&(pcb->pd), stack_secs, 1) < 0) return -2;
+    if (pd_map_sections(&(pcb->pd), stack_secs, 1) < 0) return -2;
 
     /* Setup user stack for entry point */
     uint32_t *stack_top = (uint32_t *) USER_STACK_TOP;

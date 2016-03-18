@@ -11,7 +11,6 @@
 
 #include <page_directory.h>
 #include <constants.h>
-#include <virtual_mem_manager.h>
 
 #include <simics.h>
 
@@ -57,7 +56,7 @@ void translate_addr(page_directory_t *pd, unsigned int addr) {
     unsigned int top_10 = addr & 0xffc00000;
     unsigned int middle_10 = addr & 0x003ff000;
     unsigned int pde = top_10 / PAGE_SIZE;
-    unsigned int pte = middle_10 % NUM_ENTRIES;
+    unsigned int pte = middle_10 % 1024; //NUM_ENTRIES removed
     lprintf("PDE: 0x%x", pde);
     lprintf("PTE: 0x%x", pte);
     if ((dir[pte] & 1) == 0) {
