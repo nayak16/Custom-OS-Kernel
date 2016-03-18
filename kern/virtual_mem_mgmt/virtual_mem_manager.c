@@ -93,7 +93,7 @@ int vmm_mem_alloc(page_directory_t *pd,
 
             if (vmm_create_mapping(cur_addr >> PAGE_SHIFT,
                         ((uint32_t)p_addr) >> PAGE_SHIFT,
-                        ms.pde_f, ms.pte_f, pd) < 0) return -1;
+                        ms.pte_f, ms.pde_f, pd) < 0) return -1;
 
             /* note: len is unsigned so we must check for underflow */
             if (len < PAGE_SIZE) {

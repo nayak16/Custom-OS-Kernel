@@ -12,9 +12,10 @@
 #include <report.h>
 #include <stdio.h>
 
+
+int j = 5;
 /* Main */
 int main() {
-    int j = 5;
     while(1){
         j++;
         printf("j = %d\n", j);
