@@ -63,13 +63,13 @@ int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
     mem_section_t secs[NUM_ELF_SECTIONS];
 
     mem_section_init(&secs[0], elf->e_txtstart,
-                        elf->e_txtlen, NULL, USER_RO, USER_RO);
+                        elf->e_txtlen, USER_RO, USER_RO);
     mem_section_init(&secs[1], elf->e_datstart,
-                        elf->e_datlen, NULL, USER_WR, USER_WR);
+                        elf->e_datlen, USER_WR, USER_WR);
     mem_section_init(&secs[2], elf->e_rodatstart,
-                        elf->e_rodatlen, NULL, USER_RO, USER_RO);
+                        elf->e_rodatlen, USER_RO, USER_RO);
     mem_section_init(&secs[3], elf->e_bssstart,
-                        elf->e_bsslen, NULL, USER_WR, USER_WR);
+                        elf->e_bsslen, USER_WR, USER_WR);
 
     /* Map all appropriate elf binary sections into user space */
     if (vmm_mem_alloc(&(pcb->pd), secs, NUM_ELF_SECTIONS) < 0) return -1;
@@ -102,7 +102,7 @@ int load_user_stack(pcb_t *pcb) {
     mem_section_t stack_secs[1];
 
     mem_section_init(&stack_secs[0], USER_STACK_BOTTOM,
-                        USER_STACK_SIZE, NULL, USER_WR, USER_WR);
+                        USER_STACK_SIZE, USER_WR, USER_WR);
 
     /* Allocate and map space for stack in virtual memory */
     if (vmm_mem_alloc(&(pcb->pd), stack_secs, 1) < 0) return -2;

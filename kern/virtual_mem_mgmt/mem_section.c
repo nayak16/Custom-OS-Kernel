@@ -15,12 +15,11 @@ typedef struct mem_section_t {
     void *src_data;
 } mem_section_t; */
 
-int mem_section_init(mem_section_t *ms, uint32_t addr, uint32_t len, void *src,
+int mem_section_init(mem_section_t *ms, uint32_t addr, uint32_t len,
                      uint32_t pde_flags, uint32_t pte_flags) {
     if (ms == NULL) return -1;
     ms->v_addr_start = addr;
     ms->len = len;
-    ms->src_data = src;
     ms->pde_f = pde_flags;
     ms->pte_f = pte_flags;
 

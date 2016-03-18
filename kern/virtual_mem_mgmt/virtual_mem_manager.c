@@ -21,6 +21,7 @@
 #include <page_directory.h>
 #include <frame_manager.h>
 #include <mem_section.h>
+#include <virtual_mem_manager.h>
 
 /* access to frame manager */
 #include <kern_internals.h>
@@ -60,55 +61,94 @@ int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
     return 0;
 }
 
-
-int is_sufficient_memory(mem_section_t *secs, uint32_t num_secs) {
-    int total_pages = 0;
-    int s;
-    for (s = 0 ; s < num_secs ; s++) {
-        int n_pages = DIV_ROUND_UP(secs[s].len, PAGE_SIZE);
-        total_pages += n_pages;
+#define PAGE_ALIGN_UP(a) (PAGE_SIZE * DIV_ROUND_UP(a,PAGE_SIZE))
+#define PAGE_ALIGN_DOWN(a) (PAGE_SIZE * (a/PAGE_SIZE))
+int get_bounding_v_addr(mem_section_t *secs, uint32_t num_secs,
+        uint32_t *v_addr_low, uint32_t *v_addr_high){
+    if (secs == NULL || num_secs <= 0) return -1;
+    uint32_t i, low, high;
+    low = 0xFFFFFFFF;
+    high = 0;
+    for (i=0; i<num_secs; i++){
+        uint32_t c_low = secs[i].v_addr_start;
+        uint32_t c_high = c_low + secs[i].len;
+        if (c_low < low) low = c_low;
+        if (c_high > high) high = c_high;
     }
-    return total_pages <= fm_num_free_frames(&fm);
+    if (high < low) return -1;
+    /* save results */
+    *v_addr_low = low;
+    *v_addr_high = high;
+    return 0;
+}
+
+
+int get_bounding_section(mem_section_t *secs, uint32_t num_secs,
+        uint32_t v_addr_low, uint32_t v_addr_high,
+        mem_section_t *ms){
+    if (secs == NULL || num_secs <= 0 || ms == NULL) return -1;
+    int i;
+    for (i = 0; i < num_secs; i++){
+        uint32_t s_low = secs[i].v_addr_start;
+        uint32_t s_high = s_low + secs[i].len;
+        if ((s_low <= v_addr_low && v_addr_low < s_high) ||
+            (s_low < v_addr_high && v_addr_high <= s_high)){
+            *ms = secs[i];
+            return 0;
+        }
+    }
+    // no matches found
+    return 1;
 }
 
 int vmm_mem_alloc(page_directory_t *pd,
                        mem_section_t *secs, uint32_t num_secs) {
+    uint32_t v_addr_low, v_addr_high, num_pages;
+    /* gets the highest and lowest virtual address that need to be mapped */
+    if (get_bounding_v_addr(secs, num_secs, &v_addr_low, &v_addr_high) < 0)
+        return -1;
 
-    if(!is_sufficient_memory(secs, num_secs)) return -1;
+    /* align to page */
+    v_addr_high = PAGE_ALIGN_UP(v_addr_high);
+    v_addr_low = PAGE_ALIGN_DOWN(v_addr_low);
 
-    int s;
-    /* Loop through all memory sections to allocate */
-    for (s = 0 ; s < num_secs ; s++) {
-        mem_section_t ms = secs[s];
+    /* number of pages needed to map memory sections */
+    num_pages = (v_addr_high - v_addr_low)/PAGE_SIZE;
 
-        uint32_t len = ms.len;
-        /* cur_addr must be page aligned */
-        uint32_t cur_addr = ms.v_addr_start;
-        /* Allocate and map each page */
-        while(len > 0) {
-            //TODO: handle for errors (revert)
-            void *p_addr;
-            if (fm_alloc(&fm, &p_addr) < 0) //Should never happen
-                return -2;
+    /* if not enough frames avaliable to map area */
+    if (num_pages > fm_num_free_frames(&fm)) return -2;
 
-            if (vmm_create_mapping(cur_addr >> PAGE_SHIFT,
-                        ((uint32_t)p_addr) >> PAGE_SHIFT,
-                        ms.pde_f, ms.pte_f, pd) < 0) return -1;
+    int i;
+    uint32_t v_addr = v_addr_low;
+    MAGIC_BREAK;
+    for (i = 0; i < num_pages; i++){
+        void *p_addr;
+        mem_section_t ms;
 
-            /* note: len is unsigned so we must check for underflow */
-            if (len < PAGE_SIZE) {
-                break;
-            }
-            cur_addr += PAGE_SIZE;
-            len -= PAGE_SIZE;
+        /* get a new physical frame */
+        if (fm_alloc(&fm, &p_addr) < 0) return -2;
+
+        /* get corresponding section to that page */
+        int status = get_bounding_section(secs, num_secs,
+                v_addr, v_addr+PAGE_SIZE, &ms);
+        if (status == -1){
+            /* some error occured */
+            return -1;
+        } else if (status == 1){
+            /* no matching sections found
+             * use default flag values */
+            ms.pde_f = NEW_FLAGS(SET, SET, SET, UNSET);
+            ms.pde_f = NEW_FLAGS(SET, SET, SET, DONT_CARE);
         }
-        /* Copy over contents of section into newly mapped virtual address */
-        if (ms.src_data != NULL){
-            memcpy((void*) ms.v_addr_start, ms.src_data, ms.len);
-        }
+
+        /* create a mapping between virtual to phys */
+        vmm_create_mapping(v_addr >> PAGE_SHIFT,
+            ((uint32_t)p_addr) >> PAGE_SHIFT,
+            ms.pde_f, ms.pte_f, pd);
+
+        v_addr += PAGE_SIZE;
     }
     return 0;
-
 }
 
 
