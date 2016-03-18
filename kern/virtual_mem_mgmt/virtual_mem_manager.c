@@ -60,7 +60,22 @@ int vmm_create_mapping(uint32_t vpn, uint32_t ppn, uint32_t pte_flags,
     return 0;
 }
 
+int is_mapped(page_directory_t *pd, uint32_t v_addr) {
 
+    uint32_t vpn = v_addr >> PAGE_SHIFT;
+    uint32_t page_dir_i = (vpn >> 10) & 0x3FF;
+    uint32_t page_table_i = vpn & 0x3FF;
+    uint32_t page_dir_val = pd->directory[page_dir_i];
+    if( pd_entry_present(page_dir_val) != 0) {
+        return 0;
+    }
+    uint32_t *page_table_addr = (uint32_t *)(page_dir_val & MSB_20_MASK);
+    uint32_t pte = page_table_addr[page_table_i];
+    return pte & 0x1;
+
+}
+
+// TODO: Fix
 int is_sufficient_memory(mem_section_t *secs, uint32_t num_secs) {
     int total_pages = 0;
     int s;
@@ -70,6 +85,8 @@ int is_sufficient_memory(mem_section_t *secs, uint32_t num_secs) {
     }
     return total_pages <= fm_num_free_frames(&fm);
 }
+
+#define PAGE_ALIGN_UP(a) (PAGE_SIZE * DIV_ROUND_UP(a,PAGE_SIZE))
 
 int vmm_mem_alloc(page_directory_t *pd,
                        mem_section_t *secs, uint32_t num_secs) {
@@ -82,15 +99,24 @@ int vmm_mem_alloc(page_directory_t *pd,
         mem_section_t ms = secs[s];
 
         uint32_t len = ms.len;
-        /* cur_addr must be page aligned */
+        /* cur_addr must be page aligned <-- NOT TRUE */
         uint32_t cur_addr = ms.v_addr_start;
+
+        /* Check if already mapped */
+        while (is_mapped(pd, cur_addr)){
+            /* Increment up to unallocated page */
+            uint32_t page_aligned_up = PAGE_ALIGN_UP(cur_addr);
+            uint32_t shift = page_aligned_up - cur_addr;
+            cur_addr = page_aligned_up;
+            len = shift > len ? 0 : len - shift;
+        }
+
         /* Allocate and map each page */
         while(len > 0) {
             //TODO: handle for errors (revert)
             void *p_addr;
             if (fm_alloc(&fm, &p_addr) < 0) //Should never happen
                 return -2;
-
             if (vmm_create_mapping(cur_addr >> PAGE_SHIFT,
                         ((uint32_t)p_addr) >> PAGE_SHIFT,
                         ms.pte_f, ms.pde_f, pd) < 0) return -1;
