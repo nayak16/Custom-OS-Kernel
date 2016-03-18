@@ -14,13 +14,12 @@
 typedef struct mem_section_t {
     unsigned long v_addr_start;
     unsigned long len;
-    void *src_data;
     uint32_t pde_f;
     uint32_t pte_f;
 
 } mem_section_t;
 
 int mem_section_init(mem_section_t *ms, uint32_t addr,
-                     uint32_t len, void *src, uint32_t pde_f, uint32_t pte_f);
+                     uint32_t len, uint32_t pde_f, uint32_t pte_f);
 
 #endif /* _MEM_SECTION_H_ */
