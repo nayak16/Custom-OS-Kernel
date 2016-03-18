@@ -9,6 +9,17 @@
 #include <kern_internals.h>
 #include <malloc.h>
 
+/**
+ * @brief Implements the fork system call. Creates a new process
+ * from the invoking one copying its registers and duplicating address
+ * space
+ *
+ * @param saved_regs Array of all of invoking thread's registers
+ *
+ * @return tid of the newly created thread running the forked process
+ * if success, negative error code on error
+ *
+ */
 int syscall_fork_c_handler(uint32_t *saved_regs){
 
 
@@ -18,11 +29,12 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
         return -2;
     }
 
-    /* Create copy of current pcb with duplicate address space */
+    /* Allocate space for a duplicate pcb */
     pcb_t *duplicate_pcb = malloc(sizeof(pcb_t));
     if(duplicate_pcb == NULL) return -3;
     if (pcb_init(duplicate_pcb) < 0) return -4;
 
+    /* Create copy of current pcb with duplicate address space */
     if (pcb_copy(duplicate_pcb, cur_pcb) < 0) {
         return -5;
     }

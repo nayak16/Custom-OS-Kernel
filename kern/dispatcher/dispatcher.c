@@ -21,8 +21,8 @@ uint32_t context_switch(uint32_t old_esp, int target_tid) {
     uint32_t new_esp;
     if (target_tid < 0) {
 
-        /* Save old TCB */
-        if (scheduler_save_running_tcb(&sched, old_esp) < 0) {
+        /* Defer current TCB */
+        if (scheduler_defer_current_tcb(&sched, old_esp) < 0) {
             lprintf("Current tid tcb does not exist !!!");
             MAGIC_BREAK;
         }
