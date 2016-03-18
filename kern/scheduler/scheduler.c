@@ -45,32 +45,16 @@ int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
     return 0;
 }
 
-int scheduler_copy_current_pcb(scheduler_t *sched, uint32_t *regs) {
+int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb) {
 
     if (sched == NULL) return -1;
 
-    /* Find current pcb in pool */
-    pcb_t *cur_pcb;
+    /* Find current pcb */
     if (cb_pool_get_cb(&(sched->process_pool),
-                        sched->cur_tid, (void **)(&cur_pcb)) < 0) {
+                        sched->cur_pid, (void **)(pcb)) < 0) {
         return -2;
     }
-    /* Create copy of current pcb with duplicate address space */
-    pcb_t *duplicate_pcb = malloc(sizeof(pcb_t));
-    if(duplicate_pcb == NULL) return -5;
-    if (pcb_init(duplicate_pcb) < 0) return -6;
-
-    if (pcb_copy(duplicate_pcb, cur_pcb) < 0) {
-        return -3;
-    }
-
-    int tid;
-    /* Add duplicate to scheduler runnable queue */
-    if((tid = scheduler_add_process(sched, duplicate_pcb, regs)) < 0) {
-        return -4;
-    }
-
-    return tid;
+    return 0;
 
 }
 
@@ -119,7 +103,7 @@ int scheduler_save_running_tcb(scheduler_t *sched, uint32_t old_esp) {
             return -1;
         }
         /* Save k_stack esp */
-        tcb->k_stack = (void *) old_esp;
+        tcb->tmp_k_stack = (uint32_t *)old_esp;
 
         /* Put current tid back into runnable pool */
         if(queue_enq(&(sched->runnable_pool), (void*) sched->cur_tid) < 0) {
@@ -138,13 +122,11 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
     /* Set new current running pid */
     sched->cur_pid = tcb->pid;
 
-
     /* Save new esp  */
-    *new_esp = (uint32_t)tcb->k_stack;
-    lprintf("NEW_ESP: %x", (unsigned int)tcb->k_stack);
+    *new_esp = (uint32_t)tcb->tmp_k_stack;
 
     /* Set new esp0 */
-    set_esp0((uint32_t)(tcb->k_stack) + 17*4);
+    set_esp0((uint32_t)(tcb->orig_k_stack));
 
     pcb_t *pcb;
     if (cb_pool_get_cb(&(sched->process_pool), tcb->pid, (void **)(&pcb)) < 0) {

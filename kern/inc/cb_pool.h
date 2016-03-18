@@ -7,8 +7,8 @@
  */
 
 
-#ifndef _THR_POOL_H_
-#define _THR_POOL_H_
+#ifndef _CB_POOL_H_
+#define _CB_POOL_H_
 
 #include <ll.h>
 #include <mutex.h>
@@ -27,4 +27,4 @@ int cb_pool_get_cb(cb_pool_t *cp, int id, void **cb);
 int cb_pool_remove_cb(cb_pool_t *cp, int id);
 
 
-#endif /* _THR_POOL_H_ */
+#endif /* _CB_POOL_H_ */

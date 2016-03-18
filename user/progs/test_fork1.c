@@ -16,15 +16,16 @@ int main()
     int id = fork();
     if (id == 0) {
         printf("Hello from child!");
-        //id = fork();
+        fork();
+        fork();
     } else {
         printf("Parent made child: %d", id);
     }
+    int i = 0;
     while (1) {
-        printf("My tid: %d\n", id);
-        int i;
-        for (i = 0; i < 2000000; i++){
-            continue;
+        printf("My tid: %d\n", gettid());
+        for(i = 0 ; i < 2000000 ; i++) {
+
         }
     }
 }

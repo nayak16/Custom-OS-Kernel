@@ -61,10 +61,10 @@ int tcb_init(tcb_t *tcb, int tid, int pid,
     /* Save final esp */
     tcb->esp = (uint32_t) s_top;
 
-    void *k_stack_bot = malloc(sizeof(void*) * PAGE_SIZE);
-    if (k_stack_bot == NULL) return -1;
+    tcb->k_stack_bot = malloc(sizeof(void*) * PAGE_SIZE);
+    if (tcb->k_stack_bot == NULL) return -1;
 
-    uint32_t* k_stack_top = (uint32_t*)(((uint32_t) k_stack_bot) + PAGE_SIZE);
+    uint32_t* k_stack_top = (uint32_t*)(((uint32_t) tcb->k_stack_bot) + PAGE_SIZE);
 
     /* Push meta data to stack */
     /* ------------- IRET section --------------- */
@@ -88,12 +88,13 @@ int tcb_init(tcb_t *tcb, int tid, int pid,
     k_stack_top[-16] = SEGSEL_USER_DS; // fs
     k_stack_top[-17] = SEGSEL_USER_DS; // gs
 
-    tcb->k_stack = (void *)(&(k_stack_top[-17]));
+    tcb->orig_k_stack = (void *)(&(k_stack_top[-17]));
+    tcb->tmp_k_stack = tcb->orig_k_stack;
     return 0;
 }
 
 int tcb_destroy(tcb_t *tcb) {
-    free(tcb->k_stack);
+    free(tcb->k_stack_bot);
     // TODO: Clean up other shit
     return 0;
 

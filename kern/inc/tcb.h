@@ -41,7 +41,9 @@ typedef struct tcb{
 
     int pid;
 
-    void *k_stack;
+    uint32_t *k_stack_bot;
+    uint32_t *orig_k_stack;
+    uint32_t *tmp_k_stack;
 
 } tcb_t;
 
