@@ -61,13 +61,13 @@ int getbytes( const char *filename, int offset, int size, char *buf )
 int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
     mem_section_t secs[NUM_ELF_SECTIONS];
 
-    mem_section_init(&secs[0], elf->e_txtstart,
+    ms_init(&secs[0], elf->e_txtstart,
                         elf->e_txtlen, USER_WR, USER_RO);
-    mem_section_init(&secs[1], elf->e_datstart,
+    ms_init(&secs[1], elf->e_datstart,
                         elf->e_datlen, USER_WR, USER_WR);
-    mem_section_init(&secs[2], elf->e_rodatstart,
+    ms_init(&secs[2], elf->e_rodatstart,
                         elf->e_rodatlen, USER_WR, USER_RO);
-    mem_section_init(&secs[3], elf->e_bssstart,
+    ms_init(&secs[3], elf->e_bssstart,
                         elf->e_bsslen, USER_WR, USER_WR);
 
     /* Map all appropriate elf binary sections into user space */
@@ -100,7 +100,7 @@ int load_user_stack(pcb_t *pcb) {
     /* Calculate user stack bottom */
     mem_section_t stack_secs[1];
 
-    mem_section_init(&stack_secs[0], USER_STACK_BOTTOM,
+    ms_init(&stack_secs[0], USER_STACK_BOTTOM,
                         USER_STACK_SIZE, USER_WR, USER_WR);
 
     /* Allocate and map space for stack in virtual memory */

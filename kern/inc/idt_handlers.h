@@ -23,6 +23,8 @@ int syscall_gettid_handler(void);
 /* Syscall life cycle handlers */
 
 int syscall_fork_handler(void);
+void syscall_vanish_handler(void);
+void syscall_set_status_handler(int);
 
 /* Console IO handlers */
 

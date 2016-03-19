@@ -16,4 +16,3 @@ int syscall_gettid_c_handler(){
     }
     return cur_tid;
 }
-

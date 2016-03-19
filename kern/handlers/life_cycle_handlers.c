@@ -47,3 +47,10 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
     return tid;
 }
 
+void syscall_set_status_c_handler(int status){
+    return;
+}
+
+void syscall_vanish_c_handler(){
+    while(1);
+}

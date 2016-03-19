@@ -19,7 +19,10 @@ typedef struct mem_section_t {
 
 } mem_section_t;
 
-int mem_section_init(mem_section_t *ms, uint32_t addr,
-                     uint32_t len, uint32_t pde_f, uint32_t pte_f);
-
+int ms_init(mem_section_t *ms, uint32_t addr,
+            uint32_t len, uint32_t pde_f, uint32_t pte_f);
+int ms_get_bounding_addr(mem_section_t *secs, uint32_t num_secs,
+        uint32_t *addr_low, uint32_t *addr_high);
+int ms_get_bounding_section(mem_section_t *secs, uint32_t num_secs,
+        uint32_t addr_low, uint32_t addr_high, mem_section_t **result);
 #endif /* _MEM_SECTION_H_ */

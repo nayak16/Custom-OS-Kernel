@@ -34,9 +34,18 @@
 #define OFF_SHIFT PAGE_SHIFT
 #define PDE_SHIFT 10
 #define PTE_SHIFT 10
-
+/* p - SET implies page is present, UNSET implies page is unpresent
+ * rw - SET implies page is read writable, UNSET implies read only
+ * md - SET implies user, UNSET implies supervisor
+ * glb - SET implies global, UNSET implies local
+ */
 #define NEW_FLAGS(p,rw,md,glb) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
     | (md << MODE_FLAG_BIT) | (glb << GLOBAL_FLAG_BIT))
+/* User RO */
+#define PDE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, DONT_CARE))
+/* User RO */
+#define PTE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, UNSET))
+
 
 #define ADD_FLAGS(v,f) ((uint32_t)v | f)
 #define REMOVE_FLAGS(v) ((uint32_t)v & ~0xFFF)
@@ -67,7 +76,7 @@ int pd_create_mapping(page_directory_t *pd, int32_t v_addr, uint32_t p_addr, uin
     /* page table index = 2nd 10 bits of v_addr */
     pte_i = (v_addr >> OFF_SHIFT) & 0x3FF;
     /* page table entry value is the physical address with flags */
-    pte_value = ADD_FLAGS(p_addr, pde_flags);
+    pte_value = ADD_FLAGS(p_addr, pte_flags);
 
     /* create a table if needed */
     if (entry_present(pd->directory[pde_i]) != ENTRY_PRESENT){
@@ -87,51 +96,55 @@ int pd_create_mapping(page_directory_t *pd, int32_t v_addr, uint32_t p_addr, uin
 }
 
 
-int is_sufficient_memory(mem_section_t *secs, uint32_t num_secs) {
-    int total_pages = 0;
-    int s;
-    for (s = 0 ; s < num_secs ; s++) {
-        int n_pages = DIV_ROUND_UP(secs[s].len, PAGE_SIZE);
-        total_pages += n_pages;
-    }
-    return total_pages <= fm_num_free_frames(&fm);
-}
-
-
 int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
         uint32_t num_secs) {
+    if (pd == NULL || secs == NULL || num_secs == 0) return -1;
 
-    if(!is_sufficient_memory(secs, num_secs)) return -1;
+    uint32_t v_addr_low, v_addr_high;
+    ms_get_bounding_addr(secs, num_secs, &v_addr_low, &v_addr_high);
 
-    int s;
-    /* Loop through all memory sections to allocate */
-    for (s = 0 ; s < num_secs ; s++) {
-        mem_section_t ms = secs[s];
+    v_addr_low = PAGE_ALIGN_DOWN(v_addr_low);
+    v_addr_high = PAGE_ALIGN_UP(v_addr_high)-1;
 
-        uint32_t len = ms.len;
-        /* cur_addr must be page aligned */
-        uint32_t cur_addr = ms.v_addr_start;
-        /* Allocate and map each page */
-        while(len > 0) {
-            //TODO: handle for errors (revert)
-            void *p_addr;
-            if (fm_alloc(&fm, &p_addr) < 0) //Should never happen
-                return -2;
+    uint32_t num_pages =((v_addr_high-v_addr_low)+1)/PAGE_SIZE;
+    /* check for enough frames */
+    if (num_pages > fm_num_free_frames(&fm)) return -2;
+    uint32_t cur_addr = v_addr_low;
 
-            if (pd_create_mapping(pd, PAGE_ALIGN_DOWN(cur_addr), (uint32_t)p_addr,
-                        ms.pte_f, ms.pde_f) < 0) return -1;
-
-            /* note: len is unsigned so we must check for underflow */
-            if (len < PAGE_SIZE) {
-                break;
-            }
-            cur_addr += PAGE_SIZE;
-            len -= PAGE_SIZE;
+    /* for each page allocate a frame and map it */
+    int i;
+    for (i = 0; i < num_pages; i++){
+        uint32_t p_addr, pte_f, pde_f;
+        mem_section_t *ms = NULL;
+        if (fm_alloc(&fm, (void **)&p_addr) < 0){
+            panic("Cannot allocate enough frames despite\
+                    having enough frames avaliable");
         }
+        if (ms_get_bounding_section(secs, num_secs, cur_addr,
+                    cur_addr + (PAGE_SIZE-1), &ms) < 0)
+            return -3;
+        if (ms == NULL){
+            /* a page does not belong to any memory section,
+             * but is bounded by v_addr_high and v_addr_low so it should
+             * be mapped to read only */
+            pte_f = PTE_FLAG_DEFAULT;
+            pde_f = PDE_FLAG_DEFAULT;
+        } else {
+            /* retrieve memory section's flags */
+            pte_f = ms->pte_f;
+            pde_f = ms->pde_f;
+        }
+        /* create the mapping */
+        if (pd_create_mapping(pd, cur_addr, p_addr,
+                    pte_f, pde_f) < 0) return -4;
+        cur_addr += PAGE_SIZE;
     }
+    /* zero out newly mapped memory */
+    memset((void *)v_addr_low, 0, num_pages*PAGE_SIZE);
     return 0;
-
 }
+
+
 
 int initialize_kernel(page_directory_t *pd){
     /* present, rw enabled, supervisor mode, dont flush */

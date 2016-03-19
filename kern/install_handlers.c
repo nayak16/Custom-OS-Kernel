@@ -107,13 +107,39 @@ void idt_install_entry(uint32_t offset, uint16_t seg_sel, uint8_t p,
 /* Implementation */
 
 int install_syscall_handlers(){
-    idt_install_entry((uint32_t)syscall_gettid_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, GETTID_INT, FLAG_TRAP_GATE);
+    /* Life cycle */
     idt_install_entry((uint32_t)syscall_fork_handler, SEGSEL_KERNEL_CS,
         FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, FORK_INT, FLAG_TRAP_GATE);
+    // thread_fork
+    // exec
+    idt_install_entry((uint32_t)syscall_set_status_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, SET_STATUS_INT, FLAG_TRAP_GATE);
+    idt_install_entry((uint32_t)syscall_vanish_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, VANISH_INT, FLAG_TRAP_GATE);
+    // wait
+    /* thrmgmt */
+    idt_install_entry((uint32_t)syscall_gettid_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, GETTID_INT, FLAG_TRAP_GATE);
+    // yield
+    // deschedule
+    // make runnable
+    // getticks
+    // sleep
+    // swexn
+    /* Mem MGMT */
+    // newpages
+    // removepages
+    /* console io*/
+    // get char
+    // readline
     idt_install_entry((uint32_t)syscall_print_handler, SEGSEL_KERNEL_CS,
         FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, PRINT_INT, FLAG_TRAP_GATE);
-
+    // set term color
+    // set cursor pos
+    // get cursor pos
+    /* misc */
+    // readfile
+    // halt
     return 0;
 }
 
