@@ -29,6 +29,11 @@ extern scheduler_t sched;
 extern mutex_t console_lock;
 
 /**
+ * @brief Global mutex for the scheduler
+ */
+extern mutex_t scheduler_lock;
+
+/**
  * @brief atomically exchanges val into lock and returns previous value of lock
  */
 int xchng(int* lock, int val);

@@ -22,12 +22,14 @@
  */
 int syscall_fork_c_handler(uint32_t *saved_regs){
 
-
+    /* Grab scheduler lock */
+    mutex_lock(&scheduler_lock);
     /* Get current running pcb */
     pcb_t *cur_pcb;
     if(scheduler_get_current_pcb(&sched, &cur_pcb) < 0) {
         return -2;
     }
+    mutex_unlock(&scheduler_lock);
 
     /* Allocate space for a duplicate pcb */
     pcb_t *duplicate_pcb = malloc(sizeof(pcb_t));
@@ -39,11 +41,13 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
         return -5;
     }
 
+    mutex_lock(&scheduler_lock);
     int tid;
     /* Add duplicate to scheduler runnable queue */
     if((tid = scheduler_add_process(&sched, duplicate_pcb, saved_regs)) < 0) {
         return -6;
     }
+    mutex_unlock(&scheduler_lock);
     return tid;
 }
 

@@ -40,10 +40,10 @@ int scheduler_init(scheduler_t *sched){
 
     if(queue_init(&(sched->runnable_pool)) < 0
             || queue_init(&(sched->waiting_pool)) < 0) {
-        return -1;
+        return -2;
     }
     if (cb_pool_init(&(sched->thr_pool)) < 0
-            || cb_pool_init(&(sched->process_pool)) < 0) return -1;
+            || cb_pool_init(&(sched->process_pool)) < 0) return -3;
 
     return 0;
 }
@@ -59,7 +59,6 @@ int scheduler_init(scheduler_t *sched){
  */
 int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
     if (sched == NULL) return -1;
-
     *tidp = sched->cur_tid;
     return 0;
 }
@@ -99,14 +98,14 @@ int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb) {
  */
 int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     if (sched == NULL) return -1;
+
     /* Assign next pid */
     pcb->id = sched->next_pid++;
 
     /* Create a new tcb to run the pcb */
     tcb_t *tcb = malloc(sizeof(tcb_t));
     if (tcb == NULL) return -2;
-    int tid = sched->next_tid;
-    sched->next_tid++;
+    int tid = sched->next_tid++;
 
     tcb_init(tcb, tid, pcb->id,
              (uint32_t *)pcb->stack_top, pcb->entry_point, regs);

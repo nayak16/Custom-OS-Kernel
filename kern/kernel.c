@@ -45,12 +45,10 @@
 
 
 scheduler_t sched;
-
 mutex_t heap_lock;
-
 frame_manager_t fm;
-
 mutex_t console_lock;
+mutex_t scheduler_lock;
 
 /** @brief Kernel entrypoint.
  *
@@ -73,16 +71,17 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     clear_console();
 
-    /* Initialize global heap lock */
+    /* Init global heap lock */
     mutex_init(&heap_lock);
+    /* Init console mutex */
+    mutex_init(&console_lock);
+    /* Init scheduler mutex */
+    mutex_init(&scheduler_lock);
 
     /* init frame manager */
     fm_init(&fm);
 
-    /* init console mutex */
-    mutex_init(&console_lock);
-
-    /* initialize idle_pcb */
+        /* initialize idle_pcb */
     pcb_t idle_pcb;
     pcb_init(&idle_pcb);
 
@@ -100,7 +99,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     enable_paging();
 
     /* load idle program */
-    pcb_load_prog(&idle_pcb, "getpid_test1");
+    pcb_load_prog(&idle_pcb, "test_fork1");
     /* add idle process to scheduler */
     scheduler_add_process(&sched, &idle_pcb, NULL);
 

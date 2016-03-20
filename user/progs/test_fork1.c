@@ -14,10 +14,10 @@
 int main()
 {
     int id = fork();
+    id = fork();
+    id = fork();
     if (id == 0) {
         printf("Hello from child!");
-        fork();
-        fork();
     } else {
         printf("Parent made child: %d", id);
     }

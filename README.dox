@@ -7,4 +7,17 @@
 
 Same drill as last time.
 
+
+Design Decision Rationales:
+
+Global scheduler lock - The reason we have a global scheduler lock
+rather than one inside the scheduler is to avoid the following situation:
+Consider thread 1 in fork() that grabs the scheduler's mutex. After it
+grabs the mutex, a timer fires and a context switch is being serviced.
+The context switcher also accesses the scheduler and tries to acquire
+it's mutex, but it can't because thread 1 controls it. And thus,
+execution stops because the scheduler waits forever.
+With a global scheduler lock, syscalls the modify the scheduler are thread
+safe.
+
 */
