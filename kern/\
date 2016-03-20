@@ -139,7 +139,7 @@ int install_syscall_handlers(){
     // get cursor pos
     /* misc */
     // readfile
-    INSTALL_SYSCALL(syscall_halt_handler, HALT_INT);
+    // halt
     return 0;
 }
 
