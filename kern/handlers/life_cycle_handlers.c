@@ -9,6 +9,7 @@
 #include <kern_internals.h>
 #include <malloc.h>
 
+#include <simics.h>
 /**
  * @brief Implements the fork system call. Creates a new process
  * from the invoking one copying its registers and duplicating address
@@ -52,9 +53,11 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
 }
 
 void syscall_set_status_c_handler(int status){
+    lprintf("<set_status NYI> status = %d", status);
     return;
 }
 
 void syscall_vanish_c_handler(){
+    lprintf("<vanish NYI> spin looping");
     while(1);
 }

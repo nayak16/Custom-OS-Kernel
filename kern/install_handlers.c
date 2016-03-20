@@ -106,21 +106,22 @@ void idt_install_entry(uint32_t offset, uint16_t seg_sel, uint8_t p,
 
 /* Implementation */
 
+#define INSTALL_SYSCALL(handler, int_num)\
+    (idt_install_entry((uint32_t)handler, SEGSEL_KERNEL_CS,\
+        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, int_num, FLAG_TRAP_GATE))
+
+
 int install_syscall_handlers(){
     /* Life cycle */
-    idt_install_entry((uint32_t)syscall_fork_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, FORK_INT, FLAG_TRAP_GATE);
-    // thread_fork
-    // exec
-    idt_install_entry((uint32_t)syscall_set_status_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, SET_STATUS_INT, FLAG_TRAP_GATE);
-    idt_install_entry((uint32_t)syscall_vanish_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, VANISH_INT, FLAG_TRAP_GATE);
-    // wait
+    INSTALL_SYSCALL(syscall_fork_handler, FORK_INT);
+    // INSTALL_SYSCALL(syscall_thread_fork_handler, THREAD_FORK_INT);
+    // INSTALL_SYSCALL(syscall_exec_handler, EXEC_INT);
+    INSTALL_SYSCALL(syscall_set_status_handler, SET_STATUS_INT);
+    INSTALL_SYSCALL(syscall_vanish_handler, VANISH_INT);
+    // INSTALL_SYSCALL(syscall_wait_handler, WAIT_INT);
     /* thrmgmt */
-    idt_install_entry((uint32_t)syscall_gettid_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, GETTID_INT, FLAG_TRAP_GATE);
-    // yield
+    INSTALL_SYSCALL(syscall_gettid_handler, GETTID_INT);
+    // INSTALL_SYSCALL(syscall_yield_handler, YIELD_INT);
     // deschedule
     // make runnable
     // getticks
@@ -132,14 +133,13 @@ int install_syscall_handlers(){
     /* console io*/
     // get char
     // readline
-    idt_install_entry((uint32_t)syscall_print_handler, SEGSEL_KERNEL_CS,
-        FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, PRINT_INT, FLAG_TRAP_GATE);
+    INSTALL_SYSCALL(syscall_print_handler, PRINT_INT);
     // set term color
     // set cursor pos
     // get cursor pos
     /* misc */
     // readfile
-    // halt
+    INSTALL_SYSCALL(syscall_halt_handler, HALT_INT);
     return 0;
 }
 

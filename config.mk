@@ -65,7 +65,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = test_idle test_fork1 test_cs
+STUDENTTESTS = test_idle test_fork1 test_cs test_foo
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk
@@ -116,7 +116,7 @@ AUTOSTACK_OBJS = autostack.o
 #
 # Kernel object files you provide in from kern/
 #
-KERNEL_OBJS = console.o kernel.o loader/loader.o malloc_wrappers.o install_handlers.o handlers/syscall_handler_wrappers.o handlers/exception_handler_wrappers.o handlers/thr_mgmt_handlers.o handlers/life_cycle_handlers.o handlers/exception_handlers.o handlers/console_io_handlers.o virtual_mem_mgmt/page_directory.o virtual_mem_mgmt/frame_manager.o data_structures/ll.o data_structures/queue.o special_register_cntrl/spec_reg_wrappers.o special_register_cntrl/asm_functions.o debug.o scheduler/pcb.o virtual_mem_mgmt/mem_section.o scheduler/scheduler.o scheduler/tcb.o dispatcher/dispatcher.o dispatcher/asm_helpers.o handlers/peripheral_handler_wrappers.o handlers/peripheral_handlers.o scheduler/cb_pool.o locks/mutex.o asm_helpers.o
+KERNEL_OBJS = console.o kernel.o loader/loader.o malloc_wrappers.o install_handlers.o handlers/syscall_handler_wrappers.o handlers/exception_handler_wrappers.o handlers/thr_mgmt_handlers.o handlers/life_cycle_handlers.o handlers/exception_handlers.o handlers/console_io_handlers.o handlers/misc_handlers.o virtual_mem_mgmt/page_directory.o virtual_mem_mgmt/frame_manager.o data_structures/ll.o data_structures/queue.o special_register_cntrl/spec_reg_wrappers.o special_register_cntrl/asm_functions.o debug.o scheduler/pcb.o virtual_mem_mgmt/mem_section.o scheduler/scheduler.o scheduler/tcb.o dispatcher/dispatcher.o dispatcher/asm_helpers.o handlers/peripheral_handler_wrappers.o handlers/peripheral_handlers.o scheduler/cb_pool.o locks/mutex.o asm_helpers.o
 
 ###########################################################################
 # WARNING: Do not put **test** programs into the REQPROGS variables.  Your

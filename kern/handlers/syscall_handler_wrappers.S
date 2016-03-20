@@ -76,3 +76,10 @@ syscall_vanish_handler:
 .globl syscall_set_status_handler
 syscall_set_status_handler:
     one_arg_syscall_wrapper syscall_set_status_c_handler
+
+.globl syscall_halt_handler
+syscall_halt_handler:
+    save_context
+    call syscall_halt_c_handler
+    hlt /* if simics cmd fails to halt, halt here instead */
+    restore_context

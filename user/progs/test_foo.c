@@ -2,10 +2,11 @@
 #include <syscall.h>
 
 int main(){
-
-    sim_ck1();
-    int tid = gettid();
-    lprintf("tid %d", tid);
-    while(1);
+    int i;
+    for (i = 0; i < 10; i++){
+        continue;
+    }
+    halt();
+    lprintf("returned from halt");
     return 0;
 }

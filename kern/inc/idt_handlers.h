@@ -30,6 +30,10 @@ void syscall_set_status_handler(int);
 
 int syscall_print_handler(int len, char *buf);
 
+/* Misc handlers */
+
+void syscall_halt_handler(void);
+
 /* Hardware handlers */
 
 void timer_handler(void);
