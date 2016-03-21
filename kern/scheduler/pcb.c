@@ -24,6 +24,8 @@
 #include <debug.h>
 #include <simics.h>
 
+#include <virtual_mem_mgmt.h>
+
 int pcb_init(pcb_t *pcb){
     if (pcb == NULL) return -1;
     /* Temp value before being added to scheduler */
@@ -49,7 +51,7 @@ int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb) {
     if(source_pcb == NULL || dest_pcb == NULL) return -1;
 
     /* Copy address space */
-    if(pd_copy(&(dest_pcb->pd), &(source_pcb->pd)) < 0) {
+    if(vmm_deep_copy(&(dest_pcb->pd), &(source_pcb->pd)) < 0) {
         return -3;
     }
 

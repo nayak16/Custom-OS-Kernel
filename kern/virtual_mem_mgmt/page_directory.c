@@ -17,7 +17,6 @@
 #include <constants.h>
 
 #include <page_directory.h>
-#include <kern_internals.h>
 
 /* access to flush_tlb */
 #include <special_reg_cntrl.h>
@@ -35,10 +34,6 @@
 #define PDE_SHIFT 10
 #define PTE_SHIFT 10
 
-#define ADD_FLAGS(v,f) ((uint32_t)v | f)
-#define REMOVE_FLAGS(v) ((uint32_t)v & ~0xFFF)
-#define EXTRACT_FLAGS(v) ((uint32_t)v & 0xFFF)
-
 #define ENTRY_PRESENT 0
 #define ENTRY_NOT_PRESENT 1
 
@@ -47,8 +42,30 @@ int entry_present(uint32_t v){
     return ENTRY_PRESENT;
 }
 
-int pd_create_mapping(page_directory_t *pd, int32_t v_addr, uint32_t p_addr, uint32_t pte_flags,
-        uint32_t pde_flags){
+int pd_get_mapping(page_directory_t *pd, uint32_t v_addr,
+        uint32_t **entry_addr){
+    if (pd == NULL) return -1;
+    uint32_t pde_i = (v_addr >> (OFF_SHIFT + PTE_SHIFT)) & 0x3FF;
+    /* page table index = 2nd 10 bits of v_addr */
+    uint32_t pte_i = (v_addr >> OFF_SHIFT) & 0x3FF;
+    if (entry_present(pd->directory[pde_i]) == ENTRY_NOT_PRESENT){
+        /* page directory entry not present */
+        return -2;
+    }
+    uint32_t *pt = (uint32_t *)(REMOVE_FLAGS(pd->directory[pde_i]));
+    if (entry_present(pt[pte_i]) == ENTRY_NOT_PRESENT){
+        /* directory exists but table does not */
+        return -3;
+    }
+    /* found mapping */
+    if (entry_addr != NULL){
+        *entry_addr = &(pt[pte_i]);
+    }
+    return 0;
+}
+
+int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
+        uint32_t pte_flags, uint32_t pde_flags){
     /* input addresses must be page aligned */
     if (!IS_PAGE_ALIGNED(v_addr) || !IS_PAGE_ALIGNED(p_addr)) return -1;
     uint32_t pde_i, pte_i, pde_value, pte_value;
@@ -111,58 +128,8 @@ void *get_page_address(uint32_t pd_i, uint32_t pt_i){
     return (void *)(pd_i << 22 | pt_i << 12);
 }
 
-int p_copy(void **target_pte, void *v_addr, void **new_phys_addr){
-    if (target_pte == NULL || v_addr == NULL || new_phys_addr == NULL)
-        return -1;
-    /* allocate a new buffer to hold our page contents locally */
-    void *buffer = malloc(PAGE_SIZE);
-    if (buffer == NULL) return -2;
-    /* original page table entry */
-    void *original_pte = *target_pte;
-    uint32_t flags = EXTRACT_FLAGS(original_pte);
-    /* target virtual address */
-    memcpy(buffer, v_addr, PAGE_SIZE);
-    if (fm_alloc(&fm, new_phys_addr) < 0) return -3;
-    /* remap our virtual address to new physical address */
-    *target_pte = (void *)(ADD_FLAGS(*new_phys_addr,flags));
-    /* flush cached mappings for our virtual address */
-    flush_tlb((uint32_t)v_addr);
-    /* copy contents into new phys page */
-    memcpy(v_addr, buffer, PAGE_SIZE);
-    /* restore mapping */
-    *target_pte = original_pte;
-    /* flush out any false mappings */
-    flush_tlb((uint32_t)v_addr);
-    free(buffer);
-    return 0;
-}
 
-/** @brief Deep copy page table from src to dest */
-int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i){
-    uint32_t i;
-    /* copy each page table entry */
-    for (i = 0; i < PT_NUM_ENTRIES; i++){
-        uint32_t entry = pt_src[i];
-        uint32_t flags = entry & 0xFFF;
-        /* copy over present mappings */
-        if (entry_present(entry) == ENTRY_PRESENT){
-            void *p_addr;
-            /* calculate the virtual address of current page being copied so
-             * that p_copy can *v_addr to write to the new physical address
-             * after remapping*/
-            void *v_addr = get_page_address(pd_i, i);
-            /* pass in address to the current page table entry so that p_copy
-             * can use it to copy into the new physical address */
-            if (p_copy((void **)&(pt_src[i]), v_addr ,&p_addr) < 0)
-                return -1;
-            /* assign pte to new physical address with flags */
-            pt_dest[i] = ADD_FLAGS(p_addr, flags);
-        }
-    }
-    return 0;
-}
-
-int pd_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
+int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
     if (pd_dest == NULL || pd_src == NULL) return -1;
     /* copy the upper level page directory */
     uint32_t i;
@@ -173,12 +140,9 @@ int pd_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
         if (entry_present(entry) == ENTRY_PRESENT){
             /* allocate a new page table */
             uint32_t *new_pt = memalign(PAGE_SIZE, PT_SIZE);
-            uint32_t flags = entry & 0xFFF;
+            uint32_t flags = EXTRACT_FLAGS(entry);
             /* map page directory to new page table */
             pd_dest->directory[i] = (uint32_t)new_pt | flags;
-            /* copy pages, pass in page directory index for
-             * to compute virtual address of an entry */
-            pt_copy(new_pt, (uint32_t*)(entry & ~0xFFF), i);
         }
     }
     return 0;

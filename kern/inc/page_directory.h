@@ -49,16 +49,19 @@
 #define PAGE_ALIGN_UP(addr) (PAGE_SIZE * DIV_ROUND_UP(addr, PAGE_SIZE))
 #define PAGE_ALIGN_DOWN(addr) (PAGE_SIZE * (addr / PAGE_SIZE))
 
-
+#define ADD_FLAGS(v,f) ((uint32_t)v | f)
+#define REMOVE_FLAGS(v) ((uint32_t)v & ~0xFFF)
+#define EXTRACT_FLAGS(v) ((uint32_t)v & 0xFFF)
 
 typedef struct page_directory {
     uint32_t *directory;
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
-int pd_create_mapping(page_directory_t *pd, int32_t v_addr, uint32_t p_addr, uint32_t pte_flags, uint32_t pde_flags);
+int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t **pte);
+int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr, uint32_t pte_flags, uint32_t pde_flags);
 int pd_entry_present(uint32_t v);
-int pd_copy(page_directory_t *pd_dest, page_directory_t *pd_src);
+int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src);
 int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
         uint32_t num_secs);
 void *pd_get_base_addr(page_directory_t *pd);
