@@ -130,3 +130,36 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
     memset((void *)v_addr_low, 0, num_pages*PAGE_SIZE);
     return 0;
 }
+
+int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
+    if (pd == NULL || num_pages == 0)
+        return -1;
+    /* check for enough physical frames */
+    if (fm_num_free_frames(&fm) < num_pages)
+        return -2;
+    uint32_t v_addr = base;
+    uint32_t i;
+    /* check for overflow */
+    if (base + (num_pages * PAGE_SIZE) - 1 < base){
+        return -2;
+    }
+
+    /* check for overlapping regions of memeory */
+    for (i = 0; i < num_pages; i++){
+        if (pd_get_mapping(pd, v_addr, NULL) == 0){
+            return -3;
+        }
+        v_addr += PAGE_SIZE;
+    }
+    /* allocate frames and create the mapping */
+    v_addr = base;
+    for (i = 0; i < num_pages; i++){
+        uint32_t p_addr;
+        if (fm_alloc(&fm, (void **)&p_addr) < 0){
+            panic("Uh oh...");
+        }
+        pd_create_mapping(pd, v_addr, p_addr, USER_WR, USER_WR);
+        v_addr += PAGE_SIZE;
+    }
+    return 0;
+}

@@ -30,6 +30,10 @@ void syscall_set_status_handler(int);
 
 int syscall_print_handler(int len, char *buf);
 
+/* Mem mgmt handlers*/
+
+int syscall_new_pages_handler(void *base, int len);
+
 /* Misc handlers */
 
 void syscall_halt_handler(void);

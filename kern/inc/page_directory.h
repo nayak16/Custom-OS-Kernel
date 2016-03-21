@@ -30,6 +30,11 @@
 #define NEW_FLAGS(p,rw,md,glb) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
     | (md << MODE_FLAG_BIT) | (glb << GLOBAL_FLAG_BIT))
 
+
+#define USER_RO NEW_FLAGS(SET, UNSET, SET, UNSET)
+#define USER_WR NEW_FLAGS(SET, SET, SET, UNSET)
+
+
 /* User RO */
 #define PDE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, DONT_CARE))
 /* User RO */

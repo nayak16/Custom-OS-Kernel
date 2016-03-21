@@ -83,3 +83,7 @@ syscall_halt_handler:
     call syscall_halt_c_handler
     hlt /* if simics cmd fails to halt, halt here instead */
     restore_context
+
+.globl syscall_new_pages_handler
+syscall_new_pages_handler:
+    two_arg_syscall_wrapper syscall_new_pages_c_handler

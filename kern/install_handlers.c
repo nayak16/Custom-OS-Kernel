@@ -128,7 +128,7 @@ int install_syscall_handlers(){
     // sleep
     // swexn
     /* Mem MGMT */
-    // newpages
+    INSTALL_SYSCALL(syscall_new_pages_handler, NEW_PAGES_INT);
     // removepages
     /* console io*/
     // get char

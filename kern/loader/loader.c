@@ -24,9 +24,6 @@
 #include <virtual_mem_mgmt.h>
 #define NUM_ELF_SECTIONS 4
 
-#define USER_RO NEW_FLAGS(SET, UNSET, SET, UNSET)
-#define USER_WR NEW_FLAGS(SET, SET, SET, UNSET)
-
 
 /* --- Local function prototypes --- */
 
