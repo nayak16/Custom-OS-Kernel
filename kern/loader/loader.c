@@ -20,6 +20,8 @@
 #include <simics.h>
 
 #include <kern_internals.h>
+
+#include <virtual_mem_mgmt.h>
 #define NUM_ELF_SECTIONS 4
 
 #define USER_RO NEW_FLAGS(SET, UNSET, SET, UNSET)
@@ -71,7 +73,7 @@ int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
                         elf->e_bsslen, USER_WR, USER_WR);
 
     /* Map all appropriate elf binary sections into user space */
-    if (pd_map_sections(&(pcb->pd), secs, NUM_ELF_SECTIONS) < 0) return -1;
+    if (vmm_map_sections(&(pcb->pd), secs, NUM_ELF_SECTIONS) < 0) return -1;
 
     /* Fill in .text section */
     if (getbytes(elf->e_fname, elf->e_txtoff, elf->e_txtlen,
@@ -104,7 +106,7 @@ int load_user_stack(pcb_t *pcb) {
                         USER_STACK_SIZE, USER_WR, USER_WR);
 
     /* Allocate and map space for stack in virtual memory */
-    if (pd_map_sections(&(pcb->pd), stack_secs, 1) < 0) return -2;
+    if (vmm_map_sections(&(pcb->pd), stack_secs, 1) < 0) return -2;
 
     /* Setup user stack for entry point */
     uint32_t *stack_top = (uint32_t *) USER_STACK_TOP;

@@ -34,31 +34,13 @@
 #define OFF_SHIFT PAGE_SHIFT
 #define PDE_SHIFT 10
 #define PTE_SHIFT 10
-/* p - SET implies page is present, UNSET implies page is unpresent
- * rw - SET implies page is read writable, UNSET implies read only
- * md - SET implies user, UNSET implies supervisor
- * glb - SET implies global, UNSET implies local
- */
-#define NEW_FLAGS(p,rw,md,glb) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
-    | (md << MODE_FLAG_BIT) | (glb << GLOBAL_FLAG_BIT))
-/* User RO */
-#define PDE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, DONT_CARE))
-/* User RO */
-#define PTE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, UNSET))
-
 
 #define ADD_FLAGS(v,f) ((uint32_t)v | f)
 #define REMOVE_FLAGS(v) ((uint32_t)v & ~0xFFF)
 #define EXTRACT_FLAGS(v) ((uint32_t)v & 0xFFF)
 
-#define IS_PAGE_ALIGNED(a) (a % PAGE_SIZE == 0)
-
 #define ENTRY_PRESENT 0
 #define ENTRY_NOT_PRESENT 1
-
-#define DIV_ROUND_UP(num, den) ((num + den -1) / den)
-#define PAGE_ALIGN_UP(addr) (PAGE_SIZE * DIV_ROUND_UP(addr, PAGE_SIZE))
-#define PAGE_ALIGN_DOWN(addr) (PAGE_SIZE * (addr / PAGE_SIZE))
 
 int entry_present(uint32_t v){
     if (NTH_BIT(v,0) == 0) return ENTRY_NOT_PRESENT;
@@ -94,56 +76,6 @@ int pd_create_mapping(page_directory_t *pd, int32_t v_addr, uint32_t p_addr, uin
 
     return 0;
 }
-
-
-int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
-        uint32_t num_secs) {
-    if (pd == NULL || secs == NULL || num_secs == 0) return -1;
-
-    uint32_t v_addr_low, v_addr_high;
-    ms_get_bounding_addr(secs, num_secs, &v_addr_low, &v_addr_high);
-
-    v_addr_low = PAGE_ALIGN_DOWN(v_addr_low);
-    v_addr_high = PAGE_ALIGN_UP(v_addr_high)-1;
-
-    uint32_t num_pages =((v_addr_high-v_addr_low)+1)/PAGE_SIZE;
-    /* check for enough frames */
-    if (num_pages > fm_num_free_frames(&fm)) return -2;
-    uint32_t cur_addr = v_addr_low;
-
-    /* for each page allocate a frame and map it */
-    int i;
-    for (i = 0; i < num_pages; i++){
-        uint32_t p_addr, pte_f, pde_f;
-        mem_section_t *ms = NULL;
-        if (fm_alloc(&fm, (void **)&p_addr) < 0){
-            panic("Cannot allocate enough frames despite\
-                    having enough frames avaliable");
-        }
-        if (ms_get_bounding_section(secs, num_secs, cur_addr,
-                    cur_addr + (PAGE_SIZE-1), &ms) < 0)
-            return -3;
-        if (ms == NULL){
-            /* a page does not belong to any memory section,
-             * but is bounded by v_addr_high and v_addr_low so it should
-             * be mapped to read only */
-            pte_f = PTE_FLAG_DEFAULT;
-            pde_f = PDE_FLAG_DEFAULT;
-        } else {
-            /* retrieve memory section's flags */
-            pte_f = ms->pte_f;
-            pde_f = ms->pde_f;
-        }
-        /* create the mapping */
-        if (pd_create_mapping(pd, cur_addr, p_addr,
-                    pte_f, pde_f) < 0) return -4;
-        cur_addr += PAGE_SIZE;
-    }
-    /* zero out newly mapped memory */
-    memset((void *)v_addr_low, 0, num_pages*PAGE_SIZE);
-    return 0;
-}
-
 
 
 int initialize_kernel(page_directory_t *pd){
