@@ -107,8 +107,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     enable_paging();
 
     /* load idle program */
-    if (pcb_load_prog(&idle_pcb, "test_fork1") < 0)
-        panic("could not load idle task");
+    char *args[] = {"prog", "hi from kernel", 0};
+    pcb_load_prog(&idle_pcb, "test_exec1", 2, args);
 
     /* add idle process to scheduler */
     scheduler_add_process(&sched, &idle_pcb, NULL);

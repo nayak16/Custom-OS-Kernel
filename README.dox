@@ -24,4 +24,9 @@ execution stops because the scheduler waits forever.
 With a global scheduler lock, syscalls the modify the scheduler are thread
 safe.
 
+Skip esp and eax save in syscall wrappers - This is to make sure syscall
+restore and save registers follow the same stack pattern as a context switch
+and subsequent return from a timer interrupt. This is to make implementing
+exec and yield seamless.
+
 */

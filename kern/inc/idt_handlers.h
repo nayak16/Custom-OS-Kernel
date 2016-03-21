@@ -25,6 +25,7 @@ int syscall_gettid_handler(void);
 int syscall_fork_handler(void);
 void syscall_vanish_handler(void);
 void syscall_set_status_handler(int);
+int syscall_exec_handler(char *execname, char **argvec);
 
 /* Console IO handlers */
 

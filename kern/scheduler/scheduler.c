@@ -87,7 +87,8 @@ int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb) {
  * @param regs pointer to register values to set to the new thread's
  * registers
  *
- * @return 0 on success, negative error code otherwise
+ * @return tid of thread running process on success,
+ *         negative error code otherwise
  */
 int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     if (sched == NULL) return -1;

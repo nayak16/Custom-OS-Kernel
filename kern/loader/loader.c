@@ -107,13 +107,27 @@ int load_user_stack(pcb_t *pcb) {
 
     /* Setup user stack for entry point */
     uint32_t *stack_top = (uint32_t *) USER_STACK_TOP;
+     /* Specify dummy return address */
+    stack_top[-4] = 0;
+    /* argc for _main */
     stack_top[-3] = pcb->argc;
+    /* argv for _main */
     stack_top[-2] = (uint32_t) pcb->argv;
+    /* stack_high for _main */
     stack_top[-1] = USER_STACK_TOP;
+    /* stack_low for _main */
     stack_top[0] = USER_STACK_BOTTOM;
 
-    /* Specify dummy return address */
-    stack_top[-4] = 0;
+    /*int s_idx = 0;
+    char *arg;
+    char *new_argv[pcb->argc];
+    int arg_count;
+    for (arg_idx = 0; arg_idx < pcb->argc ; arg_idx++) {
+         arg = pcb->argv[arg_idx];
+         while(arg != NULL) {
+
+         }
+    }*/
 
     /* Set pcb stack */
     pcb->stack_top = (uint32_t) &(stack_top[-4]);

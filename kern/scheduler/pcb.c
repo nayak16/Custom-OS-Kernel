@@ -59,7 +59,7 @@ int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb) {
 }
 
 
-int pcb_load_prog(pcb_t *pcb, const char *filename){
+int pcb_load_prog(pcb_t *pcb, const char *filename, int argc, char** argv){
     if (pcb == NULL || filename == NULL) return -1;
     simple_elf_t elf;
     if (elf_check_header(filename) != ELF_SUCCESS) return -2;
@@ -68,12 +68,10 @@ int pcb_load_prog(pcb_t *pcb, const char *filename){
     /* Load elf sections into memory */
     if (load_elf_sections(&elf, pcb) < 0) return -4;
 
+    pcb->argc = argc;
+    pcb->argv = argv;
     /* Load user stack into memory */
     if (load_user_stack(pcb) < 0) return -5;
-
-    /* TODO: Change this to be actual args */
-    pcb->argc = 0;
-    pcb->argv = NULL;
 
     return 0;
 }

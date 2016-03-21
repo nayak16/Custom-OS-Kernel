@@ -3,7 +3,7 @@
  *
  *  @author Christopher Wei (cjwei)
  *  @author Aatish Nayak (aatishn)
- *  @bug No known bugs.
+ *  @bug Validation of syscall arguments
  */
 
 #include <kern_internals.h>
@@ -44,14 +44,48 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
     }
 
     int tid;
-    disable_interrupts();
     /* Add duplicate to scheduler runnable queue */
     if((tid = scheduler_add_process_safe(&sched,
                                          duplicate_pcb, saved_regs)) < 0) {
         return -6;
     }
-    enable_interrupts();
     return tid;
+}
+
+/**
+ * @brief Handles the exec syscall. Loads a new pcb and immediately starts
+ * running it
+ *
+ * @bug What if one of the arguments is 0 or null string
+ *
+ * @param execname Name of program to run
+ * @param argvec Null-terminated array of string args to pass to program
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int syscall_exec_c_handler(char *execname, char **argvec) {
+    if (execname == NULL || argvec == NULL) return -1;
+
+    // TODO: Check validity and mapping of each string and arg
+    /* Parse args and get argc*/
+    char **argp = argvec;
+    int argc = 0;
+    while(/* pd_check_mapped(argvec) && */*argp != NULL) {
+        argc++;
+        lprintf("argvec: %p, arg: %s", argp, *argp);
+        argp += 1;
+    }
+
+    /* Create new pcb and load new program */
+    //pcb_t new_pcb;
+    //pcb_init(&new_pcb);
+    //pcb_load_prog(&new_pcb, execname, argc, argvec);
+
+    /* Add process to scheduler */
+
+
+    lprintf("Starting program '%s', with %d args", execname, argc);
+    return 0;
 }
 
 void syscall_set_status_c_handler(int status){
@@ -63,3 +97,4 @@ void syscall_vanish_c_handler(){
     lprintf("<vanish NYI> spin looping");
     while(1);
 }
+
