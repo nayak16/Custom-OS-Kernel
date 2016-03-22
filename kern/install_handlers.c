@@ -129,7 +129,7 @@ int install_syscall_handlers(){
     // swexn
     /* Mem MGMT */
     INSTALL_SYSCALL(syscall_new_pages_handler, NEW_PAGES_INT);
-    // removepages
+    INSTALL_SYSCALL(syscall_remove_pages_handler, REMOVE_PAGES_INT);
     /* console io*/
     // get char
     // readline

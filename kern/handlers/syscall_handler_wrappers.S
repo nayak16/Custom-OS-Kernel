@@ -87,3 +87,7 @@ syscall_halt_handler:
 .globl syscall_new_pages_handler
 syscall_new_pages_handler:
     two_arg_syscall_wrapper syscall_new_pages_c_handler
+
+.globl syscall_remove_pages_handler
+syscall_remove_pages_handler:
+    one_arg_syscall_wrapper syscall_remove_pages_c_handler

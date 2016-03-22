@@ -9,6 +9,7 @@
 #include <common_kern.h>
 /* tlb_flush */
 #include <special_reg_cntrl.h>
+
 /** @brief Copies the physical frame pointed to by v_addr in the
  *         current active page directory into p_addr
  *
@@ -172,6 +173,8 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
  *
  *  Requires base is page aligned
  *
+ *  Uses non-x86 9th flag bit to signifiy that it is removeable
+ *
  *  @param pd The page directory
  *  @param base The starting address to allocate from
  *  @param num_pages The number of pages to allocate
@@ -203,8 +206,53 @@ int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
         if (fm_alloc(&fm, (void **)&p_addr) < 0){
             panic("Uh oh...");
         }
-        pd_create_mapping(pd, v_addr, p_addr, USER_WR, USER_WR);
+        uint32_t pte_f = USER_WR;
+        uint32_t pde_f = USER_WR;
+        /* add custom flags to denote start and stop of a user allocated
+         * page table entry */
+        if (i == 0){
+            pte_f = ADD_USER_START_FLAG(pte_f);
+        }
+        if (i == num_pages-1){
+            pte_f = ADD_USER_END_FLAG(pte_f);
+        }
+        pd_create_mapping(pd, v_addr, p_addr, pte_f, pde_f);
         v_addr += PAGE_SIZE;
     }
+    return 0;
+}
+
+int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
+    if (pd == NULL || base < USER_MEM_START || !IS_PAGE_ALIGNED(base))
+        return -1;
+    uint32_t *pte_p = NULL;
+    /* check to see if base is mapped */
+    if (pd_get_mapping(pd, base, &pte_p) < 0){
+        return -2;
+    }
+    /* check to ensure that said page table is the start of a new_pages
+     * allocation */
+    if (pte_p == NULL || !IS_USER_START(*pte_p)){
+        return -3;
+    }
+    /* go through all the addresses until we get an address that signifies
+     * the end of a user new_pages */
+    uint32_t v_addr = base;
+    uint32_t pte;
+    pte_p = NULL;
+    do {
+        if (v_addr - PAGE_SIZE > v_addr)
+            panic("Overflowed while deallocating stack space!!");
+        /* get the mapping so we can check if we're done */
+        pd_get_mapping(pd, v_addr, &pte_p);
+        /* save the mapping since we want to flush the page table entry */
+        pte = *pte_p;
+        /* remove mapping */
+        pd_remove_mapping(pd, v_addr);
+        /* give frame back to frame manager */
+        fm_dealloc(&fm, (void *)REMOVE_FLAGS(pte));
+        v_addr += PAGE_SIZE;
+    } while (!IS_USER_END(pte));
+
     return 0;
 }

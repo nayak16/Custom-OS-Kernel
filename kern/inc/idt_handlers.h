@@ -33,6 +33,7 @@ int syscall_print_handler(int len, char *buf);
 /* Mem mgmt handlers*/
 
 int syscall_new_pages_handler(void *base, int len);
+int syscall_remove_pages_handler(void *base);
 
 /* Misc handlers */
 

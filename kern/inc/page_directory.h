@@ -16,11 +16,17 @@
 #include <stdint.h>
 #include <mem_section.h>
 
+#include <queue.h>
+
 #define PRESENT_FLAG_BIT 0
 #define RW_FLAG_BIT 1
 #define MODE_FLAG_BIT 2
 #define WRITE_THROUGH_FLAG_BIT 3
 #define GLOBAL_FLAG_BIT 8
+
+/* custom non-x86 flag bits */
+#define USER_START_FLAG_BIT 9
+#define USER_END_FLAG_BIT 10
 
 /* p - SET implies page is present, UNSET implies page is unpresent
  * rw - SET implies page is read writable, UNSET implies read only
@@ -30,6 +36,11 @@
 #define NEW_FLAGS(p,rw,md,glb) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
     | (md << MODE_FLAG_BIT) | (glb << GLOBAL_FLAG_BIT))
 
+#define ADD_USER_START_FLAG(flags) (flags | (SET << USER_START_FLAG_BIT))
+#define ADD_USER_END_FLAG(flags) (flags | (SET << USER_END_FLAG_BIT))
+
+#define IS_USER_START(pte) ((pte >> USER_START_FLAG_BIT) & 1)
+#define IS_USER_END(pte) ((pte >> USER_END_FLAG_BIT) & 1)
 
 #define USER_RO NEW_FLAGS(SET, UNSET, SET, UNSET)
 #define USER_WR NEW_FLAGS(SET, SET, SET, UNSET)
@@ -60,11 +71,13 @@
 
 typedef struct page_directory {
     uint32_t *directory;
+    ll_t *user_mem_sections;
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t **pte);
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr, uint32_t pte_flags, uint32_t pde_flags);
+int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr);
 int pd_entry_present(uint32_t v);
 int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src);
 int pd_map_sections(page_directory_t *pd, mem_section_t *secs,

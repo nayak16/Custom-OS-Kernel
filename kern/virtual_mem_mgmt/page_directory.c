@@ -43,6 +43,7 @@ int pd_init(page_directory_t *pd);
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t **pte);
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
         uint32_t pte_flags, uint32_t pde_flags);
+int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr);
 int pd_entry_present(uint32_t v);
 int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src);
 int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
@@ -165,7 +166,24 @@ int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
     return 0;
 }
 
+int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr){
+    if (!IS_PAGE_ALIGNED(v_addr) || pd == NULL) return -1;
+    uint32_t pde_i, pte_i;
+    /* page directory entry index = top 10 bits of v_addr */
+    pde_i = (v_addr >> (OFF_SHIFT + PTE_SHIFT)) & 0x3FF;
+    /* page table index = 2nd 10 bits of v_addr */
+    pte_i = (v_addr >> OFF_SHIFT) & 0x3FF;
 
+    /* check for present page directory entry */
+    if (entry_present(pd->directory[pde_i]) != ENTRY_PRESENT)
+        return -2;
+    uint32_t *page_table = (uint32_t *)REMOVE_FLAGS(pd->directory[pde_i]);
+    if (entry_present(page_table[pte_i]) != ENTRY_PRESENT)
+        return -3;
+    /* clear the mapping */
+    page_table[pte_i] = 0;
+    return 0;
+}
 /** @brief Returns the directory in a page directory struct
  *  @param pd The page directory
  *  @return The directory
@@ -182,7 +200,9 @@ void *pd_get_base_addr(page_directory_t *pd){
 int pd_init(page_directory_t *pd){
     /* page align allocation and clear out all present bits */
     pd->directory = memalign(PAGE_SIZE, PD_SIZE);
-    if (pd->directory == NULL) return -1;
+    if (pd->directory == NULL){
+        return -1;
+    }
     memset(pd->directory, 0, PD_SIZE);
     if (initialize_kernel(pd) < 0){
         free(pd->directory);
@@ -207,6 +227,7 @@ int pd_init(page_directory_t *pd){
  */
 int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
     if (pd_dest == NULL || pd_src == NULL) return -1;
+
     /* copy the upper level page directory */
     uint32_t i;
     /* copy over non-kernel space */
