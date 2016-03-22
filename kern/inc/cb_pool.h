@@ -18,7 +18,6 @@
  */
 typedef struct cb_pool {
     ll_t pool;
-    mutex_t m;
 } cb_pool_t;
 
 int cb_pool_init(cb_pool_t *cp);

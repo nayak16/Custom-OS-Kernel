@@ -16,10 +16,7 @@ typedef struct scheduler{
     cb_pool_t thr_pool;
     cb_pool_t process_pool;
 
-    int cur_tid;
-    int cur_pid;
-    queue_t runnable_pool;
-    queue_t waiting_pool;
+    tcb_t *cur_tcb;
 
 } scheduler_t;
 
