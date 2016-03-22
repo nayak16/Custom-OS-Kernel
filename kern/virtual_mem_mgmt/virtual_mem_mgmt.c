@@ -224,7 +224,6 @@ int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
         memset((void *)v_addr, 0, PAGE_SIZE);
         v_addr += PAGE_SIZE;
     }
-    print_page_directory(pd, 1022, 2, 0);
     return 0;
 }
 
@@ -262,6 +261,5 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
         v_addr += PAGE_SIZE;
     } while (!IS_USER_END(pte));
 
-    print_page_directory(pd, 1022, 2, 0);
     return 0;
 }
