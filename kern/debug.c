@@ -41,6 +41,9 @@ void print_page_directory(page_directory_t *pd, int start, int len, int verbose)
                 lprintf("> PTE #1023 : 0x%x", temp[1023]);
                 lprintf("> PTE #1022 : 0x%x", temp[1022]);
                 lprintf("> PTE #1021 : 0x%x", temp[1021]);
+                lprintf("> PTE #1020 : 0x%x", temp[1020]);
+                lprintf("> PTE #1019 : 0x%x", temp[1019]);
+                lprintf("> PTE #1018 : 0x%x", temp[1018]);
                 lprintf("> ....");
                 lprintf("> PTE #0002 : 0x%x", temp[2]);
                 lprintf("> PTE #0001 : 0x%x", temp[1]);

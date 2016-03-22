@@ -153,6 +153,7 @@ int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
     if (entry_present(pd->directory[pde_i]) != ENTRY_PRESENT){
         if ((pde_value = (uint32_t)memalign(PAGE_SIZE, PT_SIZE)) == 0)
             return -2;
+        memset((void *)pde_value, 0, PAGE_SIZE);
         pde_value = ADD_FLAGS(pde_value, pde_flags);
         pd->directory[pde_i] = pde_value;
     } else {
@@ -240,6 +241,7 @@ int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
             if (new_pt == NULL)
                 //TODO: roll back changes
                 return -1;
+            memset((void *)new_pt, 0, PAGE_SIZE);
             uint32_t flags = EXTRACT_FLAGS(entry);
             /* map page directory to new page table */
             pd_dest->directory[i] = (uint32_t)new_pt | flags;

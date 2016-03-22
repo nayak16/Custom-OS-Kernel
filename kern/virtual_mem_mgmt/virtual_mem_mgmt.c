@@ -10,6 +10,8 @@
 /* tlb_flush */
 #include <special_reg_cntrl.h>
 
+#include <debug.h>
+
 /** @brief Copies the physical frame pointed to by v_addr in the
  *         current active page directory into p_addr
  *
@@ -216,9 +218,13 @@ int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
         if (i == num_pages-1){
             pte_f = ADD_USER_END_FLAG(pte_f);
         }
-        pd_create_mapping(pd, v_addr, p_addr, pte_f, pde_f);
+        if (pd_create_mapping(pd, v_addr, p_addr, pte_f, pde_f) < 0)
+            return -1;
+
+        memset((void *)v_addr, 0, PAGE_SIZE);
         v_addr += PAGE_SIZE;
     }
+    print_page_directory(pd, 1022, 2, 0);
     return 0;
 }
 
@@ -249,10 +255,13 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
         pte = *pte_p;
         /* remove mapping */
         pd_remove_mapping(pd, v_addr);
+        /* flush mapping in tlb */
+        flush_tlb((uint32_t)v_addr);
         /* give frame back to frame manager */
         fm_dealloc(&fm, (void *)REMOVE_FLAGS(pte));
         v_addr += PAGE_SIZE;
     } while (!IS_USER_END(pte));
 
+    print_page_directory(pd, 1022, 2, 0);
     return 0;
 }
