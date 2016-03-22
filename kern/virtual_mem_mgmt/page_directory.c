@@ -37,11 +37,70 @@
 #define ENTRY_PRESENT 0
 #define ENTRY_NOT_PRESENT 1
 
+/* Predeclaration */
+
+int pd_init(page_directory_t *pd);
+int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t **pte);
+int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
+        uint32_t pte_flags, uint32_t pde_flags);
+int pd_entry_present(uint32_t v);
+int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src);
+int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
+        uint32_t num_secs);
+void *pd_get_base_addr(page_directory_t *pd);
+
+/* Helper functions */
+
+/** @brief Finds from a pte or pde whether that entry is present
+ *  @param v The pte/pte value
+ *  @return ENTRY_PRESENT if present, ENTRY_NOT_PRESENT otherwise */
 int entry_present(uint32_t v){
     if (NTH_BIT(v,0) == 0) return ENTRY_NOT_PRESENT;
     return ENTRY_PRESENT;
 }
 
+/** @brief Initializes the kernel mappings of a page directory
+ *  @param pd The page directory
+ *  @return 0 on success -1 on failure
+ */
+int initialize_kernel(page_directory_t *pd){
+    if (pd == NULL) return -1;
+    /* present, rw enabled, supervisor mode, dont flush */
+    uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET);
+    /* present, rw enabled, supervisor mode */
+    uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONT_CARE);
+    uint32_t i;
+    /* for the first num_kernel_entries, set the vpn==ppn for direct map */
+    /* Leave 0th page unmapped */
+    for (i = 1; i < NUM_KERNEL_PTE; i++){
+        uint32_t direct_addr = i << PAGE_SHIFT;
+        if (pd_create_mapping(pd, direct_addr, direct_addr,
+                    pte_flags, pde_flags) < 0){
+            return -1;
+        }
+    }
+    return 0;
+}
+
+/** @brief Gets the address of a page given its page table and page directory
+ *         indexes
+ *  @param pd_i The page directory index
+ *  @param pt_i The page table index
+ *  @return The page's address
+ */
+void *get_page_address(uint32_t pd_i, uint32_t pt_i){
+    return (void *)(pd_i << 22 | pt_i << 12);
+}
+
+/* Implementation */
+
+/** @brief Finds the mapping of a virtual address if it exists in a page
+ *         directory and optionally returns the address of the entry
+ *  @param pd The page directory
+ *  @param v_addr The virtual address to look up
+ *  @param entry_addr Where the address of the pte is stored upon return
+ *  @return 0 on success, negative integer code on failure
+ */
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr,
         uint32_t **entry_addr){
     if (pd == NULL) return -1;
@@ -64,6 +123,18 @@ int pd_get_mapping(page_directory_t *pd, uint32_t v_addr,
     return 0;
 }
 
+
+/** @brief Creates a mapping in a page directory with given flags
+ *
+ *  Requires that both v_addr and p_addr are page aligned
+ *
+ *  @param pd The page directory
+ *  @param v_addr The virtual address to map
+ *  @param p_addr The physical frame to map to
+ *  @param pte_flags The page table entry flags
+ *  @param pde_flags The page directory entry flags (if new page table is made)
+ *  @return 0 on success, negative integer code on failure
+ */
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
         uint32_t pte_flags, uint32_t pde_flags){
     /* input addresses must be page aligned */
@@ -95,40 +166,45 @@ int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
 }
 
 
-int initialize_kernel(page_directory_t *pd){
-    /* present, rw enabled, supervisor mode, dont flush */
-    uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET);
-    /* present, rw enabled, supervisor mode */
-    uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONT_CARE);
-    uint32_t i;
-    /* for the first num_kernel_entries, set the vpn==ppn for direct map */
-    /* Leave 0th page unmapped */
-    for (i = 1; i < NUM_KERNEL_PTE; i++){
-        uint32_t direct_addr = i << PAGE_SHIFT;
-        pd_create_mapping(pd, direct_addr, direct_addr, pte_flags, pde_flags);
-    }
-    return 0;
-}
-
-
+/** @brief Returns the directory in a page directory struct
+ *  @param pd The page directory
+ *  @return The directory
+ */
 void *pd_get_base_addr(page_directory_t *pd){
     return (void *)(pd->directory);
 }
 
+
+/** @brief Initializes a page directory
+ *  @param The page directory
+ *  @return 0 on success, -1 on failure
+ */
 int pd_init(page_directory_t *pd){
     /* page align allocation and clear out all present bits */
     pd->directory = memalign(PAGE_SIZE, PD_SIZE);
     if (pd->directory == NULL) return -1;
     memset(pd->directory, 0, PD_SIZE);
-    initialize_kernel(pd);
+    if (initialize_kernel(pd) < 0){
+        free(pd->directory);
+        pd->directory = NULL;
+        return -1;
+    }
     return 0;
 }
 
-void *get_page_address(uint32_t pd_i, uint32_t pt_i){
-    return (void *)(pd_i << 22 | pt_i << 12);
-}
 
-
+/** @brief Shallow copies a page directory
+ *
+ *  Both pd_dest and pd_src are expected to be pd_init'ed. Only copies
+ *  page directory entries that are present and are not in the kernel.
+ *  After execution, the same page directory entry indexes of pd_dest
+ *  and pd_src will be filled but  pd_dest will point to different (and empty)
+ *  page tables then that of pd_src.
+ *
+ *  @param pd_dest The page directory to copy to
+ *  @param pd_src The page directory copying from
+ *  @return 0 On success -1 on failure
+ */
 int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
     if (pd_dest == NULL || pd_src == NULL) return -1;
     /* copy the upper level page directory */
@@ -140,6 +216,9 @@ int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
         if (entry_present(entry) == ENTRY_PRESENT){
             /* allocate a new page table */
             uint32_t *new_pt = memalign(PAGE_SIZE, PT_SIZE);
+            if (new_pt == NULL)
+                //TODO: roll back changes
+                return -1;
             uint32_t flags = EXTRACT_FLAGS(entry);
             /* map page directory to new page table */
             pd_dest->directory[i] = (uint32_t)new_pt | flags;

@@ -26,7 +26,7 @@
 /** @brief Allocates a frame
  *  @param fm The frame manager
  *  @param addr Result pointer to be stored to if needed
- *  @return 0 on success, 1 on failure */
+ *  @return 0 on success, -1 on failure */
 int fm_alloc(frame_manager_t *fm, void **addr){
     mutex_lock(&(fm->m));
     int status = queue_deq(&(fm->free_frames), addr);
@@ -37,7 +37,7 @@ int fm_alloc(frame_manager_t *fm, void **addr){
 /** @brief Gets address of next free frame
  *  @param fm The frame manager
  *  @param addr Result pointer to be stored
- *  @return 0 on success, 1 on failure */
+ *  @return 0 on success, -1 on failure */
 int fm_nxt_free_frame(frame_manager_t *fm, void **addr) {
     mutex_lock(&(fm->m));
     int status = queue_peek(&(fm->free_frames), addr);
@@ -48,7 +48,7 @@ int fm_nxt_free_frame(frame_manager_t *fm, void **addr) {
 /** @brief Deallocates a frame
  *  @param fm The frame manager
  *  @param addr Physical address that is to be inserted into free frames
- *  @return 0 on success, 1 on failure */
+ *  @return 0 on success, -1 on failure */
 int fm_dealloc(frame_manager_t *fm, void *addr){
     if (((uint32_t)addr % PAGE_SIZE) || (uint32_t)addr < USER_MEM_START)
         return -1;
@@ -60,6 +60,8 @@ int fm_dealloc(frame_manager_t *fm, void *addr){
 
 
 /** @brief Initializes a frame manager
+ *  @param fm The frame manager
+ *  @return 0 on success, -1 on failure
  */
 int fm_init(frame_manager_t *fm){
     if (fm == NULL) return -1;
@@ -85,6 +87,9 @@ int fm_init(frame_manager_t *fm){
     return 0;
 }
 
+/** @brief Destroys and cleans up a frame manager
+ *  @param fm The frame manager
+ *  @return Void */
 void fm_destroy(frame_manager_t *fm){
     if (fm == NULL) return;
     mutex_destroy(&(fm->m));
@@ -92,6 +97,9 @@ void fm_destroy(frame_manager_t *fm){
     return;
 }
 
+/** @brief Gets number of frames remaining in frame manager
+ *  @param fm The frame manager
+ *  @return Number of free frames, -1 on invalid input */
 int fm_num_free_frames(frame_manager_t *fm){
     mutex_lock(&(fm->m));
     int n = queue_size(&(fm->free_frames));

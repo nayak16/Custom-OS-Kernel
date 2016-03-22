@@ -9,14 +9,28 @@
 #include <common_kern.h>
 /* tlb_flush */
 #include <special_reg_cntrl.h>
-/* requires target_pte is in the current page_directory */
-int copy_page(page_directory_t *pd_dest, uint32_t *target_pte,
-        void *v_addr, void *p_addr){
-    if (pd_dest == NULL || target_pte == NULL)
+/** @brief Copies the physical frame pointed to by v_addr in the
+ *         current active page directory into p_addr
+ *
+ *  Requires that target_pte is the address of a page table entry
+ *  in the current page directory/table system, and that it corresponds
+ *  correctly with v_addr. In other words the address that target_pte
+ *  translates to is equal ot v_addr.
+ *
+ *  @param target_pte Pointer to the page table entry that maps v_addr
+ *  @param v_addr The source virtual address
+ *  @param p_addr The destionation physical address
+ *  @return 0 on success, negative code on failure
+ */
+int copy_page(uint32_t *target_pte, void *v_addr, void *p_addr){
+    if (target_pte == NULL)
         return -1;
     /* allocate a new buffer to hold our page contents locally */
     void *buffer = malloc(PAGE_SIZE);
-    if (buffer == NULL) return -2;
+    if (buffer == NULL){
+        free(buffer);
+        return -2;
+    }
     /* original page table entry */
     uint32_t original_pte = *target_pte;
     uint32_t flags = EXTRACT_FLAGS(original_pte);
@@ -32,12 +46,20 @@ int copy_page(page_directory_t *pd_dest, uint32_t *target_pte,
     *target_pte = original_pte;
     /* flush out any false mappings */
     flush_tlb((uint32_t)v_addr);
-    free(buffer);
 
+    free(buffer);
     return 0;
 }
 
-
+/** @brief Deep copies the current page directory into pd_dest
+ *
+ *  Sets pd_dest to the same structure as the current active directory
+ *  but with different page directory entries pointing to new page tables,
+ *  new page table entries pointing to new physical frames, and new physical
+ *  frames containing the same information as it's copy
+ *
+ *  @param pd_dest The page directory to copy to
+ *  @return 0 on success, negative integer code on failure */
 int vmm_deep_copy(page_directory_t *pd_dest){
     if (pd_dest == NULL)
         return -1;
@@ -69,7 +91,7 @@ int vmm_deep_copy(page_directory_t *pd_dest){
             if (fm_alloc(&fm, (void **)&p_addr) < 0){
                 panic("Not enough frames; TODO: give back allocated frames");
             }
-            copy_page(pd_dest, pte, (void *)v_addr, (void *)p_addr);
+            copy_page(pte, (void *)v_addr, (void *)p_addr);
 
             /* don't care about pde_flags since the directory
              * should already have been mapped and all new page tables
@@ -83,6 +105,17 @@ int vmm_deep_copy(page_directory_t *pd_dest){
     return 0;
 }
 
+
+/** @brief Maps multiple memory sections into pd
+ *
+ *  Requires that sections that share the same page table have the same
+ *  permissioning
+ *
+ *  @param pd The page directory to map to
+ *  @param secs The array of memory sections
+ *  @param num_secs The number of sections to map
+ *  @return 0 on success, negative integer code on failure
+ */
 int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
         uint32_t num_secs) {
     if (pd == NULL || secs == NULL || num_secs == 0) return -1;
@@ -131,8 +164,20 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
     return 0;
 }
 
+
+/** @brief Attempts to allocate a new user space page
+ *
+ *  Will return negative integer code if pd is NULL, if num_pages is something
+ *  unreasonable, or if base is not in the user space.
+ *
+ *  Requires base is page aligned
+ *
+ *  @param pd The page directory
+ *  @param base The starting address to allocate from
+ *  @param num_pages The number of pages to allocate
+ */
 int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
-    if (pd == NULL || num_pages == 0)
+    if (pd == NULL || num_pages == 0 || num_pages > 0xFFFF)
         return -1;
     /* check for enough physical frames */
     if (fm_num_free_frames(&fm) < num_pages)

@@ -20,6 +20,8 @@
 /* x86 specific includes */
 #include <x86/asm.h>                /* enable_interrupts() */
 
+/* panic */
+#include <stdlib.h>
 
 /* console */
 #include <console.h>
@@ -99,7 +101,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     enable_paging();
 
     /* load idle program */
-    pcb_load_prog(&idle_pcb, "test_new_pages");
+    if (pcb_load_prog(&idle_pcb, "test_fork1") < 0)
+        panic("could not load idle task");
     /* add idle process to scheduler */
     scheduler_add_process(&sched, &idle_pcb, NULL);
 

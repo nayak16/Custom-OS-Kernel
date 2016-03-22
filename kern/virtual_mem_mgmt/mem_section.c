@@ -9,6 +9,13 @@
 
 #include <mem_section.h>
 
+/** @brief Initializes a memory section with given parameters
+ *  @param ms The memory section
+ *  @param addr The starting address of the memory section
+ *  @param len The length of the memory section in bytes
+ *  @param pde_flags The flags for the page directory entry
+ *  @param pte_flags The flags for the page table entry
+ *  @return 0 on success, -1 on failure */
 int ms_init(mem_section_t *ms, uint32_t addr, uint32_t len,
                      uint32_t pde_flags, uint32_t pte_flags) {
     if (ms == NULL) return -1;
@@ -20,6 +27,11 @@ int ms_init(mem_section_t *ms, uint32_t addr, uint32_t len,
     return 0;
 }
 
+/** @brief Gets the bounding addresses of multiple memory sections
+ *  @param secs The array of sections
+ *  @param num_secs The number of sections in the array
+ *  @param addr_low Where the lower bound address is stored
+ *  @param addr_high Where the upper bound address is stored */
 int ms_get_bounding_addr(mem_section_t *secs, uint32_t num_secs,
         uint32_t *addr_low, uint32_t *addr_high){
     if (secs == NULL || num_secs == 0 || addr_low == NULL ||
@@ -40,9 +52,19 @@ int ms_get_bounding_addr(mem_section_t *secs, uint32_t num_secs,
     return 0;
 }
 
+
+/** @brief Given an address range, finds a memory section which contains
+ *         part or all of the given address range from an array of sections
+ *  @param secs The array of memory sections
+ *  @param num_secs The length of secs
+ *  @param addr_low The lower bound range of address space
+ *  @param addr_high The upper bound range of address space
+ *  @param result Where the result is stored
+ *  @return 0 on success, -1 on invalid input, 1 on valid input but no bounding
+ *          section found */
 int ms_get_bounding_section(mem_section_t *secs, uint32_t num_secs,
         uint32_t addr_low, uint32_t addr_high, mem_section_t **result){
-    /* NOTE: low is inclusive and high is exclusive */
+    /* low and high are inclusive */
     if (secs == NULL || num_secs == 0 || (addr_low > addr_high) ||
             result == NULL) return -1;
     int i;
