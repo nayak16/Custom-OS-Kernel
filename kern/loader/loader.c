@@ -11,11 +11,13 @@
 #include <exec2obj.h>
 #include <loader.h>
 #include <elf_410.h>
+#include <x86/asm.h>
 
 #include <constants.h>
 #include <pcb.h>
 #include <frame_manager.h>
 #include <mem_section.h>
+#include <special_reg_cntrl.h>
 
 #include <simics.h>
 
@@ -57,7 +59,7 @@ int getbytes( const char *filename, int offset, int size, char *buf )
     return -1;
 }
 
-int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
+int map_elf_sections(simple_elf_t *elf, pcb_t *pcb){
     mem_section_t secs[NUM_ELF_SECTIONS];
 
     ms_init(&secs[0], elf->e_txtstart,
@@ -90,6 +92,7 @@ int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
     /* Set process entry point */
     pcb->entry_point = elf->e_entry;
     return 0;
+
 }
 
 

@@ -59,14 +59,14 @@ int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb) {
 }
 
 
-int pcb_load_prog(pcb_t *pcb, const char *filename, int argc, char** argv){
+int pcb_init_prog(pcb_t *pcb, const char *filename, int argc, char** argv){
     if (pcb == NULL || filename == NULL) return -1;
     simple_elf_t elf;
     if (elf_check_header(filename) != ELF_SUCCESS) return -2;
     if (elf_load_helper(&elf, filename) != ELF_SUCCESS) return -3;
 
     /* Load elf sections into memory */
-    if (load_elf_sections(&elf, pcb) < 0) return -4;
+    if (map_elf_sections(&elf, pcb) < 0) return -4;
 
     pcb->argc = argc;
     pcb->argv = argv;
@@ -75,3 +75,19 @@ int pcb_load_prog(pcb_t *pcb, const char *filename, int argc, char** argv){
 
     return 0;
 }
+
+/**
+ * @brief Fills elf sections with actual data from elf file
+ *
+ * ONLY CALL WHEN pcb->pd IS THE PDBR
+ * @param pcb pcb to load program with
+ *
+ * @return 0 on success, negative err
+ */
+int pcb_load_prog(pcb_t *pcb) {
+    if (pcb == NULL) return -1;
+
+    fill_elf_sections
+
+}
+

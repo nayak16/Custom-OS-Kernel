@@ -23,7 +23,6 @@ int main(int argc, char** argv)
   char *name = "knife";
   char *args[] = {name, "a", 0};
 
-  MAGIC_BREAK;
   exec(name,args);
 
   exit(-1);

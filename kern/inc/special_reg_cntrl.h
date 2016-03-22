@@ -13,6 +13,8 @@
 
 void set_pdbr(uint32_t new_pdbr);
 
+uint32_t get_pdbr();
+
 void enable_paging(void);
 
 void enable_pge(void);

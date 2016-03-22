@@ -77,9 +77,13 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
     }
 
     /* Create new pcb and load new program */
-    //pcb_t new_pcb;
-    //pcb_init(&new_pcb);
-    //pcb_load_prog(&new_pcb, execname, argc, argvec);
+    pcb_t new_pcb;
+    pcb_init(&new_pcb);
+    MAGIC_BREAK;
+    if (pcb_load_prog(&new_pcb, execname, argc, argvec) < 0) {
+        lprintf("Failed to load program: %s", execname);
+        return -2;
+    }
 
     /* Add process to scheduler */
 
