@@ -40,7 +40,7 @@
 /* Predeclaration */
 
 int pd_init(page_directory_t *pd);
-int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t **pte);
+int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t *pte);
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
         uint32_t pte_flags, uint32_t pde_flags);
 int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr);
@@ -103,7 +103,7 @@ void *get_page_address(uint32_t pd_i, uint32_t pt_i){
  *  @return 0 on success, negative integer code on failure
  */
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr,
-        uint32_t **entry_addr){
+        uint32_t *entry_addr){
     if (pd == NULL) return -1;
     uint32_t pde_i = (v_addr >> (OFF_SHIFT + PTE_SHIFT)) & 0x3FF;
     /* page table index = 2nd 10 bits of v_addr */
@@ -119,7 +119,7 @@ int pd_get_mapping(page_directory_t *pd, uint32_t v_addr,
     }
     /* found mapping */
     if (entry_addr != NULL){
-        *entry_addr = &(pt[pte_i]);
+        *entry_addr = pt[pte_i];
     }
     return 0;
 }

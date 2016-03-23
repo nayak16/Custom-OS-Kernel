@@ -165,28 +165,23 @@ int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
 int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
     if (pd == NULL || base < USER_MEM_START || !IS_PAGE_ALIGNED(base))
         return -1;
-    uint32_t *pte_p = NULL;
+    uint32_t pte = 0;
     /* check to see if base is mapped */
-    if (pd_get_mapping(pd, base, &pte_p) < 0){
+    if (pd_get_mapping(pd, base, &pte) < 0){
         return -2;
     }
     /* check to ensure that said page table is the start of a new_pages
      * allocation */
-    if (pte_p == NULL || !IS_USER_START(*pte_p)){
-        return -3;
-    }
+    if (!IS_USER_START(pte)) return -3;
     /* go through all the addresses until we get an address that signifies
      * the end of a user new_pages */
     uint32_t v_addr = base;
-    uint32_t pte;
-    pte_p = NULL;
+    pte = 0;
     do {
         if (v_addr - PAGE_SIZE > v_addr)
             panic("Overflowed while deallocating stack space!!");
         /* get the mapping so we can check if we're done */
-        pd_get_mapping(pd, v_addr, &pte_p);
-        /* save the mapping since we want to flush the page table entry */
-        pte = *pte_p;
+        pd_get_mapping(pd, v_addr, &pte);
         /* remove mapping */
         pd_remove_mapping(pd, v_addr);
         /* flush mapping in tlb */
