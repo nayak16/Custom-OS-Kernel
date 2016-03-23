@@ -37,6 +37,16 @@ int ht_init(ht_t *t, uint32_t max_size,
     return 0;
 }
 
+/**
+ * @brief Gets the value with the key provided
+ *
+ * @param t Hashtable to access
+ * @param key Key used to find the data desired
+ * @param valp Address to store value
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int ht_get(ht_t *t, key_t key, void **valp) {
     if (t == NULL || valp == NULL) return -1;
 
@@ -57,6 +67,30 @@ int ht_get(ht_t *t, key_t key, void **valp) {
     return -2;
 }
 
+int remove_entry(ht_t *t, ht_entry_t *e, int idx) {
+    if (t == NULL || e == NULL || idx < 0) return -1;
+
+    /* Only one in chain */
+    if (e->prev == NULL && e->next == NULL) {
+        t->arr[idx] = NULL;
+    }
+    else {
+        if (e->prev != NULL) e->prev->next = e->next;
+        if (e->next != NULL) e->next->prev = e->prev;
+    }
+    return 0;
+}
+
+/**
+ * @brief Removes and reports the value with the key provided
+ *
+ * @param t Hashtable to access
+ * @param key Key used to find the data desired
+ * @param valp Address to store value
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int ht_remove(ht_t *t, key_t key, void **valp) {
     if(t == NULL) return -1;
 
@@ -71,8 +105,7 @@ int ht_remove(ht_t *t, key_t key, void **valp) {
             /* If needed, save value */
             if (valp != NULL) *valp = e->val;
             /* Remove entry from chain */
-            e->prev->next = e->next;
-            e->next->prev = e->prev;
+            remove_entry(t, e, idx);
             /* Free entry */
             free(e);
             t->size--;
@@ -84,6 +117,18 @@ int ht_remove(ht_t *t, key_t key, void **valp) {
     return -2;
 }
 
+/**
+ * @brief Inserts the key and value pair in the specified hash table
+ *
+ * Uses provided hash function to calculate a bucket index
+ *
+ * @param t Hash table to insert pair into
+ * @param key key in key-value pair
+ * @param val value in key-value pair
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int ht_put(ht_t *t, key_t key, void *val) {
     if (t == NULL) return -1;
 
@@ -101,11 +146,11 @@ int ht_put(ht_t *t, key_t key, void *val) {
     new_e->val = val;
     new_e->key = key;
     new_e->next = NULL;
+    new_e->prev = NULL;
 
     /* Check if first in bucket */
     if (e == NULL) {
         t->arr[idx] = new_e;
-        new_e->prev = NULL;
     }/* Otherwise, put at end of chain */
     else {
         e->next = new_e;
@@ -115,6 +160,14 @@ int ht_put(ht_t *t, key_t key, void *val) {
     return 0;
 }
 
+/**
+ * @brief Destroys the specified hash table and frees it's data structures
+ *
+ * @param t Hash table to destroy
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 void ht_destroy(ht_t *t) {
     if (t == NULL) return;
 
@@ -132,7 +185,6 @@ void ht_destroy(ht_t *t) {
     }
     /* Free table */
     free(t->arr);
-
 }
 
 

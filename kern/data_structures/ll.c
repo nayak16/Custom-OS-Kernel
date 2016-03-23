@@ -19,7 +19,15 @@
 
 
 /************* Linked List Node Functions *************/
-
+/**
+ * @brief Inits a linked list node
+ *
+ * @param node Node to init
+ * @param data Data to store in node
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int ll_node_init(ll_node_t *node, void *data) {
     if (node == NULL) return -1;
     node->prev = NULL;
@@ -29,6 +37,15 @@ int ll_node_init(ll_node_t *node, void *data) {
     return 0;
 }
 
+/**
+ * @brief Gets data from node and stores it in datap
+ *
+ * @param node Node to get data from
+ * @param datap Address to store data
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int ll_node_get_data(ll_node_t *node, void **datap) {
     if (node == NULL) return -1;
     *datap = node->e;
