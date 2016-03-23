@@ -53,7 +53,7 @@ typedef struct tcb{
 int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
 
     /* Set appropriate tid and pcb */
-    tcb->id = tid;
+    tcb->tid = tid;
     tcb->pcb = pcb;
 
     /* Set status to UNINIT indicating it's not in the scheduler yet */
@@ -101,7 +101,7 @@ int tcb_destroy(tcb_t *tcb) {
 
 int tcb_gettid(tcb_t *tcb, int *tid){
     if (tcb == NULL) return -1;
-    *tid = tcb->id;
+    *tid = tcb->tid;
     return 0;
 }
 

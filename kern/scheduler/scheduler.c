@@ -10,7 +10,7 @@
 #include <scheduler.h>
 #include <dispatcher.h>
 #include <queue.h>
-#include <cb_pool.h>
+#include <tcb_pool.h>
 /* pdbr */
 #include <special_reg_cntrl.h>
 /* set_esp0 */
@@ -37,9 +37,9 @@ int scheduler_init(scheduler_t *sched){
     sched->next_pid = 0;
     sched->cur_tcb = NULL;
 
-    if (cb_pool_init(&(sched->thr_pool)) < 0
+    /*if (cb_pool_init(&(sched->thr_pool)) < 0
             || cb_pool_init(&(sched->process_pool)) < 0) return -3;
-
+    */
     return 0;
 }
 
@@ -54,7 +54,7 @@ int scheduler_init(scheduler_t *sched){
  */
 int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
     if (sched == NULL) return -1;
-    *tidp = sched->cur_tcb->id;
+    *tidp = sched->cur_tcb->tid;
     return 0;
 }
 
@@ -93,7 +93,7 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     if (sched == NULL) return -1;
 
     /* Assign next pid */
-    pcb->id = sched->next_pid++;
+    pcb->pid = sched->next_pid++;
 
     /* Create a new tcb to run the pcb */
     tcb_t *tcb = malloc(sizeof(tcb_t));
@@ -106,11 +106,11 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     tcb->status = RUNNABLE;
 
     /* Add pcb and tcb to respective pools */
-    if (cb_pool_add_cb(&(sched->thr_pool), (void*)tcb) < 0
+    /*if (cb_pool_add_cb(&(sched->thr_pool), (void*)tcb) < 0
             || cb_pool_add_cb(&(sched->process_pool), (void*)pcb) < 0) {
 
         return -3;
-    }
+    }*/
 
     return tid;
 }
@@ -206,14 +206,13 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
     if (sched == NULL || tcbp == NULL) return -1;
 
-    int tid = 0;
+    //int tid = 0;
     /* Remove from runnable pool */
 
 
-    if(cb_pool_get_cb(&(sched->thr_pool), tid, (void**)tcbp) < 0) {
-        /* TODO: FATAL ERROR */
+    /*if(cb_pool_get_cb(&(sched->thr_pool), tid, (void**)tcbp) < 0) {
         return -2;
-    }
+    }*/
 
     return 0;
 }

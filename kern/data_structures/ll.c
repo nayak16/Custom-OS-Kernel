@@ -139,6 +139,37 @@ int ll_peek(ll_t *ll, void **val){
     return 0;
 }
 
+/**
+ * @brief Statically Moves the head of the list to the tail
+ *
+ * @param ll Linked list to modify
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
+int ll_cycle(ll_t *ll) {
+    if (ll == NULL) return -1;
+
+    /* Save original head */
+    ll_node_t *orig_head = ll->head;
+
+    /* Set new head */
+    ll->head = orig_head->next;
+
+    /* orig_head next now points to nothing */
+    orig_head->next = NULL;
+
+    /* Link up next and prev pointers with tail */
+    orig_head->prev = ll->tail;
+    ll->tail->next = orig_head;
+
+    /* orig_head is now tail of list */
+    ll->tail = orig_head;
+
+    return 0;
+
+}
+
 
 /**
  * @brief Links the specified ll_node_t to the tail of ll specified
@@ -153,11 +184,11 @@ int ll_link_node(ll_t *ll, ll_node_t *new_node) {
 
     if (ll->head == NULL){
         ASSERT(ll->tail == NULL);
-        /* no elements in queue yet */
+        /* no elements in list yet */
         ll->head = new_node;
         ll->tail = new_node;
     } else {
-        /* link new node and update queue's back pointer */
+        /* link new node and update list's tail pointer */
         ll->tail->next = new_node;
         new_node->prev = ll->tail;
         ll->tail = new_node;
@@ -255,7 +286,7 @@ int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr){
  * @return 0 on success, negative if error or data not found
  *
  */
-int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val){
+int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val, void** valp){
     if (ll == NULL || func == NULL){
         return -1;
     }
@@ -264,6 +295,8 @@ int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val){
     /* Loop through linked list */
     while (node != NULL){
         if ((*func)(node->e) == c_val){
+            /* Save node data */
+            if (valp != NULL) *valp = node->e;
             /* Remove and free node */
             return ll_remove_node(ll, node);
         }

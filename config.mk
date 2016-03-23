@@ -123,7 +123,7 @@ data_structures/ll.o data_structures/queue.o data_structures/circ_buffer.o data_
 special_register_cntrl/spec_reg_wrappers.o special_register_cntrl/asm_functions.o \
 scheduler/pcb.o scheduler/scheduler.o scheduler/tcb.o scheduler/tcb_pool.o \
 dispatcher/dispatcher.o dispatcher/asm_helpers.o \
-locks/mutex.o
+locks/mutex.o \
 
 ###########################################################################
 # WARNING: Do not put **test** programs into the REQPROGS variables.  Your

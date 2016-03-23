@@ -22,9 +22,7 @@
 
 typedef struct tcb{
 
-    int id;
-
-    int pid;
+    int tid;
 
     int status;
 

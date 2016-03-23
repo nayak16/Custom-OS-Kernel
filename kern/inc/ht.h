@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-
+#include <ll.h>
 
 /**
  * @brief typedef of a key
@@ -23,20 +23,16 @@ typedef int key_t;
 typedef struct ht_entry {
     key_t key;
     void *val;
-    struct ht_entry *next;
-    struct ht_entry *prev;
 } ht_entry_t;
 
 typedef struct ht {
     uint32_t size;
     uint32_t max_size;
-    int (*compare)(key_t k1, key_t k2);
     int (*hash)(key_t key);
-    ht_entry_t **arr;
+    ll_t *arr;
 } ht_t;
 
-int ht_init(ht_t *t, uint32_t max_size,
-            int (*hash)(key_t key), int (*compare)(key_t k1, key_t k2));
+int ht_init(ht_t *t, uint32_t max_size, int (*hash)(key_t key));
 int ht_get(ht_t *t, key_t key, void **valp);
 int ht_put(ht_t *t, key_t key, void *val);
 void ht_destroy(ht_t *t);
