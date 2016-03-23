@@ -1,4 +1,3 @@
-
 #include <simics.h>
 #include <x86/asm.h>
 #include <x86/interrupt_defines.h>
@@ -8,26 +7,8 @@
 #include <kern_internals.h>
 /* KEYBOARD_PORT define */
 #include <x86/keyhelp.h>
+#include <circ_buffer.h>
 
-int key_buffer_read(){
-    // temporary
-    return 0;
-}
-
-int readchar(void){
-    int aug_char;
-    kh_type proc_char;
-    /* no keys to be read */
-    aug_char = key_buffer_read();
-    if (aug_char == -1) return -1;
-    /* bit extend with 0's before returning */
-    proc_char = process_scancode(aug_char);
-    if (KH_HASDATA(proc_char) && KH_ISMAKE(proc_char)){
-        return KH_GETCHAR(proc_char);
-    }
-    /* key stroke is a non-data or non-keystroke-down key press */
-    return -1;
-}
 
 uint32_t c_timer_handler(uint32_t old_esp) {
     uint32_t new_esp = context_switch(old_esp, -1);
@@ -37,6 +18,7 @@ uint32_t c_timer_handler(uint32_t old_esp) {
 
 void c_keyboard_handler(){
     inb(KEYBOARD_PORT);
+
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
     return;
 }

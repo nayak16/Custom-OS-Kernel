@@ -45,12 +45,14 @@
 #include <simics.h>                 /* lprintf() */
 #include <debug.h>
 
+#define KEYBOARD_BUFFER_SIZE 256
 
 scheduler_t sched;
 mutex_t heap_lock;
 frame_manager_t fm;
 mutex_t console_lock;
 mutex_t scheduler_lock;
+circ_buf_t keyboard_buffer;
 
 /** @brief Kernel entrypoint.
  *
@@ -79,6 +81,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     mutex_init(&console_lock);
     /* Init scheduler mutex */
     mutex_init(&scheduler_lock);
+
+    /* initialize the keyboard buffer */
+    circ_buf_init(&keyboard_buffer, KEYBOARD_BUFFER_SIZE);
 
     /* init frame manager */
     fm_init(&fm);

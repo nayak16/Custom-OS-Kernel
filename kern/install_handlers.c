@@ -21,6 +21,10 @@
 #include <x86/keyhelp.h>
 
 #include <idt_handlers.h>
+/* access to circ_buf_init */
+#include <circ_buffer.h>
+/* access to keyboard_buffer */
+#include <kern_internals.h>
 /**
  * CONSTANTS
  */
@@ -155,6 +159,7 @@ int install_exception_handlers() {
 
     return 0;
 }
+
 
 int install_peripheral_handlers(){
     char lsb, msb;

@@ -4,9 +4,17 @@
 keyboard_handler:
     // Save Registers
     pusha
+    push %ds
+    push %es
+    push %fs
+    push %gs
     // Call C handler
     call c_keyboard_handler
     // Restore Registers
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
     popa
     iret
 
