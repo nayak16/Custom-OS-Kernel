@@ -213,6 +213,59 @@ int pd_init(page_directory_t *pd){
     return 0;
 }
 
+int p_copy(void **target_pte, void *v_addr, void *p_addr){
+    if (target_pte == NULL || v_addr == NULL)
+        return -1;
+    /* allocate a new buffer to hold our page contents locally */
+    void *buffer = malloc(PAGE_SIZE);
+    if (buffer == NULL) return -2;
+    /* original page table entry */
+    void *original_pte = *target_pte;
+    uint32_t flags = EXTRACT_FLAGS(original_pte);
+    /* target virtual address */
+    memcpy(buffer, v_addr, PAGE_SIZE);
+    /* remap our virtual address to new physical address */
+    *target_pte = (void *)(ADD_FLAGS(p_addr,flags));
+    /* flush cached mappings for our virtual address */
+    flush_tlb((uint32_t)v_addr);
+    /* copy contents into new phys page */
+    memcpy(v_addr, buffer, PAGE_SIZE);
+    /* restore mapping */
+    *target_pte = original_pte;
+    /* flush out any false mappings */
+    flush_tlb((uint32_t)v_addr);
+    free(buffer);
+    return 0;
+}
+
+
+int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i,
+        frame_manager_t *fm){
+    uint32_t i;
+    /* copy each page table entry */
+    for (i = 0; i < PT_NUM_ENTRIES; i++){
+        uint32_t entry = pt_src[i];
+        uint32_t flags = entry & 0xFFF;
+        /* copy over present mappings */
+        if (entry_present(entry) == ENTRY_PRESENT){
+            void *p_addr;
+            if (fm_alloc(fm, &p_addr) < 0) return -2;
+            /* calculate the virtual address of current page being copied so
+             * that p_copy can *v_addr to write to the new physical address
+             * after remapping*/
+            void *v_addr = get_page_address(pd_i, i);
+            /* pass in address to the current page table entry so that p_copy
+             * can use it to copy into the new physical address */
+            if (p_copy((void **)&(pt_src[i]), v_addr, p_addr) < 0)
+                return -1;
+            /* assign pte to new physical address with flags */
+            pt_dest[i] = ADD_FLAGS(p_addr, flags);
+        }
+    }
+    return 0;
+}
+
+
 
 /** @brief Shallow copies a page directory
  *
@@ -226,7 +279,8 @@ int pd_init(page_directory_t *pd){
  *  @param pd_src The page directory copying from
  *  @return 0 On success -1 on failure
  */
-int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
+int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
+        frame_manager_t *fm){
     if (pd_dest == NULL || pd_src == NULL) return -1;
 
     /* copy the upper level page directory */
@@ -245,6 +299,7 @@ int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src){
             uint32_t flags = EXTRACT_FLAGS(entry);
             /* map page directory to new page table */
             pd_dest->directory[i] = (uint32_t)new_pt | flags;
+            pt_copy(new_pt, (uint32_t *)REMOVE_FLAGS(entry), i, fm);
         }
     }
     return 0;

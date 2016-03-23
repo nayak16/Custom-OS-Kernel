@@ -15,6 +15,7 @@
 #include <constants.h>
 #include <stdint.h>
 #include <mem_section.h>
+#include <frame_manager.h>
 
 #include <queue.h>
 
@@ -79,7 +80,7 @@ int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t **pte);
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr, uint32_t pte_flags, uint32_t pde_flags);
 int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr);
 int pd_entry_present(uint32_t v);
-int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src);
+int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src, frame_manager_t *fm);
 int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
         uint32_t num_secs);
 void *pd_get_base_addr(page_directory_t *pd);
