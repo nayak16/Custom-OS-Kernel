@@ -22,6 +22,7 @@ typedef struct cleanup {
 int cleanup_init(cleanup_t *clu);
 int cleanup_push(cleanup_t *clu, void (*routine)(void *), void *arg);
 int cleanup_pop(cleanup_t *clu, int execute);
+void cleanup_rollback(cleanup_t *clu);
 void cleanup_destroy(cleanup_t *clu);
 int cleanup_size(cleanup_t *clu);
 

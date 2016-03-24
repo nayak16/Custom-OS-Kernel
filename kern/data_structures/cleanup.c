@@ -39,6 +39,17 @@ int cleanup_pop(cleanup_t *clu, int execute){
     free(clut);
     return 0;
 }
+
+void cleanup_rollback(cleanup_t *clu){
+    if (clu == NULL) return;
+    uint32_t i;
+    for (i = 0; i < cleanup_size(clu); i++){
+        cleanup_pop(clu, 1);
+    }
+    return;
+}
+
+
 void cleanup_destroy(cleanup_t *clu){
     if (clu == NULL) return;
     stack_destroy(clu->stk);

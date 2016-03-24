@@ -65,7 +65,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = test_idle test_fork1 test_cs test_foo test_new_pages test_mem_mgmt
+STUDENTTESTS = test_idle test_fork1 test_cs test_foo test_new_pages test_mem_mgmt test_new_pages_rollback
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk
