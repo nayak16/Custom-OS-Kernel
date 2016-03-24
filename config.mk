@@ -119,7 +119,7 @@ AUTOSTACK_OBJS = autostack.o
 KERNEL_OBJS = console.o kernel.o loader/loader.o malloc_wrappers.o install_handlers.o debug.o asm_helpers.o \
 handlers/syscall_handler_wrappers.o handlers/exception_handler_wrappers.o handlers/thr_mgmt_handlers.o handlers/life_cycle_handlers.o handlers/exception_handlers.o handlers/console_io_handlers.o handlers/misc_handlers.o handlers/peripheral_handler_wrappers.o handlers/peripheral_handlers.o handlers/mem_mgmt_handlers.o \
 virtual_mem_mgmt/page_directory.o virtual_mem_mgmt/frame_manager.o virtual_mem_mgmt/mem_section.o virtual_mem_mgmt/virtual_mem_mgmt.o\
-data_structures/ll.o data_structures/queue.o data_structures/circ_buffer.o data_structures/ht.o data_structures/stack.o\
+data_structures/ll.o data_structures/queue.o data_structures/circ_buffer.o data_structures/ht.o data_structures/stack.o data_structures/cleanup.o\
 special_register_cntrl/spec_reg_wrappers.o special_register_cntrl/asm_functions.o \
 scheduler/pcb.o scheduler/scheduler.o scheduler/tcb.o scheduler/tcb_pool.o \
 dispatcher/dispatcher.o dispatcher/asm_helpers.o \
