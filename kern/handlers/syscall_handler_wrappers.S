@@ -69,6 +69,10 @@ syscall_fork_handler:
 syscall_print_handler:
     two_arg_syscall_wrapper syscall_print_c_handler
 
+.globl syscall_readline_handler
+syscall_readline_handler:
+    two_arg_syscall_wrapper syscall_readline_c_handler
+
 .globl syscall_vanish_handler
 syscall_vanish_handler:
     no_arg_syscall_wrapper syscall_vanish_c_handler

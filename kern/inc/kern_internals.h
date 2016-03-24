@@ -12,7 +12,7 @@
 #include <scheduler.h>
 #include <frame_manager.h>
 #include <mutex.h>
-#include <circ_buffer.h>
+#include <keyboard.h>
 
 /**
  * @brief Extern of physical memory manager for the kernel
@@ -37,7 +37,7 @@ extern mutex_t scheduler_lock;
 /**
  * @brief Global keyboard buffer
  */
-extern circ_buf_t keyboard_buffer;
+extern keyboard_t keyboard;
 /**
  * @brief atomically exchanges val into lock and returns previous value of lock
  */

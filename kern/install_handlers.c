@@ -136,7 +136,7 @@ int install_syscall_handlers(){
     INSTALL_SYSCALL(syscall_remove_pages_handler, REMOVE_PAGES_INT);
     /* console io*/
     // get char
-    // readline
+    INSTALL_SYSCALL(syscall_readline_handler, READLINE_INT);
     INSTALL_SYSCALL(syscall_print_handler, PRINT_INT);
     INSTALL_SYSCALL(syscall_set_term_color_handler, SET_TERM_COLOR_INT);
     INSTALL_SYSCALL(syscall_set_cursor_pos_handler, SET_CURSOR_POS_INT);

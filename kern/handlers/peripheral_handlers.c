@@ -23,7 +23,7 @@ void c_keyboard_handler(){
     unsigned char aug_char = inb(KEYBOARD_PORT);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
     /* 0 extend aug_char and save into keyboard_buffer */
-    if (circ_buf_write(&keyboard_buffer, (void *)((uint32_t)aug_char)) < 0)
+    if (keyboard_write(&keyboard, (uint32_t)aug_char) < 0)
         lprintf("keyboard buffer overflowed *beep*");
     return;
 }
