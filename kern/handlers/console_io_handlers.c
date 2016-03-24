@@ -29,3 +29,14 @@ int syscall_print_c_handler(int len, char *buf){
     return 0;
 }
 
+int syscall_set_term_color_c_handler(int color){
+    return set_term_color(color);
+}
+
+int syscall_set_cursor_pos_c_handler(int row, int col){
+    return set_cursor(row, col);
+}
+
+int syscall_get_cursor_pos_c_handler(int *row, int *col){
+    return get_cursor(row, col);
+}

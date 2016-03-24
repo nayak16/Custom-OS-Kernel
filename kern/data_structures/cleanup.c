@@ -42,7 +42,7 @@ int cleanup_pop(cleanup_t *clu, int execute){
 
 void cleanup_rollback(cleanup_t *clu){
     if (clu == NULL) return;
-    uint32_t i;
+    int i;
     for (i = 0; i < cleanup_size(clu); i++){
         cleanup_pop(clu, 1);
     }

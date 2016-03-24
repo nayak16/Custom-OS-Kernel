@@ -455,15 +455,16 @@ int set_cursor( int row, int col ){
 }
 
 
-void get_cursor( int *row, int *col ){
-  ASSERT(row != NULL && col != NULL);
+int get_cursor( int *row, int *col ){
+  if (row == NULL || col == NULL) return -1;
   int hpos, lpos;
   /* get the current hardware cursor and convert to logical cursor */
   hpos = get_hardware_cursor();
   lpos = hardware_to_logical(hpos);
-  ASSERT(lpos != -1);
+  if (lpos == -1) return -1;
   /* convert logical cursor to a row column pair and save into row col addr */
   lpos_to_row_col(lpos, row, col);
+  return 0;
 }
 
 

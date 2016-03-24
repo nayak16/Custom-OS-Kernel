@@ -91,3 +91,15 @@ syscall_new_pages_handler:
 .globl syscall_remove_pages_handler
 syscall_remove_pages_handler:
     one_arg_syscall_wrapper syscall_remove_pages_c_handler
+
+.globl syscall_set_term_color_handler
+syscall_set_term_color_handler:
+    one_arg_syscall_wrapper syscall_set_term_color_c_handler
+
+.globl syscall_set_cursor_pos_handler
+syscall_set_cursor_pos_handler:
+    two_arg_syscall_wrapper syscall_set_cursor_pos_c_handler
+
+.globl syscall_get_cursor_pos_handler
+syscall_get_cursor_pos_handler:
+    two_arg_syscall_wrapper syscall_get_cursor_pos_c_handler

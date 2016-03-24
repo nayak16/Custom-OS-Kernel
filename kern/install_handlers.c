@@ -138,9 +138,9 @@ int install_syscall_handlers(){
     // get char
     // readline
     INSTALL_SYSCALL(syscall_print_handler, PRINT_INT);
-    // set term color
-    // set cursor pos
-    // get cursor pos
+    INSTALL_SYSCALL(syscall_set_term_color_handler, SET_TERM_COLOR_INT);
+    INSTALL_SYSCALL(syscall_set_cursor_pos_handler, SET_CURSOR_POS_INT);
+    INSTALL_SYSCALL(syscall_get_cursor_pos_handler, GET_CURSOR_POS_INT);
     /* misc */
     // readfile
     INSTALL_SYSCALL(syscall_halt_handler, HALT_INT);

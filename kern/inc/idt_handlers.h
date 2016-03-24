@@ -29,6 +29,9 @@ void syscall_set_status_handler(int);
 /* Console IO handlers */
 
 int syscall_print_handler(int len, char *buf);
+int syscall_set_term_color_handler(int color);
+int syscall_set_cursor_pos_handler(int row, int col);
+int syscall_get_cursor_pos_handler(int *row, int *col);
 
 /* Mem mgmt handlers*/
 

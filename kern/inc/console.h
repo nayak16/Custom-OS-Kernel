@@ -90,9 +90,9 @@ int set_cursor(int row, int col);
  *         row will be written.
  *  @param col The address to which the current cursor
  *         column will be written.
- *  @return Void.
+ *  @return 0 on success, negative integer code on failure.
  */
-void get_cursor(int* row, int* col);
+int get_cursor(int* row, int* col);
 
 /** @brief Hides the cursor.
  *
