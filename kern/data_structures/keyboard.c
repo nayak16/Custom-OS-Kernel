@@ -14,6 +14,7 @@ int keyboard_init(keyboard_t *k, uint32_t len){
     if (k == NULL || len == 0) return -1;
     circ_buf_t *cbuf = malloc(sizeof(circ_buf_t));
     if (circ_buf_init(cbuf, len) < 0) return -2;
+    if (mutex_init(&k->m) < 0) return -3;
     k->buf = cbuf;
     k->num_waiting = 0;
     return 0;
