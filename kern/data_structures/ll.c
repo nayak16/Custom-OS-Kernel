@@ -103,7 +103,6 @@ int ll_add(ll_t *ll, void *value){
  */
 int ll_deq(ll_t *ll, void **val){
     if (ll == NULL) return -1;
-
     /* Check if empty */
     if (ll->size == 0) return -2;
 
@@ -114,7 +113,7 @@ int ll_deq(ll_t *ll, void **val){
     }
     /* update head of queue */
     ll->head = head->next;
-    ll->head->prev = NULL;
+    if (ll->head != NULL) ll->head->prev = NULL;
 
     /* save value before freeing struct */
     if (val != NULL) *val = head->e;
@@ -149,7 +148,8 @@ int ll_peek(ll_t *ll, void **val){
  */
 int ll_cycle(ll_t *ll) {
     if (ll == NULL) return -1;
-
+    /* No need to cycle if only one in ll */
+    if (ll->size == 1) return 0;
     /* Save original head */
     ll_node_t *orig_head = ll->head;
 

@@ -120,6 +120,10 @@ int ht_remove(ht_t *t, key_t key, void **valp) {
 int ht_put(ht_t *t, key_t key, void *val) {
     if (t == NULL) return -1;
 
+    void *dummy;
+    /* Check if specified key value pair is already in the ht */
+    if (ht_get(t, key, &dummy) != -2) return -4;
+
     /* Index into correct bucket */
     int idx = t->hash(key) % t->max_size;
     ll_t c = t->arr[idx];

@@ -37,9 +37,9 @@ int scheduler_init(scheduler_t *sched){
     sched->next_pid = 0;
     sched->cur_tcb = NULL;
 
-    /*if (cb_pool_init(&(sched->thr_pool)) < 0
-            || cb_pool_init(&(sched->process_pool)) < 0) return -3;
-    */
+    /* Init tcb pool */
+    if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
+
     return 0;
 }
 
@@ -105,14 +105,19 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     /* Set tcb to runnable */
     tcb->status = RUNNABLE;
 
-    /* Add pcb and tcb to respective pools */
-    /*if (cb_pool_add_cb(&(sched->thr_pool), (void*)tcb) < 0
-            || cb_pool_add_cb(&(sched->process_pool), (void*)pcb) < 0) {
-
-        return -3;
-    }*/
+    /* Add a runnable tcb to pool */
+    if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), tcb) < 0) return -3;
 
     return tid;
+}
+
+int scheduler_add_process_safe(scheduler_t *sched,
+                                pcb_t *pcb, uint32_t *regs){
+
+    disable_interrupts();
+    int status = scheduler_add_process(sched, pcb, regs);
+    enable_interrupts();
+    return status;
 }
 
 /**
@@ -152,7 +157,7 @@ int scheduler_defer_current_tcb(scheduler_t *sched, uint32_t old_esp) {
         /* Save k_stack esp */
         sched->cur_tcb->tmp_k_stack = (uint32_t *)old_esp;
 
-        /* Put current tid back into runnable pool */
+        /* Set current tcb status back to RUNNABLE */
         sched->cur_tcb->status = RUNNABLE;
     }
     return 0;
@@ -182,6 +187,7 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
     if (sched == NULL || tcb == NULL || new_esp == NULL) return -1;
     /* Set new current running tid */
     sched->cur_tcb = tcb;
+    sched->cur_tcb->status = RUNNING;
 
     /* Save new esp  */
     *new_esp = (uint32_t)tcb->tmp_k_stack;
@@ -206,13 +212,8 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
     if (sched == NULL || tcbp == NULL) return -1;
 
-    //int tid = 0;
-    /* Remove from runnable pool */
-
-
-    /*if(cb_pool_get_cb(&(sched->thr_pool), tid, (void**)tcbp) < 0) {
-        return -2;
-    }*/
+    /* Cycle runnable pool and get next tcb to run */
+    if (tcb_pool_get_next_tcb(&(sched->thr_pool), tcbp) < 0) return -2;
 
     return 0;
 }

@@ -8,6 +8,7 @@
 
 #include <kern_internals.h>
 #include <malloc.h>
+#include <x86/asm.h>
 
 #include <simics.h>
 /**
@@ -42,13 +43,14 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
         return -5;
     }
 
-    mutex_lock(&scheduler_lock);
     int tid;
+    disable_interrupts();
     /* Add duplicate to scheduler runnable queue */
-    if((tid = scheduler_add_process(&sched, duplicate_pcb, saved_regs)) < 0) {
+    if((tid = scheduler_add_process_safe(&sched,
+                                         duplicate_pcb, saved_regs)) < 0) {
         return -6;
     }
-    mutex_unlock(&scheduler_lock);
+    enable_interrupts();
     return tid;
 }
 

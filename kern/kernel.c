@@ -36,6 +36,7 @@
 #include <special_reg_cntrl.h>
 #include <scheduler.h>
 #include <mutex.h>
+#include <queue.h>
 
 /* Kernel global variables and internals */
 #include <kern_internals.h>
@@ -88,7 +89,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* init frame manager */
     fm_init(&fm);
 
-        /* initialize idle_pcb */
+    /* initialize idle_pcb */
     pcb_t idle_pcb;
     pcb_init(&idle_pcb);
 
@@ -108,13 +109,12 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* load idle program */
     if (pcb_load_prog(&idle_pcb, "test_fork1") < 0)
         panic("could not load idle task");
+
     /* add idle process to scheduler */
     scheduler_add_process(&sched, &idle_pcb, NULL);
-
     // TODO: create and load init task
 
     // TODO: set first thread running
-
     scheduler_start(&sched); // enable intterupts
 
     while (1) {
