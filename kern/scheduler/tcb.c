@@ -56,8 +56,8 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     tcb->tid = tid;
     tcb->pcb = pcb;
 
-    /* Set status to UNINIT indicating it's not in the scheduler yet */
-    tcb->status = UNINIT;
+    /* Set tcb to runnable */
+    tcb->status = RUNNABLE;
 
     /* Init a k_stack which will also be used for scheduling */
     tcb->k_stack_bot = malloc(sizeof(void*) * PAGE_SIZE);
@@ -94,9 +94,14 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
 
 int tcb_destroy(tcb_t *tcb) {
     free(tcb->k_stack_bot);
-    // TODO: Clean up other shit
     return 0;
 
+}
+
+int tcb_get_pcb(tcb_t *tcb, pcb_t **pcb) {
+    if (tcb == NULL || pcb == NULL) return -1;
+    *pcb = tcb->pcb;
+    return 0;
 }
 
 int tcb_gettid(tcb_t *tcb, int *tid){

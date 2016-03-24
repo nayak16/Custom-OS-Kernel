@@ -8,6 +8,8 @@
 
 #include <kern_internals.h>
 #include <malloc.h>
+#include <string.h>
+#include <common_kern.h>
 #include <x86/asm.h>
 
 #include <simics.h>
@@ -70,25 +72,48 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
     /* Parse args and get argc*/
     char **argp = argvec;
     int argc = 0;
-    while(/* pd_check_mapped(argvec) && */*argp != NULL) {
+    while(/*pd_get_mapping(argvec) &&*/ *argp != NULL) {
         argc++;
         lprintf("argvec: %p, arg: %s", argp, *argp);
         argp += 1;
     }
+    /* Make local copy of execname */
+    char name_copy[sizeof(execname)+1];
+    memcpy(name_copy, execname, sizeof(execname)+1);
 
-    /* Create new pcb and load new program */
-    pcb_t new_pcb;
-    pcb_init(&new_pcb);
-    MAGIC_BREAK;
-    if (pcb_load_prog(&new_pcb, execname, argc, argvec) < 0) {
-        lprintf("Failed to load program: %s", execname);
-        return -2;
+    /* Get current tcb */
+    tcb_t *cur_tcb;
+    if (scheduler_get_current_tcb(&sched, &cur_tcb) < 0) {
+        // TODO: Fatal Error
+        panic("Can't obtain current pcb");
+        MAGIC_BREAK;
     }
 
-    /* Add process to scheduler */
+    /* Get current pcb */
+    pcb_t *cur_pcb;
+    if (tcb_get_pcb(cur_tcb, &cur_pcb) < 0) return -3;
+    lprintf("name_copy: %s", name_copy);
 
+    /* Clear old pcb user space mappings */
+    uint32_t v_addr;
+    for (v_addr = USER_MEM_START;
+            v_addr >= USER_MEM_START ; v_addr+=PAGE_SIZE) {
+        if (pd_remove_mapping(&(cur_pcb->pd), v_addr) == -1) {
+            /* Actual error */
+            return -2;
+        }
+    }
 
-    lprintf("Starting program '%s', with %d args", execname, argc);
+    /* Load in new program */
+    lprintf("Loading new program...");
+    MAGIC_BREAK;
+    if (pcb_load_prog(cur_pcb, name_copy, argc, argvec) < 0) {
+        lprintf("Failed to load program: %s", name_copy);
+        return -3;
+    }
+
+    lprintf("Starting program '%s', with %d args", name_copy, argc);
+
     return 0;
 }
 

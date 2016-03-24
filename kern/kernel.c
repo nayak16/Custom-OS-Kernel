@@ -108,7 +108,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* load idle program */
     char *args[] = {"prog", "hi from kernel", 0};
-    pcb_load_prog(&idle_pcb, "knife", 2, args);
+    pcb_load_prog(&idle_pcb, "test_exec1", 2, args);
 
     /* add idle process to scheduler */
     scheduler_add_process(&sched, &idle_pcb, NULL);

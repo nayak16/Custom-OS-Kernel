@@ -57,6 +57,24 @@ int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
     *tidp = sched->cur_tcb->tid;
     return 0;
 }
+/**
+ * @brief Gets the tcb with the specified tid
+ *
+ * @param sched Scheduler to get next tcb from
+ * @param target_tid tid to look for
+ * @param tcbp Address to store pointer to tcb
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_get_tcb_by_tid(scheduler_t *sched,
+                             int target_tid, tcb_t **tcbp) {
+    if (sched == NULL || tcbp == NULL) return -1;
+
+    /* Cycle runnable pool and get next tcb to run */
+    if (tcb_pool_find_tcb(&(sched->thr_pool), target_tid, tcbp) < 0) return -2;
+
+    return 0;
+}
 
 /**
  * @brief Gets current running pcb
@@ -71,10 +89,25 @@ int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb) {
 
     if (sched == NULL) return -1;
     *pcb = sched->cur_tcb->pcb;
-
     return 0;
-
 }
+
+/**
+ * @brief Gets current running tcb
+ *
+ * @param sched scheduler to get tcb from
+ * @param tcb address to store current tcb
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
+int scheduler_get_current_tcb(scheduler_t *sched, tcb_t **tcb) {
+
+    if (sched == NULL) return -1;
+    *tcb = sched->cur_tcb;
+    return 0;
+}
+
 
 /**
  * @brief Creates a tcb to run the specified pcb and adds
@@ -102,9 +135,6 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     int tid = sched->next_tid++;
 
     tcb_init(tcb, tid, pcb, regs);
-
-    /* Set tcb to runnable */
-    tcb->status = RUNNABLE;
 
     /* Add a runnable tcb to pool */
     if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), tcb) < 0) return -3;
