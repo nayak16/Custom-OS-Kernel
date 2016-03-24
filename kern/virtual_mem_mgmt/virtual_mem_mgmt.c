@@ -98,7 +98,7 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
         cur_addr += PAGE_SIZE;
     }
     /* zero out newly mapped memory */
-    memset((void *)v_addr_low, 0, num_pages*PAGE_SIZE);
+    memset((void *)v_addr_low, 0, num_pages*PAGE_SIZE/sizeof(void*));
     return 0;
 }
 

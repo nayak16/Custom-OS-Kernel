@@ -11,7 +11,7 @@
 #define _LL_H_
 
 /**
- * @brief Struct representing a singly linked linked list node
+ * @brief Struct representing a doubly linked linked list node
  */
 typedef struct ll_node {
     /** @brief Data the ll_node_t holds */
@@ -20,10 +20,13 @@ typedef struct ll_node {
     /** @brief Pointer pointing to next node */
     struct ll_node *next;
 
-    /** @brief Pointer pointing to next node */
+    /** @brief Pointer pointing to prev node */
     struct ll_node *prev;
 
 } ll_node_t;
+
+int ll_node_init(ll_node_t *node, void *data);
+int ll_node_get_data(ll_node_t *node, void **datap);
 
 /**
  * @brief Struct representing a linked list
@@ -43,13 +46,17 @@ typedef struct ll {
 int ll_init(ll_t *ll);
 int ll_add(ll_t *ll, void *value);
 int ll_deq(ll_t *ll, void **value_ptr);
-void ll_destroy(ll_t *ll);
 int ll_peek(ll_t *ll, void **value_ptr);
+int ll_cycle(ll_t *ll);
 
+int ll_link_node(ll_t *ll, ll_node_t *node);
+int ll_unlink_node(ll_t *ll, ll_node_t *node);
 
 int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr);
-int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val);
+int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val, void **valp);
 
 int ll_size(ll_t *ll);
+void ll_destroy(ll_t *ll);
+
 
 #endif /* _LL_H_ */

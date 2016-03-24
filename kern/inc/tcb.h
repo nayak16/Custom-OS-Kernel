@@ -10,36 +10,23 @@
 /* frame manager include */
 #include <frame_manager.h>
 
+#include <pcb.h>
+
+/* possible tcb statuses */
+#define UNINIT 0
+#define RUNNABLE 1
+#define WAITING 2
+#define ZOMBIE 3
+#define RUNNING 4
+
+
 typedef struct tcb{
-    /************************************************************************
-     * WARNING: changes in our typedef will mess up assembly functions that *
-     * rely on the layout of tcb                                            *
-     ************************************************************************/
 
-    int id;
-    uint32_t eax; /* Side note: lowest stack addr when pushed */
-    uint32_t ebx;
-    uint32_t ecx;
-    uint32_t edx;
+    int tid;
 
-    uint32_t esi;
-    uint32_t edi;
+    int status;
 
-
-    /* Special Registers */
-    uint32_t ebp;
-    uint32_t e_flags;
-    uint32_t ss;
-    uint32_t cs;
-    uint32_t eip;
-    uint32_t esp;
-
-    uint32_t ds;
-    uint32_t es;
-    uint32_t fs;
-    uint32_t gs;
-
-    int pid;
+    pcb_t *pcb;
 
     uint32_t *k_stack_bot;
     uint32_t *orig_k_stack;
@@ -47,8 +34,7 @@ typedef struct tcb{
 
 } tcb_t;
 
-int tcb_init(tcb_t *tcb, int tid, int pid,
-             uint32_t *s_top, uint32_t eip, uint32_t *regs);
+int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs);
 int tcb_destroy(tcb_t *tcb);
 int tcb_gettid(tcb_t *tcb, int *tid);
 

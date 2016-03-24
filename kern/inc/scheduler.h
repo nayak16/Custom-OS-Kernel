@@ -5,7 +5,7 @@
 #include <pcb.h>
 #include <tcb.h>
 #include <queue.h>
-#include <cb_pool.h>
+#include <tcb_pool.h>
 
 #ifndef _SCHEDULER_H_
 #define _SCHEDULER_H_
@@ -13,20 +13,16 @@
 typedef struct scheduler{
     int next_tid;
     int next_pid;
-    cb_pool_t thr_pool;
-    cb_pool_t process_pool;
-
-    int cur_tid;
-    int cur_pid;
-    queue_t runnable_pool;
-    queue_t waiting_pool;
-
+    tcb_pool_t thr_pool;
+    tcb_t *cur_tcb;
 } scheduler_t;
 
 
 int scheduler_init(scheduler_t *sched);
 
 int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs);
+int scheduler_add_process_safe(scheduler_t *sched,
+                               pcb_t *pcb, uint32_t *regs);
 
 int scheduler_start(scheduler_t *sched);
 

@@ -50,17 +50,16 @@ typedef struct tcb{
 #define FS_IDX 1
 #define GS_IDX 0
 
-int tcb_init(tcb_t *tcb, int tid, int pid,
-             uint32_t *s_top, uint32_t eip, uint32_t *regs) {
+int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
 
-    /* These should be set by the scheduler */
-    tcb->id = tid;
-    tcb->pid = pid;
+    /* Set appropriate tid and pcb */
+    tcb->tid = tid;
+    tcb->pcb = pcb;
 
+    /* Set status to UNINIT indicating it's not in the scheduler yet */
+    tcb->status = UNINIT;
 
-    /* Save final esp */
-    tcb->esp = (uint32_t) s_top;
-
+    /* Init a k_stack which will also be used for scheduling */
     tcb->k_stack_bot = malloc(sizeof(void*) * PAGE_SIZE);
     if (tcb->k_stack_bot == NULL) return -1;
 
@@ -69,17 +68,17 @@ int tcb_init(tcb_t *tcb, int tid, int pid,
     /* Push meta data to stack */
     /* ------------- IRET section --------------- */
     k_stack_top[-1] = regs == NULL ? SEGSEL_USER_DS : regs[SS_IDX];
-    k_stack_top[-2] = regs == NULL ? (uint32_t) s_top : regs[ESP_IDX];
+    k_stack_top[-2] = regs == NULL ? (uint32_t) pcb->stack_top : regs[ESP_IDX];
     k_stack_top[-3] = regs == NULL ? get_user_eflags() : regs[EFLAGS_IDX];
     k_stack_top[-4] = regs == NULL ? SEGSEL_USER_CS : regs[CS_IDX];
-    k_stack_top[-5] = regs == NULL ? eip : regs[EIP_IDX];
+    k_stack_top[-5] = regs == NULL ? pcb->entry_point : regs[EIP_IDX];
     /* ---------- General Purpose Regs ---------- */
     k_stack_top[-6] = 0;   // eax
     k_stack_top[-7] = regs == NULL ? 0 : regs[ECX_IDX];   // ecx
     k_stack_top[-8] = regs == NULL ? 0 : regs[EDX_IDX];   // edx
     k_stack_top[-9] = regs == NULL ? 0 : regs[EBX_IDX];   // ebx
     k_stack_top[-10] = 0;  // skip esp
-    k_stack_top[-11] = regs == NULL ? (uint32_t) s_top : regs[EBP_IDX];  // ebp
+    k_stack_top[-11] = regs == NULL ? (uint32_t) pcb->stack_top : regs[EBP_IDX];  // ebp
     k_stack_top[-12] = regs == NULL ? 0 : regs[ESI_IDX];  // esi
     k_stack_top[-13] = regs == NULL ? 0 : regs[EDI_IDX];  // edi
     /* --------- Extra Segment Selectors -------- */
@@ -102,7 +101,7 @@ int tcb_destroy(tcb_t *tcb) {
 
 int tcb_gettid(tcb_t *tcb, int *tid){
     if (tcb == NULL) return -1;
-    *tid = tcb->id;
+    *tid = tcb->tid;
     return 0;
 }
 
