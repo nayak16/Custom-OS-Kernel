@@ -7,6 +7,10 @@
 
 Same drill as last time.
 
+TODO LIST:
+implement rollbacks on resource failure
+think about readline
+think about ZFOD and COW
 
 Design Decision Rationales:
 

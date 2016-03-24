@@ -193,3 +193,18 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
 
     return 0;
 }
+
+int vmm_clear_user_space(page_directory_t *pd){
+    uint32_t v_addr, pte;
+    /* go until we overflow */
+    for (v_addr = USER_MEM_START; v_addr != 0; v_addr+=PAGE_SIZE){
+        pd_get_mapping(pd, v_addr, &pte);
+        /* remove mapping */
+        pd_remove_mapping(pd, v_addr);
+        /* give frame back to frame manager */
+        fm_dealloc(&fm, (void *)REMOVE_FLAGS(pte));
+    }
+    /* flush mapping in tlb */
+    flush_tlb((uint32_t)v_addr);
+    return 0;
+}
