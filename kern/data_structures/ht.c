@@ -134,7 +134,7 @@ int ht_put(ht_t *t, key_t key, void *val) {
     new_e->val = val;
     new_e->key = key;
 
-    if(ll_add(&c, (void*) new_e) < 0) return -3;
+    if(ll_add_last(&c, (void*) new_e) < 0) return -3;
     t->size++;
     return 0;
 }

@@ -44,12 +44,18 @@ typedef struct ll {
 } ll_t;
 
 int ll_init(ll_t *ll);
-int ll_add(ll_t *ll, void *value);
-int ll_deq(ll_t *ll, void **value_ptr);
+
+int ll_add_last(ll_t *ll, void *value);
+int ll_add_first(ll_t *ll, void *value);
+int ll_remove_last(ll_t *ll, void **value_ptr);
+int ll_remove_first(ll_t *ll, void **value_ptr);
+
 int ll_peek(ll_t *ll, void **value_ptr);
 int ll_cycle(ll_t *ll);
 
-int ll_link_node(ll_t *ll, ll_node_t *node);
+int ll_link_node_first(ll_t *ll, ll_node_t *node);
+int ll_link_node_last(ll_t *ll, ll_node_t *node);
+
 int ll_unlink_node(ll_t *ll, ll_node_t *node);
 
 int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr);

@@ -18,11 +18,11 @@ int queue_init(queue_t *q){
 }
 int queue_enq(queue_t *q, void *value){
     if (q == NULL) return -1;
-    return ll_add(q->ll, value);
+    return ll_add_last(q->ll, value);
 }
 int queue_deq(queue_t *q, void **value_ptr){
     if (q == NULL) return -1;
-    return ll_deq(q->ll, value_ptr);
+    return ll_remove_first(q->ll, value_ptr);
 }
 void queue_destroy(queue_t *q){
     if (q == NULL) return;

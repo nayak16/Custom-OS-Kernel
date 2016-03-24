@@ -82,7 +82,7 @@ int ll_init(ll_t *ll) {
  * -2 if malloc() fails
  *
  */
-int ll_add(ll_t *ll, void *value){
+int ll_add_last(ll_t *ll, void *value){
     if (ll == NULL) return -1;
 
     /* make a new node */
@@ -90,18 +90,41 @@ int ll_add(ll_t *ll, void *value){
     if (ll_node_init(new_node, value) < 0 ) return -2;
 
     /* Link it to the tail of the list */
-    return ll_link_node(ll, new_node);
+    return ll_link_node_last(ll, new_node);
 }
 
 /**
- * @brief Dequeue an element from the end of a linked list
+ * @brief Add to front of linked list provided
+ * Can be used as enqueue operation for a linked list queue
+ *
+ * @param ll Pointer to linked list to add to
+ * @param value Value to add to list
+ *
+ * @return 0 on success, negative error code on failure
+ * -1 if q is NULL
+ * -2 if malloc() fails
+ *
+ */
+int ll_add_first(ll_t *ll, void *value){
+    if (ll == NULL) return -1;
+
+    /* make a new node */
+    ll_node_t *new_node = (ll_node_t *)malloc(sizeof(ll_node_t));
+    if (ll_node_init(new_node, value) < 0 ) return -2;
+
+    /* Link it to the tail of the list */
+    return ll_link_node_first(ll, new_node);
+}
+
+/**
+ * @brief Remove an element from the front of a linked list and get its value
  *
  * @param ll Pointer to linked list to dequeue from
  * @param val Address to put the dequeued value
  *
  * @return 0 on success, -1 on error
  */
-int ll_deq(ll_t *ll, void **val){
+int ll_remove_first(ll_t *ll, void **val){
     if (ll == NULL) return -1;
     /* Check if empty */
     if (ll->size == 0) return -2;
@@ -123,7 +146,37 @@ int ll_deq(ll_t *ll, void **val){
 }
 
 /**
- * @brief Peek and return the last element of the linked list
+ * @brief Remove an element from the back of a linked list and get its value
+ *
+ * @param ll Pointer to linked list to dequeue from
+ * @param val Address to put the dequeued value
+ *
+ * @return 0 on success, -1 on error
+ */
+int ll_remove_last(ll_t *ll, void **val){
+    if (ll == NULL) return -1;
+    /* Check if empty */
+    if (ll->size == 0) return -2;
+
+    /* save tail of queue */
+    ll_node_t *tail = ll->tail;
+    if (tail == ll->head){
+        ll->head = NULL;
+    }
+    /* update tail */
+    ll->tail = tail->prev;
+    /* unlink new tail from old tail */
+    if (ll->tail != NULL) ll->tail->next = NULL;
+
+    /* save value before freeing struct */
+    if (val != NULL) *val = tail->e;
+    free(tail);
+    ll->size--;
+    return 0;
+}
+
+/**
+ * @brief Peek and return the value at the front of the linked list
  *
  * @param ll Pointer to linked list to dequeue from
  * @param val Address to put the dequeued value
@@ -179,7 +232,7 @@ int ll_cycle(ll_t *ll) {
  *
  * @return 0 on success, negative erorr code otherwise
  */
-int ll_link_node(ll_t *ll, ll_node_t *new_node) {
+int ll_link_node_last(ll_t *ll, ll_node_t *new_node) {
     if (ll == NULL || new_node == NULL) return -1;
 
     if (ll->head == NULL){
@@ -192,6 +245,23 @@ int ll_link_node(ll_t *ll, ll_node_t *new_node) {
         ll->tail->next = new_node;
         new_node->prev = ll->tail;
         ll->tail = new_node;
+    }
+    ll->size++;
+    return 0;
+}
+
+int ll_link_node_first(ll_t *ll, ll_node_t *new_node){
+    if (ll == NULL || new_node == NULL) return -1;
+
+    if (ll->head == NULL){
+        ASSERT(ll->tail == NULL);
+        /* no elements in list yet */
+        ll->head = new_node;
+        ll->tail = new_node;
+    } else {
+        ll->head->prev = new_node;
+        new_node->next = ll->head;
+        ll->head = new_node;
     }
     ll->size++;
     return 0;

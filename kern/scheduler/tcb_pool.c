@@ -54,7 +54,7 @@ int tcb_pool_add_runnable_tcb(tcb_pool_t *tp, tcb_t *tcb) {
     if (ht_put(&(tp->threads), (key_t) tcb->tid, (void*) node) < 0) return -3;
 
     /* Put same node into runnable pool */
-    if (ll_link_node(&(tp->runnable_pool), node) < 0) return -4;
+    if (ll_link_node_last(&(tp->runnable_pool), node) < 0) return -4;
 
     return 0;
 }
