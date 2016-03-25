@@ -57,7 +57,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS = getpid_test1 ck1 loader_test1 knife remove_pages_test1 readline_basic
+410TESTS = getpid_test1 ck1 loader_test1 knife remove_pages_test1 remove_pages_test2 exec_basic exec_basic_helper
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -65,7 +65,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = test_idle test_fork1 test_cs test_foo test_new_pages test_mem_mgmt test_console_io
+STUDENTTESTS = test_idle test_fork1 test_cs test_foo test_new_pages test_mem_mgmt test_exec1
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk

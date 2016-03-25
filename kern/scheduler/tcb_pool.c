@@ -71,7 +71,15 @@ int tcb_pool_get_next_tcb(tcb_pool_t *tp, tcb_t **next_tcb) {
     return 0;
 }
 
-int tcb_pool_find_tcb(tcb_pool_t *tp, int id, tcb_t **tcbp);
+int tcb_pool_find_tcb(tcb_pool_t *tp, int tid, tcb_t **tcbp) {
+    if (tp == NULL || tcbp == NULL) return -1;
+    if (ht_get(&(tp->threads), (key_t) tid, (void**) tcbp) < 0) {
+        /* Not found */
+        return -2;
+    }
+    return 0;
+}
+
 int tcb_pool_remove_tcb(tcb_pool_t *tp, int id);
 
 

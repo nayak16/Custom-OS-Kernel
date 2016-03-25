@@ -27,7 +27,13 @@ int scheduler_add_process_safe(scheduler_t *sched,
 int scheduler_start(scheduler_t *sched);
 
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcb);
-int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp);
+int scheduler_get_tcb_by_tid(scheduler_t *sched,
+                             int target_tid, tcb_t **tcbp);
+
+int scheduler_set_running_tcb(scheduler_t *sched,
+                                tcb_t *tcb, uint32_t *new_esp);
+
+int scheduler_get_current_tcb(scheduler_t *sched, tcb_t **tcb);
 
 int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb);
 

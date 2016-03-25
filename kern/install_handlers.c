@@ -119,7 +119,7 @@ int install_syscall_handlers(){
     /* Life cycle */
     INSTALL_SYSCALL(syscall_fork_handler, FORK_INT);
     // INSTALL_SYSCALL(syscall_thread_fork_handler, THREAD_FORK_INT);
-    // INSTALL_SYSCALL(syscall_exec_handler, EXEC_INT);
+    INSTALL_SYSCALL(syscall_exec_handler, EXEC_INT);
     INSTALL_SYSCALL(syscall_set_status_handler, SET_STATUS_INT);
     INSTALL_SYSCALL(syscall_vanish_handler, VANISH_INT);
     // INSTALL_SYSCALL(syscall_wait_handler, WAIT_INT);
