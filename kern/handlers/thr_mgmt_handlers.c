@@ -16,3 +16,15 @@ int syscall_gettid_c_handler(){
     }
     return cur_tid;
 }
+
+int syscall_yield_c_handler(int tid){
+    return 0;
+}
+int syscall_deschedule_c_handler(int *reject){
+    return 0;
+}
+int syscall_make_runnable_c_handler(int tid){
+    return 0;
+}
+
+

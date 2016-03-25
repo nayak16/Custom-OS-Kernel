@@ -123,27 +123,32 @@ int install_syscall_handlers(){
     INSTALL_SYSCALL(syscall_set_status_handler, SET_STATUS_INT);
     INSTALL_SYSCALL(syscall_vanish_handler, VANISH_INT);
     // INSTALL_SYSCALL(syscall_wait_handler, WAIT_INT);
+
     /* thrmgmt */
     INSTALL_SYSCALL(syscall_gettid_handler, GETTID_INT);
-    // INSTALL_SYSCALL(syscall_yield_handler, YIELD_INT);
-    // deschedule
-    // make runnable
-    // getticks
-    // sleep
-    // swexn
+    INSTALL_SYSCALL(syscall_yield_handler, YIELD_INT);
+    INSTALL_SYSCALL(syscall_deschedule_handler, DESCHEDULE_INT);
+    INSTALL_SYSCALL(syscall_make_runnable_handler, MAKE_RUNNABLE_INT);
+    //INSTALL_SYSCALL(syscall_get_ticks_handler, GET_TICKS_INT);
+    //INSTALL_SYSCALL(syscall_sleep_handler, SLEEP_INT);
+    //INSTALL_SYSCALL(syscall_swexn_handler, SWEXN_INT);
+
     /* Mem MGMT */
     INSTALL_SYSCALL(syscall_new_pages_handler, NEW_PAGES_INT);
     INSTALL_SYSCALL(syscall_remove_pages_handler, REMOVE_PAGES_INT);
+
     /* console io*/
-    // get char
+    //INSTALL_SYSCALL(syscall_getchar_handler, GETCHAR_INT);
     INSTALL_SYSCALL(syscall_readline_handler, READLINE_INT);
     INSTALL_SYSCALL(syscall_print_handler, PRINT_INT);
     INSTALL_SYSCALL(syscall_set_term_color_handler, SET_TERM_COLOR_INT);
     INSTALL_SYSCALL(syscall_set_cursor_pos_handler, SET_CURSOR_POS_INT);
     INSTALL_SYSCALL(syscall_get_cursor_pos_handler, GET_CURSOR_POS_INT);
+
     /* misc */
-    // readfile
+    //INSTALL_SYSCALL(syscall_read_file_handler, READ_FILE_INT);
     INSTALL_SYSCALL(syscall_halt_handler, HALT_INT);
+
     return 0;
 }
 

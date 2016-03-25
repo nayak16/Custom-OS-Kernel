@@ -107,3 +107,15 @@ syscall_set_cursor_pos_handler:
 .globl syscall_get_cursor_pos_handler
 syscall_get_cursor_pos_handler:
     two_arg_syscall_wrapper syscall_get_cursor_pos_c_handler
+
+.globl syscall_yield_handler
+syscall_yield_handler:
+    one_arg_syscall_wrapper syscall_yield_c_handler
+
+.globl syscall_deschedule_handler
+syscall_deschedule_handler:
+    one_arg_syscall_wrapper syscall_deschedule_c_handler
+
+.globl syscall_make_runnable_handler
+syscall_make_runnable_handler:
+    one_arg_syscall_wrapper syscall_make_runnable_c_handler
