@@ -9,6 +9,7 @@
 #include <kern_internals.h>
 #include <malloc.h>
 #include <string.h>
+#include <dispatcher.h>
 #include <common_kern.h>
 #include <x86/asm.h>
 
@@ -67,7 +68,7 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
  */
 int syscall_exec_c_handler(char *execname, char **argvec) {
     if (execname == NULL || argvec == NULL) return -1;
-
+    lprintf("Exec called with %s", execname);
     // TODO: Check validity and mapping of each string and arg
     /* Parse args and get argc*/
     char **argp = argvec;
@@ -78,8 +79,10 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
         argp += 1;
     }
     /* Make local copy of execname */
-    char name_copy[sizeof(execname)+1];
-    memcpy(name_copy, execname, sizeof(execname)+1);
+    int len = strlen(execname);
+    char name_copy[len+1];
+    memcpy(name_copy, execname, len);
+    name_copy[len] = '\0';
 
     /* Get current tcb */
     tcb_t *cur_tcb;
@@ -106,12 +109,15 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
 
     /* Load in new program */
     lprintf("Loading new program...");
-    MAGIC_BREAK;
     if (pcb_load_prog(cur_pcb, name_copy, argc, argvec) < 0) {
         lprintf("Failed to load program: %s", name_copy);
         return -3;
     }
 
+    /* Reload a tcb with new contents */
+    tcb_reload_safe(cur_tcb, cur_pcb);
+    restore_context((uint32_t)cur_tcb->orig_k_stack);
+    while(1);
     lprintf("Starting program '%s', with %d args", name_copy, argc);
 
     return 0;

@@ -10,6 +10,7 @@
 #include <tcb.h>
 #include <malloc.h>
 #include <special_reg_cntrl.h>
+#include <x86/asm.h>
 
 #include <simics.h>
 /*
@@ -107,6 +108,12 @@ int tcb_get_pcb(tcb_t *tcb, pcb_t **pcb) {
 int tcb_gettid(tcb_t *tcb, int *tid){
     if (tcb == NULL) return -1;
     *tid = tcb->tid;
+    return 0;
+}
+
+int tcb_reload_safe(tcb_t *tcb, pcb_t *pcb) {
+    tcb_destroy(tcb);
+    tcb_init(tcb, tcb->tid, pcb, NULL);
     return 0;
 }
 

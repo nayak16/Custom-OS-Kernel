@@ -30,11 +30,6 @@ timer_handler:
     push %esp
     // Call C handler
     call c_timer_handler
-    movl %eax, %esp
-    // Restore Registers
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa
-    iret
+    push %eax
+    call restore_context
+    /* SHOULD NEVER RETURN */

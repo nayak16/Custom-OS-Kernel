@@ -36,6 +36,7 @@ typedef struct tcb{
 
 int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs);
 int tcb_get_pcb(tcb_t *tcb, pcb_t **pcb);
+int tcb_reload_safe(tcb_t *tcb, pcb_t *pcb);
 int tcb_destroy(tcb_t *tcb);
 int tcb_gettid(tcb_t *tcb, int *tid);
 
