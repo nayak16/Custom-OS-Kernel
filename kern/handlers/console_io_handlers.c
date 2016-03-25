@@ -23,34 +23,17 @@
 /* an arbitrary max len */
 //TODO: figure out these lengths
 #define MAX_SYSCALL_PRINT_LEN 512
-#define MAX_SYSCALL_READLINE_LEN 512
 
-int readchar(int *result){
-    if (result == NULL) return -1;
-    uint32_t aug_char;
-    kh_type proc_char;
-    /* no keys to be read */
-    if (keyboard_read(&keyboard, &aug_char) < 0) return -1;
-    /* bit extend with 0's before returning */
-    proc_char = process_scancode(aug_char);
-    if (KH_HASDATA(proc_char) && KH_ISMAKE(proc_char)){
-        *result = KH_GETCHAR(proc_char);
-        return 0;
-    }
-    /* key stroke is a non-data or non-keystroke-down key press */
-    return -1;
-}
 
 int syscall_readline_c_handler(int len, char *buf){
+    uint32_t max_len;
+    keyboard_buffer_size(&keyboard, &max_len);
     //TODO: check that buf is not in read only section
-    if (buf == NULL || len >= MAX_SYSCALL_READLINE_LEN)
+    if (buf == NULL || len > max_len);
         return -1;
-    keyboard_open(&keyboard);
-    //deschedule
-    //uint32_t i, aug_char;
-    //read in until len or new line
-    keyboard_close(&keyboard);
-    return 0;
+    /* attempt to lock the keyboard. only continues when there is an entire
+     * line to be read from the keyboard */
+    return keyboard_read(&keyboard, len, buf);
 }
 
 int syscall_print_c_handler(int len, char *buf){

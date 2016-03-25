@@ -25,5 +25,5 @@ int circ_buf_init(circ_buf_t *circ_buf, uint32_t len);
 void circ_buf_destroy(circ_buf_t *circ_buf);
 int circ_buf_write(circ_buf_t *circ_buf, void *v);
 int circ_buf_read(circ_buf_t *circ_buf, void **v);
-
+int circ_buf_size(circ_buf_t *circ_buf, uint32_t *len);
 #endif /* _CIRC_BUFFER_H_ */

@@ -49,3 +49,9 @@ int circ_buf_read(circ_buf_t *circ_buf, void **v){
     circ_buf->i_r = (circ_buf->i_r + 1) % circ_buf->len;
     return 0;
 }
+
+int circ_buf_size(circ_buf_t *circ_buf, uint32_t *len){
+    if (circ_buf == NULL || len == NULL) return -1;
+    *len = circ_buf->len;
+    return 0;
+}
