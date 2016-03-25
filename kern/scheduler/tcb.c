@@ -93,6 +93,13 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     return 0;
 }
 
+int tcb_get_init_stack(tcb_t *tcb, void **stack) {
+    if (tcb == NULL || stack == NULL) return -1;
+
+    *stack = tcb->orig_k_stack;
+    return 0;
+}
+
 int tcb_destroy(tcb_t *tcb) {
     free(tcb->k_stack_bot);
     return 0;

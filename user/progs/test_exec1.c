@@ -19,11 +19,13 @@ int main(int argc, char** argv)
 {
 
     lprintf("argc: %d", argc);
-
-  char *name = "knife";
-  char *args[] = {name, "a", 0};
-
-  exec(name,args);
+    int i;
+    for (i = 0 ; i < argc ; i++) {
+        lprintf("arg%d: %s, argv: %p", i+1, argv[i], &(argv[i]));
+    }
+  char *args[] = {"test_exec1", "RECURSIVE", 0};
+    MAGIC_BREAK;
+  exec("test_exec1",args);
 
   exit(-1);
 }

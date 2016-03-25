@@ -10,6 +10,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <dispatcher.h>
+#include <virtual_mem_mgmt.h>
 #include <common_kern.h>
 #include <x86/asm.h>
 
@@ -78,11 +79,22 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
         lprintf("argvec: %p, arg: %s", argp, *argp);
         argp += 1;
     }
+
     /* Make local copy of execname */
     int len = strlen(execname);
     char name_copy[len+1];
     memcpy(name_copy, execname, len);
+    /* Null terminated */
     name_copy[len] = '\0';
+    /* Make local copy of argv */
+    char *local_argv[argc];
+    int i;
+    for (i = 0; i < argc ; i++) {
+        int len = strlen(argvec[i])+1;
+        /* Allocate space for each local_argv arg */
+        local_argv[i] = malloc(sizeof(char) * len);
+        memcpy(local_argv[i], argvec[i], len);
+    }
 
     /* Get current tcb */
     tcb_t *cur_tcb;
@@ -90,36 +102,39 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
         // TODO: Fatal Error
         panic("Can't obtain current pcb");
         MAGIC_BREAK;
+        return -3;
     }
-
     /* Get current pcb */
     pcb_t *cur_pcb;
     if (tcb_get_pcb(cur_tcb, &cur_pcb) < 0) return -3;
-    lprintf("name_copy: %s", name_copy);
 
     /* Clear old pcb user space mappings */
-    uint32_t v_addr;
-    for (v_addr = USER_MEM_START;
-            v_addr >= USER_MEM_START ; v_addr+=PAGE_SIZE) {
-        if (pd_remove_mapping(&(cur_pcb->pd), v_addr) == -1) {
-            /* Actual error */
-            return -2;
-        }
-    }
+    if (vmm_clear_user_space(&(cur_pcb->pd)) < 0) return -4;
 
     /* Load in new program */
     lprintf("Loading new program...");
-    if (pcb_load_prog(cur_pcb, name_copy, argc, argvec) < 0) {
+    if (pcb_load_prog(cur_pcb, name_copy, argc, local_argv) < 0) {
+        // TODO: Figure out failure
         lprintf("Failed to load program: %s", name_copy);
+        MAGIC_BREAK;
         return -3;
+    }
+    /* Free all allocated local_argv args */
+    for (i = 0; i < argc ; i++) {
+        free(local_argv[i]);
     }
 
     /* Reload a tcb with new contents */
     tcb_reload_safe(cur_tcb, cur_pcb);
-    restore_context((uint32_t)cur_tcb->orig_k_stack);
-    while(1);
-    lprintf("Starting program '%s', with %d args", name_copy, argc);
 
+    /* Get stack to start at */
+    void *init_stack;
+    tcb_get_init_stack(cur_tcb, &init_stack);
+
+    /* Restore context with new program */
+    restore_context((uint32_t)init_stack);
+
+    /* SHOULD NEVER RETURN */
     return 0;
 }
 
