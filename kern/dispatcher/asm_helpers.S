@@ -28,3 +28,14 @@ initial_mode_switch_asm:
     push 52(%esp) // Push cs
     push 60(%esp) // Push eip
     iret
+
+.globl restore_context
+
+restore_context:
+    movl 4(%esp), %esp
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    iret

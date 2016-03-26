@@ -19,9 +19,9 @@
 void page_fault_c_handler(void){
     lprintf("Page fault occured!");
     print_control_regs();
-    page_directory_t *pd_temp = malloc(sizeof(page_directory_t));
-    pd_temp->directory = (uint32_t *)(get_cr3() & ~0xFFF);
-    print_page_directory(pd_temp, 1023, 1, 1);
+    //page_directory_t *pd_temp = malloc(sizeof(page_directory_t));
+    //pd_temp->directory = (uint32_t *)(get_cr3() & ~0xFFF);
+    //print_page_directory(pd_temp, 1023, 1, 1);
     MAGIC_BREAK;
     //panic("page_fault_c_handler: Not yet implemented");
 }

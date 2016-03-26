@@ -73,6 +73,10 @@ syscall_print_handler:
 syscall_readline_handler:
     two_arg_syscall_wrapper syscall_readline_c_handler
 
+.globl syscall_exec_handler
+syscall_exec_handler:
+    two_arg_syscall_wrapper syscall_exec_c_handler
+
 .globl syscall_vanish_handler
 syscall_vanish_handler:
     no_arg_syscall_wrapper syscall_vanish_c_handler

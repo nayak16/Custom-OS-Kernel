@@ -11,11 +11,13 @@
 #include <exec2obj.h>
 #include <loader.h>
 #include <elf_410.h>
+#include <x86/asm.h>
 
 #include <constants.h>
 #include <pcb.h>
 #include <frame_manager.h>
 #include <mem_section.h>
+#include <special_reg_cntrl.h>
 
 #include <simics.h>
 
@@ -90,6 +92,7 @@ int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
     /* Set process entry point */
     pcb->entry_point = elf->e_entry;
     return 0;
+
 }
 
 
@@ -107,13 +110,59 @@ int load_user_stack(pcb_t *pcb) {
 
     /* Setup user stack for entry point */
     uint32_t *stack_top = (uint32_t *) USER_STACK_TOP;
-    stack_top[-3] = pcb->argc;
-    stack_top[-2] = (uint32_t) pcb->argv;
-    stack_top[-1] = USER_STACK_TOP;
-    stack_top[0] = USER_STACK_BOTTOM;
 
+    /* Loop through argv and allocate data onto user stack */
+    char *arg;
+    /* Will hold addresses of each arg string to be put into memory later */
+
+    char *new_argv[pcb->argc];
+    int arg_idx;
+    char *esp = (char*)stack_top;
+    for (arg_idx = 0; arg_idx < pcb->argc ; arg_idx++) {
+        /* Get arg from provided argv */
+        arg = pcb->argv[arg_idx];
+        /* Calculate lenght of string arg */
+        int arg_len = strlen(arg);
+        /* Since we are filling in memory backwards, start with null char */
+        *esp = '\0';
+
+        int str_i = arg_len-1;
+        /* Loop backwards through arg string and fill in esp */
+        while(str_i >= 0) {
+            esp--;
+            *esp = arg[str_i];
+            str_i--;
+        }
+        /* Save addr of start of string */
+        new_argv[arg_idx] = esp;
+        /* Make room for next arg */
+        esp--;
+    }
+
+    /* Round esp down to nearest 4-byte boundary */
+    stack_top = (uint32_t*)((uint32_t)esp - (uint32_t)((uint32_t)esp % 4));
+
+    /* Go one space down to make room for first address */
+    stack_top--;
+    int i = pcb->argc - 1;
+    /* Fill in addresses of strings into memory */
+    while(i >= 0) {
+        *stack_top = (uint32_t)new_argv[i];
+        i--;
+        stack_top--;
+    }
+    /* Save final argv value */
+    uint32_t *final_argv = stack_top + 1;
     /* Specify dummy return address */
     stack_top[-4] = 0;
+    /* argc for _main */
+    stack_top[-3] = pcb->argc;
+    /* argv for _main */
+    stack_top[-2] = (uint32_t) final_argv;
+    /* stack_high for _main */
+    stack_top[-1] = USER_STACK_TOP;
+    /* stack_low for _main */
+    stack_top[0] = USER_STACK_BOTTOM;
 
     /* Set pcb stack */
     pcb->stack_top = (uint32_t) &(stack_top[-4]);

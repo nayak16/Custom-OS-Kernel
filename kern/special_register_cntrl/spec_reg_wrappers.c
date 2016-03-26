@@ -34,9 +34,13 @@ void set_pdbr(uint32_t new_pdbr) {
     uint32_t empty_cr3 = get_cr3() & LSB_12_MASK;
     uint32_t new_cr3 = new_pdbr | empty_cr3;
 
-
     set_cr3(new_cr3);
 }
+
+uint32_t get_pdbr() {
+    return get_cr3();
+}
+
 
 void enable_paging(void) {
     uint32_t new_cr0 = get_cr0() | (SET << ENABLE_PAGING_BIT) | (SET << DISABLE_CACHING_BIT);
