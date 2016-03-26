@@ -17,14 +17,11 @@ int syscall_new_pages_c_handler(void *base, int len){
     /* check for non-positive and non-page aligned lengths */
     if (len <= 0 || (len % PAGE_SIZE) != 0) return -1;
 
-    /* Grab scheduler lock */
-    mutex_lock(&scheduler_lock);
     /* Get current running pcb */
     pcb_t *cur_pcb;
     if(scheduler_get_current_pcb(&sched, &cur_pcb) < 0) {
         return -2;
     }
-    mutex_unlock(&scheduler_lock);
 
     page_directory_t *pd = &(cur_pcb->pd);
 
@@ -35,16 +32,11 @@ int syscall_new_pages_c_handler(void *base, int len){
 }
 
 int syscall_remove_pages_c_handler(void *base){
-
-    /* Grab scheduler lock */
-    mutex_lock(&scheduler_lock);
     /* Get current running pcb */
     pcb_t *cur_pcb;
     if(scheduler_get_current_pcb(&sched, &cur_pcb) < 0) {
         return -2;
     }
-    mutex_unlock(&scheduler_lock);
-
     page_directory_t *pd = &(cur_pcb->pd);
 
     if (vmm_remove_user_page(pd, (uint32_t)base) < 0) return -1;

@@ -30,11 +30,6 @@ extern scheduler_t sched;
 extern mutex_t console_lock;
 
 /**
- * @brief Global mutex for the scheduler
- */
-extern mutex_t scheduler_lock;
-
-/**
  * @brief Global keyboard buffer
  */
 extern keyboard_t keyboard;

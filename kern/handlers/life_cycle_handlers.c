@@ -30,13 +30,11 @@
 int syscall_fork_c_handler(uint32_t *saved_regs){
 
     /* Grab scheduler lock */
-    mutex_lock(&scheduler_lock);
     /* Get current running pcb */
     pcb_t *cur_pcb;
     if(scheduler_get_current_pcb(&sched, &cur_pcb) < 0) {
         return -2;
     }
-    mutex_unlock(&scheduler_lock);
 
     /* Allocate space for a duplicate pcb */
     pcb_t *duplicate_pcb = malloc(sizeof(pcb_t));
