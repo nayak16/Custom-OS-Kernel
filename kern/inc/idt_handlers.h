@@ -22,7 +22,7 @@ int syscall_gettid_handler(void);
 int syscall_yield_handler(int);
 int syscall_deschedule_handler(int *);
 int syscall_make_runnable_handler(int);
-
+int syscall_get_ticks_handler(void);
 
 /* Syscall life cycle handlers */
 

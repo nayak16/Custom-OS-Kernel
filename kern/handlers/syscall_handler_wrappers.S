@@ -123,3 +123,7 @@ syscall_deschedule_handler:
 .globl syscall_make_runnable_handler
 syscall_make_runnable_handler:
     one_arg_syscall_wrapper syscall_make_runnable_c_handler
+
+.globl syscall_get_ticks_handler
+syscall_get_ticks_handler:
+    no_arg_syscall_wrapper syscall_get_ticks_c_handler

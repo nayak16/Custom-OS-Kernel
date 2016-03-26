@@ -9,6 +9,7 @@
 #include <kern_internals.h>
 #include <scheduler.h>
 
+#include <simics.h>
 int syscall_gettid_c_handler(){
     int cur_tid;
     if(scheduler_get_current_tid(&sched, &cur_tid) < 0) {
@@ -16,6 +17,7 @@ int syscall_gettid_c_handler(){
     }
     return cur_tid;
 }
+
 
 int syscall_yield_c_handler(int tid){
     return 0;
@@ -27,4 +29,6 @@ int syscall_make_runnable_c_handler(int tid){
     return 0;
 }
 
-
+unsigned int syscall_get_ticks_c_handler(){
+    return scheduler_num_ticks;
+}

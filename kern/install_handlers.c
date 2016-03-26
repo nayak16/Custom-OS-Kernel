@@ -129,7 +129,7 @@ int install_syscall_handlers(){
     INSTALL_SYSCALL(syscall_yield_handler, YIELD_INT);
     INSTALL_SYSCALL(syscall_deschedule_handler, DESCHEDULE_INT);
     INSTALL_SYSCALL(syscall_make_runnable_handler, MAKE_RUNNABLE_INT);
-    //INSTALL_SYSCALL(syscall_get_ticks_handler, GET_TICKS_INT);
+    INSTALL_SYSCALL(syscall_get_ticks_handler, GET_TICKS_INT);
     //INSTALL_SYSCALL(syscall_sleep_handler, SLEEP_INT);
     //INSTALL_SYSCALL(syscall_swexn_handler, SWEXN_INT);
 
