@@ -2,16 +2,18 @@
 #include <syscall.h>
 
 int main(){
-    int i;
     int reject = 0;
-    int tid = 0;
-    for (i = 0; i < 10; i++){
-        if (tid == 0) lprintf("Parent: %d", i);
-        else lprintf("Child: %d", i);
-        if (i == 2 && tid == 0) {
-
-            if (tid == 0) deschedule(&reject);
-        }
+    int parent_tid = gettid();
+    int child_tid = fork();
+    if (child_tid != 0) {
+        lprintf("Parent sleeping!");
+        deschedule(&reject);
+        lprintf("Parent woke up!!");
+    }
+    int j;
+    for(j = 0 ; j < 10000 ; j++);
+    if (child_tid == 0 && make_runnable(parent_tid) < 0) {
+        lprintf("Parent not asleep!");
     }
     return 0;
 }

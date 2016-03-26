@@ -121,7 +121,7 @@ handlers/syscall_handler_wrappers.o handlers/exception_handler_wrappers.o handle
 virtual_mem_mgmt/page_directory.o virtual_mem_mgmt/frame_manager.o virtual_mem_mgmt/mem_section.o virtual_mem_mgmt/virtual_mem_mgmt.o\
 data_structures/ll.o data_structures/queue.o data_structures/circ_buffer.o data_structures/ht.o data_structures/stack.o data_structures/cleanup.o data_structures/keyboard.o\
 special_register_cntrl/spec_reg_wrappers.o special_register_cntrl/asm_functions.o \
-scheduler/pcb.o scheduler/scheduler.o scheduler/tcb.o scheduler/tcb_pool.o \
+scheduler/pcb.o scheduler/scheduler.o scheduler/tcb.o scheduler/tcb_pool.o scheduler/thr_helpers.o \
 dispatcher/dispatcher.o dispatcher/asm_helpers.o \
 locks/mutex.o locks/sem.o\
 

@@ -43,6 +43,7 @@ int scheduler_get_current_tcb(scheduler_t *sched, tcb_t **tcb);
 int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb);
 
 int scheduler_deschedule_current_safe(scheduler_t *sched);
+int scheduler_make_runnable_safe(scheduler_t *sched, int tid);
 
 int scheduler_defer_current_tcb(scheduler_t *sched, uint32_t old_esp);
 

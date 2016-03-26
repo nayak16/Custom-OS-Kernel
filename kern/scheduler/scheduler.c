@@ -94,12 +94,20 @@ int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb) {
     return 0;
 }
 
+/**
+ * @brief Removes the current tcb from the runnable pool and puts it
+ * in the waiting pool
+ *
+ * @param sched Scheduler to manipulate
+ *
+ * @return 0 on success, negative error code otherwise
+ */
 int scheduler_deschedule_current(scheduler_t *sched) {
     if (sched == NULL) return -1;
 
     /* Manipulate tcb_pool*/
     if (tcb_pool_make_waiting(&(sched->thr_pool), sched->cur_tcb->tid) < 0) {
-        return -2;
+        return -3;
     }
     /* Set current tcb to WAITING */
     sched->cur_tcb->status = WAITING;
@@ -120,6 +128,51 @@ int scheduler_deschedule_current(scheduler_t *sched) {
 int scheduler_deschedule_current_safe(scheduler_t *sched) {
     disable_interrupts();
     int status = scheduler_deschedule_current(sched);
+    enable_interrupts();
+    return status;
+}
+
+/**
+ * @brief Moves the tcb with the specified tid from waiting to runnable
+ *
+ * @param sched Scheduler to manipulate
+ * @param tid tid of tcb to make runnable
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_make_runnable(scheduler_t *sched, int tid) {
+    if (sched == NULL) return -1;
+
+    /* Manipulate tcb_pool*/
+    if (tcb_pool_make_runnable(&(sched->thr_pool), tid) < 0) {
+        return -2;
+    }
+
+    tcb_t *tcb;
+    /* Get specified tcb */
+    if (tcb_pool_find_tcb(&(sched->thr_pool), tid, &tcb) < 0) return -3;
+
+    /* Set current tcb to RUNNABLE */
+    tcb->status = RUNNABLE;
+
+    return -0;
+}
+
+/**
+ * @brief Disables interrupts and makes the tcb with the specified
+ * tid runnable
+ *
+ * Context switch must not happen while modifying scheduler
+ * data structures i.e. runnable_pool, waiting_pool
+ *
+ * @param sched Scheduler to manipulate
+ * @param tid tid of tcb to make runnable
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_make_runnable_safe(scheduler_t *sched, int tid) {
+    disable_interrupts();
+    int status = scheduler_make_runnable(sched, tid);
     enable_interrupts();
     return status;
 }
@@ -250,8 +303,9 @@ int scheduler_defer_current_tcb(scheduler_t *sched, uint32_t old_esp) {
         /* Save k_stack esp */
         sched->cur_tcb->tmp_k_stack = (uint32_t *)old_esp;
 
-        /* Set current tcb status back to RUNNABLE */
-        sched->cur_tcb->status = RUNNABLE;
+        /* Set current tcb status back to RUNNABLE if it's not WAITING */
+        if (sched->cur_tcb->status == RUNNING)
+            sched->cur_tcb->status = RUNNABLE;
     }
     return 0;
 }
