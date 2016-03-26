@@ -13,6 +13,7 @@
 #include <virtual_mem_mgmt.h>
 #include <common_kern.h>
 #include <x86/asm.h>
+#include <loader.h>
 
 #include <simics.h>
 /**
@@ -70,6 +71,10 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
 int syscall_exec_c_handler(char *execname, char **argvec) {
     if (execname == NULL || argvec == NULL) return -1;
     lprintf("Exec called with %s", execname);
+    if (!load_elf_exists(execname)){
+        lprintf("Could not locate file with name %s", execname);
+        return -2;
+    }
     // TODO: Check validity and mapping of each string and arg
     /* Parse args and get argc*/
     char **argp = argvec;

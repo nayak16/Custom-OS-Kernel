@@ -106,8 +106,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     enable_paging();
 
     /* load idle program */
-    char *args[] = {"ab", "c", "hello world", 0};
-    pcb_load_prog(&idle_pcb, "test_exec1", 3, args);
+    pcb_load_prog(&idle_pcb, "exec_nonexist", 0, NULL);
 
     /* add idle process to scheduler */
     scheduler_add_process(&sched, &idle_pcb, NULL);

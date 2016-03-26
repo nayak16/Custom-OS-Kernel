@@ -59,6 +59,11 @@ int getbytes( const char *filename, int offset, int size, char *buf )
     return -1;
 }
 
+int load_elf_exists(const char *filename){
+    simple_elf_t elf;
+    return (elf_check_header(filename) == ELF_SUCCESS && elf_load_helper(&elf, filename) == ELF_SUCCESS);
+}
+
 int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){
     mem_section_t secs[NUM_ELF_SECTIONS];
 

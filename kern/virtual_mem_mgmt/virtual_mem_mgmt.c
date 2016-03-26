@@ -27,14 +27,11 @@ int vmm_deep_copy(page_directory_t *pd_dest){
     if (pd_dest == NULL)
         return -1;
 
-    /* Grab scheduler lock */
-    mutex_lock(&scheduler_lock);
     /* Get current running pcb */
     pcb_t *cur_pcb;
     if(scheduler_get_current_pcb(&sched, &cur_pcb) < 0) {
         return -2;
     }
-    mutex_unlock(&scheduler_lock);
 
     page_directory_t *pd_src = &(cur_pcb->pd);
     /* shallow copy page directory structure */

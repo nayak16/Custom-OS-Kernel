@@ -25,7 +25,7 @@
 int getbytes( const char *filename, int offset, int size, char *buf );
 
 int load_elf_sections(simple_elf_t *elf, pcb_t *pcb);
-
+int load_elf_exists(const char *filename);
 int load_user_stack(pcb_t *pcb);
 
 #endif /* _LOADER_H */
