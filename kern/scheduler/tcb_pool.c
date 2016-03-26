@@ -62,22 +62,60 @@ int tcb_pool_add_runnable_tcb(tcb_pool_t *tp, tcb_t *tcb) {
 int tcb_pool_get_next_tcb(tcb_pool_t *tp, tcb_t **next_tcb) {
     if (tp == NULL || next_tcb == NULL) return -1;
 
+    int ret;
     /* Cycle runnable pool once */
-    if (ll_cycle(&(tp->runnable_pool)) < 0) return -2;
+    if ((ret = ll_cycle(&(tp->runnable_pool))) == -2) {
+        /* Runnable pool is empty */
+        return -2;
+    } else if (ret < 0) {
+        /* Some other error */
+        return -3;
+    }
 
     /* Head of runnable_pool should be next tcb */
-    if (ll_peek(&(tp->runnable_pool), (void**) next_tcb) < 0) return -3;
+    if (ll_peek(&(tp->runnable_pool), (void**) next_tcb) < 0) return -4;
 
     return 0;
 }
 
 int tcb_pool_find_tcb(tcb_pool_t *tp, int tid, tcb_t **tcbp) {
     if (tp == NULL || tcbp == NULL) return -1;
-    if (ht_get(&(tp->threads), (key_t) tid, (void**) tcbp) < 0) {
+    ll_node_t *node;
+    if (ht_get(&(tp->threads), (key_t) tid, (void**) &node) < 0) {
         /* Not found */
         return -2;
     }
+    if (ll_node_get_data(node, (void**)tcbp) < 0) {
+        return -3;
+    }
     return 0;
+}
+
+int tcb_pool_make_waiting(tcb_pool_t *tp, int tid) {
+    if (tp == NULL) return -1;
+
+    ll_node_t *node;
+
+    /* Get specified node and tcb from hash table */
+    if (ht_get(&(tp->threads), (key_t) tid, (void**) &node) < 0) {
+        /* Not found */
+        return -2;
+    }
+    tcb_t *tcb;
+    if (ll_node_get_data(node, (void**)&tcb) < 0) {
+        return -3;
+    }
+    /* Check if tcb is not already WAITING */
+    if (tcb->status == WAITING) return -4;
+
+    /* Remove from runnable pool */
+    if (ll_unlink_node(&(tp->runnable_pool), node) < 0) return -5;
+
+    /* Add to waiting pool */
+    if (ll_link_node_last(&(tp->waiting_pool), node) < 0) return -6;
+
+    return 0;
+
 }
 
 int tcb_pool_remove_tcb(tcb_pool_t *tp, int id);

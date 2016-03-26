@@ -94,6 +94,36 @@ int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb) {
     return 0;
 }
 
+int scheduler_deschedule_current(scheduler_t *sched) {
+    if (sched == NULL) return -1;
+
+    /* Manipulate tcb_pool*/
+    if (tcb_pool_make_waiting(&(sched->thr_pool), sched->cur_tcb->tid) < 0) {
+        return -2;
+    }
+    /* Set current tcb to WAITING */
+    sched->cur_tcb->status = WAITING;
+
+    return 0;
+}
+
+/**
+ * @brief Disables interrupts and deschedules the current tcb
+ *
+ * Context switch must not happen while modifying scheduler
+ * data structures i.e. runnable_pool, waiting_pool
+ *
+ * @param sched Scheduler to manipulate
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_deschedule_current_safe(scheduler_t *sched) {
+    disable_interrupts();
+    int status = scheduler_deschedule_current(sched);
+    enable_interrupts();
+    return status;
+}
+
 /**
  * @brief Gets current running tcb
  *
@@ -110,6 +140,36 @@ int scheduler_get_current_tcb(scheduler_t *sched, tcb_t **tcb) {
     return 0;
 }
 
+/**
+ * @brief Creates a tcb for the idle pcb specified and saves it in the
+ * scheduler.
+ *
+ * The idle tcb will run when no other tcb exists in the
+ * runnable pool.
+ *
+ * @param sched Scheduler to add to
+ * @param idle_pcb Pointer to idle pcb with add
+ *
+ * @return tid of idle tcb on success, negative error code otherwise
+ *
+ */
+int scheduler_add_idle_process(scheduler_t *sched, pcb_t *idle_pcb) {
+    if (sched == NULL) return -1;
+
+    /* Set pid of idle_pcb */
+    idle_pcb->pid = sched->next_pid++;
+
+    /* Create idle tcb */
+    tcb_t *idle_tcb = malloc(sizeof(tcb_t));
+    if (idle_tcb == NULL) return -2;
+    int tid = sched->next_tid++;
+    tcb_init(idle_tcb, tid, idle_pcb, NULL);
+
+    /* Save into scheduler */
+    sched->idle_tcb = idle_tcb;
+
+    return tid;
+}
 
 /**
  * @brief Creates a tcb to run the specified pcb and adds
@@ -245,8 +305,17 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
     if (sched == NULL || tcbp == NULL) return -1;
 
+    int ret;
     /* Cycle runnable pool and get next tcb to run */
-    if (tcb_pool_get_next_tcb(&(sched->thr_pool), tcbp) < 0) return -2;
+    if ((ret = tcb_pool_get_next_tcb(&(sched->thr_pool), tcbp)) == -2) {
+        /* Runnable Pool is empty, run the idle tcb */
+        *tcbp = sched->idle_tcb;
+
+        return 0;
+    } else if (ret < 0) {
+        /* Some other error */
+        return -2;
+    }
 
     return 0;
 }

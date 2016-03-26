@@ -201,6 +201,10 @@ int ll_peek(ll_t *ll, void **val){
  */
 int ll_cycle(ll_t *ll) {
     if (ll == NULL) return -1;
+
+    /* Check if linked list is empty */
+    if (ll->size == 0) return -2;
+
     /* No need to cycle if only one in ll */
     if (ll->size == 1) return 0;
     /* Save original head */

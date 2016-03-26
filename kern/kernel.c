@@ -105,11 +105,19 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* Enable Paging */
     enable_paging();
 
-    /* load idle program */
-    pcb_load_prog(&idle_pcb, "exec_nonexist", 0, NULL);
+    /* Load idle program */
+    pcb_load_prog(&idle_pcb, "idle", 0, NULL);
 
     /* add idle process to scheduler */
-    scheduler_add_process(&sched, &idle_pcb, NULL);
+    scheduler_add_idle_process(&sched, &idle_pcb);
+
+    /* Load in actual work pcb */
+    set_pdbr((uint32_t) pd_get_base_addr(&work_pcb.pd));
+    pcb_load_prog(&work_pcb, "test_deschedule", 0, NULL);
+
+    /* Add work pcb into scheduler */
+    scheduler_add_process(&sched, &work_pcb, NULL);
+
     // TODO: create and load init task
 
     // TODO: set first thread running

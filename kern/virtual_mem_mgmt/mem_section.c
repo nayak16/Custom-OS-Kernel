@@ -40,7 +40,8 @@ int ms_get_bounding_addr(mem_section_t *secs, uint32_t num_secs,
     uint32_t low = 0xFFFFFFFF;
     uint32_t high = 0x0;
     for (s = 0; s < num_secs; s++){
-        if (secs[s].len == 0) return -1;
+        /* Don't consider section if it is empty */
+        if (secs[s].len == 0) continue;
         uint32_t c_low = secs[s].v_addr_start;
         uint32_t c_high = secs[s].v_addr_start + (secs[s].len - 1);
         if (c_low < low) low = c_low;

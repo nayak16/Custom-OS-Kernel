@@ -10,6 +10,8 @@
 #include <ll.h>
 #include <malloc.h>
 
+#include <simics.h>
+
 /**
  * @brief Initializes a hash table with provided parameters
  *
@@ -62,10 +64,10 @@ int ht_get(ht_t *t, key_t key, void **valp) {
 
     /* Index into correct bucket */
     int idx = t->hash(key) % t->max_size;
-    ll_t c = t->arr[idx];
 
     ht_entry_t *e;
-    if (ll_find(&c, extract_key, (void*) key, (void*) &e) < 0) {
+    /* Find element in bucket */
+    if (ll_find(&(t->arr[idx]), extract_key, (void*) key, (void*) &e) < 0) {
         /* Not found */
         return -2;
     }
@@ -88,10 +90,10 @@ int ht_remove(ht_t *t, key_t key, void **valp) {
 
     /* Index into correct bucket */
     int idx = t->hash(key) % t->max_size;
-    ll_t c = t->arr[idx];
 
     ht_entry_t *e;
-    if (ll_remove(&c, extract_key, (void*) key, (void**) &e) < 0) {
+    /* Remove from bucket */
+    if (ll_remove(&(t->arr[idx]), extract_key, (void*) key, (void**) &e) < 0) {
         /* Not found */
         return -2;
     }
@@ -126,7 +128,6 @@ int ht_put(ht_t *t, key_t key, void *val) {
 
     /* Index into correct bucket */
     int idx = t->hash(key) % t->max_size;
-    ll_t c = t->arr[idx];
 
     /* Init a new entry */
     ht_entry_t *new_e = malloc(sizeof(ht_entry_t));
@@ -134,7 +135,7 @@ int ht_put(ht_t *t, key_t key, void *val) {
     new_e->val = val;
     new_e->key = key;
 
-    if(ll_add_last(&c, (void*) new_e) < 0) return -3;
+    if(ll_add_last(&(t->arr[idx]), (void*) new_e) < 0) return -3;
     t->size++;
     return 0;
 }

@@ -118,6 +118,13 @@ int tcb_gettid(tcb_t *tcb, int *tid){
     return 0;
 }
 
+int tcb_get_status(tcb_t *tcb, int *statusp){
+    if (tcb == NULL || statusp == NULL) return -1;
+    // TODO: Make atomic??
+    *statusp = tcb->status;
+    return 0;
+}
+
 int tcb_reload_safe(tcb_t *tcb, pcb_t *pcb) {
     tcb_destroy(tcb);
     tcb_init(tcb, tcb->tid, pcb, NULL);

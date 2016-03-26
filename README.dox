@@ -11,6 +11,8 @@ TODO LIST:
 implement rollbacks on resource failure
 think about readline
 think about ZFOD and COW
+make all scheduler assigns atomic (xchng)
+Make idle thread run runnable_pool is empty
 
 Design Decision Rationales:
 
