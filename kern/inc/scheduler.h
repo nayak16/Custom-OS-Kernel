@@ -17,6 +17,8 @@ typedef struct scheduler{
     tcb_t *cur_tcb;
 } scheduler_t;
 
+extern uint32_t scheduler_num_ticks;
+
 
 int scheduler_init(scheduler_t *sched);
 

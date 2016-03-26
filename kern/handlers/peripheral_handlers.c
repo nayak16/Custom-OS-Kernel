@@ -13,6 +13,7 @@
 #include <circ_buffer.h>
 
 uint32_t c_timer_handler(uint32_t old_esp) {
+    scheduler_num_ticks++;
     uint32_t new_esp = context_switch(old_esp, -1);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
     return new_esp;

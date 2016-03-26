@@ -18,6 +18,8 @@
 
 #include <simics.h>
 
+uint32_t scheduler_num_ticks = 0;
+
 int is_started(scheduler_t *sched) {
     return sched->cur_tcb != NULL;
 }
