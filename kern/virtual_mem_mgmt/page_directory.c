@@ -56,8 +56,14 @@ void *pd_get_base_addr(page_directory_t *pd);
  *  @param v The pte/pte value
  *  @return ENTRY_PRESENT if present, ENTRY_NOT_PRESENT otherwise */
 int entry_present(uint32_t v){
-    if (NTH_BIT(v,0) == 0) return ENTRY_NOT_PRESENT;
+    if (NTH_BIT(v,PRESENT_FLAG_BIT) == 0) return ENTRY_NOT_PRESENT;
     return ENTRY_PRESENT;
+}
+
+int entry_permissions(uint32_t v, uint32_t *priv, uint32_t *access){
+    if (priv != NULL) *priv = NTH_BIT(v,MODE_FLAG_BIT);
+    if (access != NULL) *access = NTH_BIT(v,RW_FLAG_BIT);
+    return 0;
 }
 
 /** @brief Initializes the kernel mappings of a page directory
@@ -124,6 +130,61 @@ int pd_get_mapping(page_directory_t *pd, uint32_t v_addr,
     return 0;
 }
 
+
+/** @brief Checks the permissions of an address and optionally
+ *  store the privledge and access
+ *  @param pd The page directory
+ *  @param v_addr The virtual address in question
+ *  @return 0 on success, negative integer code on failure
+ */
+int pd_get_permissions(page_directory_t *pd, uint32_t v_addr,
+        uint32_t *priv, uint32_t *access){
+    if (pd == NULL) return -1;
+    uint32_t pde_i = (v_addr >> (OFF_SHIFT + PTE_SHIFT)) & 0x3FF;
+    /* page table index = 2nd 10 bits of v_addr */
+    uint32_t pte_i = (v_addr >> OFF_SHIFT) & 0x3FF;
+    if (entry_present(pd->directory[pde_i]) == ENTRY_NOT_PRESENT){
+        return -2;
+    }
+    uint32_t *pt = (uint32_t *)(REMOVE_FLAGS(pd->directory[pde_i]));
+    if (entry_present(pt[pte_i]) == ENTRY_NOT_PRESENT){
+        return -3;
+    }
+    uint32_t pd_priv, pd_access, pt_priv, pt_access,
+             combined_priv, combined_access;
+    entry_permissions(pd->directory[pde_i], &pd_priv, &pd_access);
+    entry_permissions(pt[pte_i], &pt_priv, &pt_access);
+    /* combined priv = 1 only if both levels are user */
+    combined_priv = pd_priv && pt_priv;
+    /* if combined priv = user, both access types must be set
+     * otherwise always read/write */
+    combined_access = combined_priv ? (pd_access && pt_access) : 1;
+
+    if (priv != NULL) *priv = combined_priv;
+    if (access != NULL) *access = combined_access;
+    return 0;
+}
+/** @brief Checks if virtual address is user read/write
+ *  @param pd The page directory
+ *  @param v_addr The virtual address
+ *  @return 1 on true 0 on false
+ */
+int pd_is_user_read_write(page_directory_t *pd, uint32_t v_addr){
+    uint32_t priv, access;
+    pd_get_permissions(pd, v_addr, &priv, &access);
+    return (priv == 1 && access == 1);
+}
+
+/** @brief Checks if virtual address is in user space
+ *  @param pd The page directory
+ *  @param v_addr The virtual address
+ *  @return 1 on true 0 on false
+ */
+int pd_is_user_readable(page_directory_t *pd, uint32_t v_addr){
+    uint32_t priv;
+    pd_get_permissions(pd, v_addr, &priv, NULL);
+    return (priv == 1);
+}
 
 /** @brief Creates a mapping in a page directory with given flags
  *

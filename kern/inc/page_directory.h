@@ -78,6 +78,10 @@ typedef struct page_directory {
 int pd_init(page_directory_t *pd);
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t *pte);
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr, uint32_t pte_flags, uint32_t pde_flags);
+int pd_get_permissions(page_directory_t *pd, uint32_t v_addr,
+        uint32_t *priv, uint32_t *access);
+int pd_is_user_read_write(page_directory_t *pd, uint32_t v_addr);
+int pd_is_user_readable(page_directory_t *pd, uint32_t v_addr);
 int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr);
 int pd_entry_present(uint32_t v);
 int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src, frame_manager_t *fm);
