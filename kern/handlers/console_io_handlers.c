@@ -29,7 +29,7 @@ int syscall_readline_c_handler(int len, char *buf){
     uint32_t max_len;
     keyboard_buffer_size(&keyboard, &max_len);
     //TODO: check that buf is not in read only section
-    if (buf == NULL || len > max_len);
+    if (buf == NULL || len < 0 || (uint32_t)len > max_len)
         return -1;
     /* attempt to lock the keyboard. only continues when there is an entire
      * line to be read from the keyboard */
