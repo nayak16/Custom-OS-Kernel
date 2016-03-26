@@ -25,7 +25,7 @@ typedef struct tcb{
     int tid;
 
     int status;
-
+    int exit_status;
     int t_wakeup;
 
     pcb_t *pcb;

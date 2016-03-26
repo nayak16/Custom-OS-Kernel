@@ -143,6 +143,11 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
 
 void syscall_set_status_c_handler(int status){
     lprintf("<set_status NYI> status = %d", status);
+    tcb_t *cur_tcb;
+    if (scheduler_get_current_tcb(&sched, &cur_tcb) < 0) {
+        return;
+    }
+    cur_tcb->exit_status = status;
     return;
 }
 
