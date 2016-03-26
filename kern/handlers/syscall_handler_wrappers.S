@@ -127,3 +127,8 @@ syscall_make_runnable_handler:
 .globl syscall_get_ticks_handler
 syscall_get_ticks_handler:
     no_arg_syscall_wrapper syscall_get_ticks_c_handler
+
+.globl syscall_sleep_handler
+syscall_sleep_handler:
+    one_arg_syscall_wrapper syscall_sleep_c_handler
+

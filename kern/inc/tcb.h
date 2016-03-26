@@ -26,6 +26,8 @@ typedef struct tcb{
 
     int status;
 
+    int t_wakeup;
+
     pcb_t *pcb;
 
     uint32_t *k_stack_bot;
