@@ -34,9 +34,25 @@ execution stops because the scheduler waits forever.
 With a global scheduler lock, syscalls the modify the scheduler are thread
 safe.
 
-Skip esp and eax save in syscall wrappers - This is to make sure syscall
-restore and save registers follow the same stack pattern as a context switch
-and subsequent return from a timer interrupt. This is to make implementing
-exec and yield seamless.
+Scheduler TCB pool data structure - Right from the beginning we abstracted
+the tcb pool data structure out. This allowed us to change the internals
+of the pool as the project progressed. For ck1 and ck2, we used a linked
+list of tcb pools. Every pool access was O(n) where n = total number
+of threads. Then, the runnable and waiting pools were queues and
+not abstracted out. However, we encountered problems because our queue
+implementation used malloc for every deq and enq; it was grossly
+inefficient combined with the linked list of threads. We decided to
+revamp the whole data structure to ensure least amount of mallocs and
+constant access time.
+We wrote a hashtable data structure capable of storing generic data with
+an accompanying key. Then in the tcb_pool, we store linked list nodes
+each holding a tcb into the hash table. The key is the tid of the stored
+tcb. Essentially, it is a hash table of linked list nodes, where each
+node belongs to either the runnable, waiting, or sleeping pools. This
+allows each transfer of nodes between pools to be constant time, and
+thus syscalls like deschedule and make_runnable O(1). Each tcb also has a
+status that indicates which pool it belongs to. Although writing this
+data structure was arduous, it proved to be a really good solution to
+minimize access time and number of malloc/free pairs.
 
 */
