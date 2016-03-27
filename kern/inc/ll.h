@@ -55,7 +55,8 @@ int ll_cycle(ll_t *ll);
 
 int ll_link_node_first(ll_t *ll, ll_node_t *node);
 int ll_link_node_last(ll_t *ll, ll_node_t *node);
-
+int ll_link_node_sorted(ll_t *ll, ll_node_t *new_node,
+        int (*cmp)(void *, void *));
 int ll_unlink_node(ll_t *ll, ll_node_t *node);
 
 int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr);

@@ -133,7 +133,8 @@ int scheduler_deschedule_current_safe(scheduler_t *sched) {
 }
 
 /**
- * @brief Moves the tcb with the specified tid from waiting to runnable
+ * @brief Moves the tcb with the specified tid from waiting or sleeping
+ *        to runnable
  *
  * @param sched Scheduler to manipulate
  * @param tid tid of tcb to make runnable
@@ -177,6 +178,53 @@ int scheduler_make_runnable_safe(scheduler_t *sched, int tid) {
     return status;
 }
 
+/**
+ * @brief Moves the tcb with the specified tid from running to sleeping
+ *
+ * @param sched Scheduler to manipulate
+ * @param tid tid of tcb to make sleeping
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_make_current_sleeping(scheduler_t *sched, int ticks) {
+    if (sched == NULL || ticks < 0) return -1;
+
+    /* Somehow already sleeping...?*/
+    if (sched->cur_tcb->status == SLEEPING) return -4;
+    /* Set current tcb to RUNNABLE */
+    sched->cur_tcb->status = SLEEPING;
+    if (scheduler_num_ticks + ticks < scheduler_num_ticks){
+        //TODO: handle this...
+        MAGIC_BREAK;
+    }
+    sched->cur_tcb->t_wakeup = scheduler_num_ticks+ticks;
+
+    /* Manipulate tcb_pool*/
+    if (tcb_pool_make_sleeping(&(sched->thr_pool), sched->cur_tcb->tid) < 0) {
+        return -2;
+    }
+
+    return -0;
+}
+
+/**
+ * @brief Disables interrupts and makes the tcb with the specified
+ * tid sleeping
+ *
+ * Context switch must not happen while modifying scheduler
+ * data structures i.e. runnable_pool, waiting_pool
+ *
+ * @param sched Scheduler to manipulate
+ * @param tid tid of tcb to make runnable
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_make_current_sleeping_safe(scheduler_t *sched, int ticks) {
+    disable_interrupts();
+    int status = scheduler_make_current_sleeping(sched, ticks);
+    enable_interrupts();
+    return status;
+}
 /**
  * @brief Gets current running tcb
  *
@@ -308,6 +356,10 @@ int scheduler_defer_current_tcb(scheduler_t *sched, uint32_t old_esp) {
             sched->cur_tcb->status = RUNNABLE;
     }
     return 0;
+}
+
+int scheduler_wakeup(scheduler_t *sched){
+    return tcb_pool_wakeup(&(sched->thr_pool), scheduler_num_ticks);
 }
 
 /**

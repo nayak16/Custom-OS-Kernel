@@ -22,6 +22,11 @@ uint32_t context_switch(uint32_t old_esp, int target_tid) {
         lprintf("Current tid tcb does not exist !!!");
         MAGIC_BREAK;
     }
+    /* Wake up any sleeping threads */
+    if (scheduler_wakeup(&sched) < 0){
+        lprintf("Error waking up threads");
+        MAGIC_BREAK;
+    }
 
     tcb_t *next_tcb;
     /* Switch to scheduler selected tid */

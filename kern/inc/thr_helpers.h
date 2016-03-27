@@ -16,6 +16,7 @@ int thr_deschedule(int *reject);
 int thr_make_runnable(int tid);
 int thr_yield(int tid);
 int thr_gettid(void);
+int thr_sleep(int ticks);
 
 #endif /* _THR_HELPERS_H_ */
 

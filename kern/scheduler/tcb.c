@@ -131,3 +131,8 @@ int tcb_reload_safe(tcb_t *tcb, pcb_t *pcb) {
     return 0;
 }
 
+int tcb_t_wakeup_cmp(void *a, void *b){
+    uint32_t t1 = (uint32_t)((tcb_t *)a)->t_wakeup;
+    uint32_t t2 = (uint32_t)((tcb_t *)b)->t_wakeup;
+    return (t1 < t2) ? -1 : ((t1 > t2) ? 1 : 0);
+}

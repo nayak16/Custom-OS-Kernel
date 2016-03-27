@@ -18,7 +18,7 @@
 #define WAITING 2
 #define ZOMBIE 3
 #define RUNNING 4
-
+#define SLEEPING 5
 
 typedef struct tcb{
 
@@ -26,7 +26,7 @@ typedef struct tcb{
 
     int status;
     int exit_status;
-    int t_wakeup;
+    uint32_t t_wakeup;
 
     pcb_t *pcb;
 
@@ -39,6 +39,7 @@ typedef struct tcb{
 int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs);
 int tcb_get_pcb(tcb_t *tcb, pcb_t **pcb);
 int tcb_get_init_stack(tcb_t *tcb, void **stack);
+int tcb_t_wakeup_cmp(void *a, void *b);
 
 int tcb_reload_safe(tcb_t *tcb, pcb_t *pcb);
 int tcb_get_status(tcb_t *tcb, int *statusp);

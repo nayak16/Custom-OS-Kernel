@@ -272,6 +272,61 @@ int ll_link_node_first(ll_t *ll, ll_node_t *new_node){
 }
 
 /**
+ * @brief Links the specified ll_node_t such that the resulting linked list
+ *        is sorted by the comparison function cmp(a,b) which returns -1 if
+ *        a < b, 0 if a == b, and 1 if a > b.
+ *
+ * @param ll Linked list to link to
+ * @param node Node to link
+ *
+ * @return 0 on success, negative erorr code otherwise
+ */
+int ll_link_node_sorted(ll_t *ll, ll_node_t *new_node,
+        int (*cmp)(void *, void *)) {
+    if (ll == NULL || new_node == NULL || cmp == NULL) return -1;
+    if (new_node->e == NULL) return -2;
+
+    if (ll->head == NULL){
+        ASSERT(ll->tail == NULL);
+        /* no elements in list yet */
+        ll->head = new_node;
+        ll->tail = new_node;
+    } else {
+        ll_node_t *curr_node = ll->head;
+        /* check to see if new node is smallest number */
+        if ((*cmp)(new_node->e, curr_node->e) < 0){
+            return ll_link_node_first(ll, new_node);
+        }
+        /* go through list until we find a node such that our new value is between
+         * the curr_node and curr_node->next */
+        while (curr_node->next != NULL){
+            /* check for wonky node elements */
+            if (curr_node->e == NULL) return -2;
+            /* assert that our list is ordered up to this point */
+            ASSERT((*cmp)(curr_node->e, curr_node->next->e) <= 0);
+
+            if ((*cmp)(new_node->e, curr_node->e) >= 0 &&
+                (*cmp)(new_node->e, curr_node->next->e) <= 0){
+                break;
+            } else {
+                curr_node = curr_node->next;
+            }
+        }
+        /* at this point, curr_node points to the node that the new_node should be
+         * inserted after */
+        if (curr_node->next == NULL){
+            return ll_link_node_last(ll, new_node);
+        } else {
+            curr_node->next->prev = new_node;
+            new_node->next = curr_node->next;
+            curr_node->next = new_node;
+            new_node->prev = curr_node;
+        }
+    }
+    ll->size++;
+    return 0;
+}
+/**
  * @brief Unlink a linked list node from the ll specified
  *
  * @param ll Pointer to linked list to remove from
@@ -298,6 +353,9 @@ int ll_unlink_node(ll_t *ll, ll_node_t *node) {
         node->next->prev = node->prev;
         node->prev->next = node->next;
     }
+    /* Remove any old links */
+    node->next = NULL;
+    node->prev = NULL;
     ll->size--;
     return 0;
 }
