@@ -26,6 +26,7 @@ int thr_deschedule(int *reject) {
     if (scheduler_deschedule_current_safe(&sched) < 0) return -3;
     /* Loop until current tcb is RUNNABLE again. Allows time for scheduler to context
      * switch into another tcb, and only resume when cur_tcb is put back into the runnable pool */
+    // TODO: yield
     int status;
     do {
         if(tcb_get_status(my_tcb, &status) < 0) return -4;
@@ -37,7 +38,6 @@ int thr_deschedule(int *reject) {
 int thr_make_runnable(int tid) {
     if (scheduler_make_runnable_safe(&sched, tid) < 0) return -3;
     return 0;
-
 }
 
 int thr_sleep(int ticks) {
@@ -45,7 +45,7 @@ int thr_sleep(int ticks) {
     if(scheduler_get_current_tcb(&sched, &my_tcb) < 0) return -2;
 
     if (scheduler_make_current_sleeping_safe(&sched, ticks) < 0) return -3;
-
+    //TODO: yield
     int status;
     do {
         if(tcb_get_status(my_tcb, &status) < 0) return -4;

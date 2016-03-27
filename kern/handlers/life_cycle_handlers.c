@@ -152,7 +152,8 @@ void syscall_set_status_c_handler(int status){
 }
 
 void syscall_vanish_c_handler(){
-    lprintf("<vanish NYI> spin looping");
+    lprintf("Vanishing");
+    scheduler_make_current_zombie_safe(&sched);
     while(1);
 }
 

@@ -56,6 +56,7 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     /* Set appropriate tid and pcb */
     tcb->tid = tid;
     tcb->pcb = pcb;
+    pcb->num_threads++;
 
     /* Set tcb to runnable */
     tcb->status = RUNNABLE;
@@ -101,9 +102,9 @@ int tcb_get_init_stack(tcb_t *tcb, void **stack) {
 }
 
 int tcb_destroy(tcb_t *tcb) {
+    tcb->pcb->num_threads--;
     free(tcb->k_stack_bot);
     return 0;
-
 }
 
 int tcb_get_pcb(tcb_t *tcb, pcb_t **pcb) {

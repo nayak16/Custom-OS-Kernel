@@ -30,6 +30,7 @@ int pcb_init(pcb_t *pcb){
     if (pcb == NULL) return -1;
     /* Temp value before being added to scheduler */
     pcb->pid = -1;
+    pcb->num_threads = 0;
 
     pd_init(&(pcb->pd));
     return 0;

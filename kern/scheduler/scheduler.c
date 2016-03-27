@@ -215,7 +215,7 @@ int scheduler_make_current_sleeping(scheduler_t *sched, int ticks) {
  * data structures i.e. runnable_pool, waiting_pool
  *
  * @param sched Scheduler to manipulate
- * @param tid tid of tcb to make runnable
+ * @param tid tid of tcb to make sleeping
  *
  * @return 0 on success, negative error code otherwise
  */
@@ -234,6 +234,42 @@ int scheduler_make_current_sleeping_safe(scheduler_t *sched, int ticks) {
  * @return 0 on success, negative error code otherwise
  *
  */
+
+/**
+ * @brief Moves the tcb with the specified tid into the zombie pool
+ *
+ * @param sched Scheduler to manipulate
+ * @param tid tid of tcb to make sleeping
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_make_current_zombie(scheduler_t *sched) {
+    if (sched == NULL) return -1;
+    if (tcb_pool_make_zombie(&(sched->thr_pool), sched->cur_tcb->tid) < 0) {
+        return -2;
+    }
+    return 0;
+}
+
+/**
+ * @brief Disables interrupts and makes the tcb with the specified
+ * tid a zombie
+ *
+ * Context switch must not happen while modifying scheduler
+ * data structures i.e. runnable_pool, waiting_pool
+ *
+ * @param sched Scheduler to manipulate
+ * @param tid tid of tcb to make zombie
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_make_current_zombie_safe(scheduler_t *sched) {
+    disable_interrupts();
+    int status = scheduler_make_current_zombie(sched);
+    enable_interrupts();
+    return status;
+}
+
 int scheduler_get_current_tcb(scheduler_t *sched, tcb_t **tcb) {
 
     if (sched == NULL) return -1;

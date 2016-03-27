@@ -31,7 +31,9 @@ int tcb_pool_init(tcb_pool_t *tp) {
     if (ht_init(&(tp->threads), TABLE_SIZE, tid_hash) < 0) return -2;
 
     if (ll_init(&(tp->runnable_pool)) < 0
-            || ll_init(&(tp->waiting_pool))) return -3;
+        || ll_init(&(tp->waiting_pool)) < 0
+        || ll_init(&(tp->sleeping_pool)) < 0
+        || ll_init(&(tp->zombie_pool))< 0) return -3;
 
     return 0;
 }
@@ -223,6 +225,36 @@ int tcb_pool_make_runnable(tcb_pool_t *tp, int tid) {
 
 }
 
+int tcb_pool_make_zombie(tcb_pool_t *tp, int tid){
+    MAGIC_BREAK;
+    if (tp == NULL) return -1;
+
+    ll_node_t *node;
+
+    /* Get specified node and tcb from hash table */
+    if (ht_get(&(tp->threads), (key_t) tid, (void**) &node) < 0) {
+        /* Not found */
+        return -2;
+    }
+    tcb_t *tcb;
+    if (ll_node_get_data(node, (void**)&tcb) < 0) {
+        return -3;
+    }
+
+    switch(tcb->status){
+        case RUNNABLE:
+        case RUNNING:
+            if (ll_unlink_node(&(tp->runnable_pool), node) < 0) return -5;
+        case WAITING:
+            /* hard to concieve a way for this to happen */
+            if (ll_unlink_node(&(tp->waiting_pool), node) < 0) return -5;
+        default:
+            return -6;
+    }
+    tcb->status = ZOMBIE;
+    if (ll_link_node_last(&(tp->zombie_pool), node) < 0) return -7;
+    return 0;
+}
 
 int tcb_pool_remove_tcb(tcb_pool_t *tp, int id);
 

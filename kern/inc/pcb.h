@@ -19,6 +19,8 @@ typedef struct pcb{
 
     unsigned long entry_point;
     page_directory_t pd;
+
+    uint32_t num_threads;
 } pcb_t;
 
 int pcb_init(pcb_t *pcb);
