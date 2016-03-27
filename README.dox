@@ -16,6 +16,16 @@ Make idle thread run runnable_pool is empty
 
 Design Decision Rationales:
 
+New pages & remove pages - One interesting thing about remove pages is that
+it does not need to know how long the length of the allocated chunk of memory
+that data should be remembered from a call to new_pages. We do this by using 2
+of the unused bits in the page table entry flags. Bit 9 denotes the beginning
+of a new_pages allocation and bit 10 denotes the end of a new_pages allocation.
+Therefore, if we call remove_pages on a memory location that does not have the
+9th bit set, we can immediately return an error code. Otherwise, we simply
+while loop and increase the virtual address until we find a mapping that has
+the 10th bit set.
+
 Sleeping pool design - In order to maintain constant time context switching,
 we decided on implementing the sleeping pool as a linked list that maintains
 an ordering. This allows us to check whether or not we need to wake up a thread
