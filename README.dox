@@ -16,6 +16,14 @@ Make idle thread run runnable_pool is empty
 
 Design Decision Rationales:
 
+Sleeping pool design - In order to maintain constant time context switching,
+we decided on implementing the sleeping pool as a linked list that maintains
+an ordering. This allows us to check whether or not we need to wake up a thread
+in constant time by simply looking at the first element - which has the lowest
+lookup time - and comparing it to the current time for every tick. Granted, a
+sorted insertion into a linked list takes O(n) time, this is very much worth
+it for the constant time wakeup procedure.
+
 Global scheduler lock - The reason we have a global scheduler lock
 rather than one inside the scheduler is to avoid the following situation:
 Consider thread 1 in fork() that grabs the scheduler's mutex. After it
