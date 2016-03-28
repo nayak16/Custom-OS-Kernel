@@ -61,8 +61,10 @@ void sem_wait( sem_t *sem ) {
         queue_enq(&(sem->q), (void *)&metadata);
         mutex_unlock(&(sem->m));
         /* only deschedules if awoken by sem_signal */
-        while(!(metadata.reject))
-            thr_deschedule(&(metadata.reject));
+        while(!(metadata.reject)) {
+            thr_kern_deschedule(&(metadata.reject));
+            MAGIC_BREAK;
+        }
     } else {
         /* resource avaliable! */
         mutex_unlock(&(sem->m));

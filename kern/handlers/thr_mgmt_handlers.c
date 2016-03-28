@@ -19,27 +19,10 @@ int syscall_gettid_c_handler(){
 
 
 int syscall_yield_c_handler(uint32_t old_esp, int tid){
-    if (tid >= 0) {
-        int ret;
-        /* Check if specified tcb is runnable */
-        if ((ret = scheduler_check_is_runnable(&sched, tid)) < 0) {
-            /* Not found */
-            return -2;
-        } else if (ret == 0) {
-            /* tcb is not runnable */
-            return -3;
-        }
-        /* Success, tcb is runnable */
-    }
-    /* Context switch */
-    uint32_t new_esp = context_switch_safe(old_esp, tid);
-    /* Restore context with new selected esp */
-    restore_context(new_esp);
-
-    return 0;
+    return thr_yield(old_esp, tid);
 }
-int syscall_deschedule_c_handler(int *reject){
-   return thr_deschedule(reject);
+int syscall_deschedule_c_handler(uint32_t old_esp, int *reject){
+   return thr_deschedule(old_esp, reject);
 }
 
 int syscall_make_runnable_c_handler(int tid){

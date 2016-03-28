@@ -57,7 +57,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS = getpid_test1 ck1 loader_test1 knife remove_pages_test1 remove_pages_test2 exec_basic exec_basic_helper exec_nonexist readline_basic sleep_test1 yield_desc_mkrun
+410TESTS = getpid_test1 ck1 loader_test1 knife remove_pages_test1 remove_pages_test2 exec_basic exec_basic_helper exec_nonexist readline_basic sleep_test1 yield_desc_mkrun deschedule_hang
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -121,7 +121,7 @@ handlers/syscall_handler_wrappers.o handlers/exception_handler_wrappers.o handle
 virtual_mem_mgmt/page_directory.o virtual_mem_mgmt/frame_manager.o virtual_mem_mgmt/mem_section.o virtual_mem_mgmt/virtual_mem_mgmt.o\
 data_structures/ll.o data_structures/queue.o data_structures/circ_buffer.o data_structures/ht.o data_structures/stack.o data_structures/cleanup.o data_structures/keyboard.o\
 special_register_cntrl/spec_reg_wrappers.o special_register_cntrl/asm_functions.o \
-scheduler/pcb.o scheduler/scheduler.o scheduler/tcb.o scheduler/tcb_pool.o scheduler/thr_helpers.o \
+scheduler/pcb.o scheduler/scheduler.o scheduler/tcb.o scheduler/tcb_pool.o scheduler/thr_helpers.o scheduler/thr_helpers_wrappers.o \
 dispatcher/dispatcher.o dispatcher/asm_helpers.o \
 locks/mutex.o locks/sem.o\
 

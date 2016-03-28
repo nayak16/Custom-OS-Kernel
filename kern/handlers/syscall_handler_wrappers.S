@@ -1,5 +1,5 @@
 .macro save_context
-    subl $4, %esp /* Skip save eax */
+    pushl $0 /* Store 0 as eax, in case of success */
     pushl %ecx
     pushl %edx
     pushl %ebx
@@ -128,7 +128,13 @@ syscall_yield_handler:
 
 .globl syscall_deschedule_handler
 syscall_deschedule_handler:
-    one_arg_syscall_wrapper syscall_deschedule_c_handler
+    save_context
+    movl %esp, %eax /* Save esp */
+    pushl %esi /* push the reject arg onto the stack*/
+    pushl %eax /* Push old_esp arg onto the stack */
+    call syscall_deschedule_c_handler /* call yield c handler */
+    addl $8, %esp /* skip both arguments */
+    restore_context
 
 .globl syscall_make_runnable_handler
 syscall_make_runnable_handler:
