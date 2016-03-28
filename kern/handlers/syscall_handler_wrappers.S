@@ -1,7 +1,9 @@
 .macro save_context
+    subl $4, %esp /* Skip save eax */
     pushl %ecx
     pushl %edx
     pushl %ebx
+    subl $4, %esp /* Skip save esp */
     pushl %ebp
     pushl %esi
     pushl %edi
@@ -19,9 +21,11 @@
     popl %edi
     popl %esi
     popl %ebp
+    addl $4, %esp /* Skip restore esp */
     popl %ebx
     popl %edx
     popl %ecx
+    addl $4, %esp /* Skip restore eax */
     iret
 .endm
 
@@ -114,7 +118,13 @@ syscall_get_cursor_pos_handler:
 
 .globl syscall_yield_handler
 syscall_yield_handler:
-    one_arg_syscall_wrapper syscall_yield_c_handler
+    save_context
+    movl %esp, %eax /* Save esp */
+    pushl %esi /* push the tid arg onto the stack*/
+    pushl %eax /* Push old_esp arg onto the stack */
+    call syscall_yield_c_handler /* call yield c handler */
+    addl $8, %esp /* skip both arguments */
+    restore_context
 
 .globl syscall_deschedule_handler
 syscall_deschedule_handler:

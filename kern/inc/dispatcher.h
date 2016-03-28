@@ -14,6 +14,7 @@ void save_context(tcb_t *tcb);
 
 void restore_context(uint32_t new_esp);
 
+uint32_t context_switch_safe(uint32_t old_esp, int target_tid);
 uint32_t context_switch(uint32_t old_esp, int target_tid);
 
 

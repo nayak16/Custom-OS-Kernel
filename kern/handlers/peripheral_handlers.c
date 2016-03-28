@@ -15,7 +15,17 @@
 
 uint32_t c_timer_handler(uint32_t old_esp) {
     scheduler_num_ticks++;
+
+    /* Wake up any sleeping threads */
+    if (scheduler_wakeup(&sched) < 0){
+        lprintf("Error waking up threads");
+        MAGIC_BREAK;
+    }
+
+    /* Context switch into scheduler determined tcb,
+     * possibly into a thread that was just woken up */
     uint32_t new_esp = context_switch(old_esp, -1);
+
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
     return new_esp;
 }

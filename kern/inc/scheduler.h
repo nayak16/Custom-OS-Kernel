@@ -35,6 +35,8 @@ int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcb);
 int scheduler_get_tcb_by_tid(scheduler_t *sched,
                              int target_tid, tcb_t **tcbp);
 
+int scheduler_check_is_runnable(scheduler_t *sched, int target_tid);
+
 int scheduler_set_running_tcb(scheduler_t *sched,
                                 tcb_t *tcb, uint32_t *new_esp);
 
@@ -46,6 +48,7 @@ int scheduler_deschedule_current_safe(scheduler_t *sched);
 int scheduler_make_runnable_safe(scheduler_t *sched, int tid);
 int scheduler_make_current_sleeping_safe(scheduler_t *sched, int ticks);
 int scheduler_make_current_zombie_safe(scheduler_t *sched);
+
 int scheduler_wakeup(scheduler_t *sched);
 int scheduler_reap(scheduler_t *sched);
 

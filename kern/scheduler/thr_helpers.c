@@ -64,6 +64,8 @@ int thr_gettid() {
 }
 
 
-int thr_yield(int tid);
+int thr_yield(int tid) {
+    return 0;
+}
 
 

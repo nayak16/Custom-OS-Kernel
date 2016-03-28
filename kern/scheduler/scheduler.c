@@ -72,12 +72,33 @@ int scheduler_get_tcb_by_tid(scheduler_t *sched,
                              int target_tid, tcb_t **tcbp) {
     if (sched == NULL || tcbp == NULL) return -1;
 
-    /* Cycle runnable pool and get next tcb to run */
+    /* Find the correct tcb from the pool */
     if (tcb_pool_find_tcb(&(sched->thr_pool), target_tid, tcbp) < 0) return -2;
 
     return 0;
 }
 
+/**
+ * @brief Checks if the tcb with the specified tid is currently
+ * runnable or not
+ *
+ * @param sched Scheduler to check
+ * @param target_tid tid of tcb to check
+ *
+ * @return 1 if tcb is RUNNABLE, 0 if not, negative error code otherwise
+ *
+ */
+int scheduler_check_is_runnable(scheduler_t *sched, int target_tid) {
+    if (sched == NULL) return -1;
+
+    tcb_t *tcb;
+    /* Find the correct tcb from the pool */
+    if (tcb_pool_find_tcb(&(sched->thr_pool), target_tid, &tcb) < 0) return -2;
+
+    /* Check the status */
+    return tcb->status == RUNNABLE;
+
+}
 /**
  * @brief Gets current running pcb
  *

@@ -13,6 +13,7 @@ think about readline
 think about ZFOD and COW
 make all scheduler assigns atomic (xchng)
 Make idle thread run runnable_pool is empty
+Get rid of restore_context and instead return esp in exec and yield
 
 Design Decision Rationales:
 
