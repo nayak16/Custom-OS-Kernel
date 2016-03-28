@@ -120,8 +120,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     scheduler_add_idle_process(&sched, idle_pcb);
 
     /* Load in actual work pcb */
-    set_pdbr((uint32_t) pd_get_base_addr(&work_pcb->pd));
-    pcb_load_prog(work_pcb, "shell", 0, NULL);
+    set_pdbr((uint32_t) pd_get_base_addr(&work_pcb.pd));
+    pcb_load_prog(&work_pcb, "test_readline", 0, NULL);
 
     /* Add work pcb into scheduler */
     scheduler_add_process(&sched, work_pcb, NULL);
