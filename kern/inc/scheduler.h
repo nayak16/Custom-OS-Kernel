@@ -39,6 +39,8 @@ int scheduler_get_pcb_by_pid(scheduler_t *sched,
 
 int scheduler_check_is_runnable(scheduler_t *sched, int target_tid);
 
+int scheduler_check_is_runnable(scheduler_t *sched, int target_tid);
+
 int scheduler_set_running_tcb(scheduler_t *sched,
                                 tcb_t *tcb, uint32_t *new_esp);
 
