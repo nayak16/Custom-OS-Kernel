@@ -59,6 +59,8 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     tcb->tid = tid;
     tcb->pcb = pcb;
 
+    pcb_set_original_tid(pcb, tid);
+
     /* Set tcb to runnable */
     tcb->status = RUNNABLE;
 
@@ -137,4 +139,10 @@ int tcb_t_wakeup_cmp(void *a, void *b){
     uint32_t t1 = (uint32_t)((tcb_t *)a)->t_wakeup;
     uint32_t t2 = (uint32_t)((tcb_t *)b)->t_wakeup;
     return (t1 < t2) ? -1 : ((t1 > t2) ? 1 : 0);
+}
+
+int tcb_get_exit_status(tcb_t *tcb, int *status_ptr){
+    if (tcb == NULL) return -1;
+    *status_ptr = tcb->exit_status;
+    return 0;
 }

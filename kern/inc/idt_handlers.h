@@ -29,6 +29,7 @@ int syscall_sleep_handler(int);
 
 int syscall_fork_handler(void);
 void syscall_vanish_handler(void);
+int syscall_wait_handler(int *status_ptr);
 void syscall_set_status_handler(int);
 int syscall_exec_handler(char *execname, char **argvec);
 

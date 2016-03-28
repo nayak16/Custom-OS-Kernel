@@ -34,6 +34,8 @@ int scheduler_start(scheduler_t *sched);
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcb);
 int scheduler_get_tcb_by_tid(scheduler_t *sched,
                              int target_tid, tcb_t **tcbp);
+int scheduler_get_pcb_by_pid(scheduler_t *sched,
+                             int target_pid, pcb_t **pcbp);
 
 int scheduler_check_is_runnable(scheduler_t *sched, int target_tid);
 

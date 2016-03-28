@@ -42,14 +42,12 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
     if (pcb_init(duplicate_pcb) < 0) return -4;
 
     /* Create copy of current pcb with duplicate address space */
-    if (pcb_copy(duplicate_pcb, cur_pcb) < 0) {
-        return -5;
-    }
+    if (pcb_copy(duplicate_pcb, cur_pcb) < 0) return -5;
 
     int tid;
     /* Add duplicate to scheduler runnable queue */
     if((tid = scheduler_add_process_safe(&sched,
-                                         duplicate_pcb, saved_regs)) < 0) {
+                duplicate_pcb, saved_regs)) < 0) {
         return -6;
     }
     return tid;
@@ -153,7 +151,39 @@ void syscall_set_status_c_handler(int status){
 
 void syscall_vanish_c_handler(){
     lprintf("Vanishing");
+    pcb_t *cur_pcb, *parent_pcb;
+    tcb_t *cur_tcb;
+    /* get current pcb and tcb */
+    scheduler_get_current_tcb(&sched, &cur_tcb);
+    tcb_get_pcb(cur_tcb, &cur_pcb);
+
+    /* from cur_pcb, get parent_pcb */
+    if (scheduler_get_pcb_by_pid(&sched, pcb_get_ppid(cur_pcb), &parent_pcb) < 0){
+        lprintf("Could not retrieve parent pid, routing return status to init");
+        while (1);
+        //TODO: get the init pcb and signal it's pcb
+    }
+    int exit_status;
+    if (tcb_get_exit_status(cur_tcb, &exit_status) < 0)
+        exit_status = -2;
+
+    int original_tid;
+    pcb_get_original_tid(cur_pcb, &original_tid);
+
+    /* signal the status to parent_pcb */
+    pcb_signal_status(parent_pcb, exit_status, original_tid);
+
+    /* move the current thread to zombie pool for clean up*/
     scheduler_make_current_zombie_safe(&sched);
     while(1);
 }
 
+int syscall_wait_c_handler(int *status_ptr){
+    pcb_t *cur_pcb;
+    int original_pid;
+    /* get the current running pcb */
+    if (scheduler_get_current_pcb(&sched, &cur_pcb) < 0) return -1;
+    if (pcb_wait_on_status(cur_pcb, status_ptr, &original_pid) < 0)
+        return -2;
+    return original_pid;
+}

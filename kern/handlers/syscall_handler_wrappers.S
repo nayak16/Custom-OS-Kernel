@@ -155,3 +155,7 @@ syscall_sleep_handler:
     restore_context
 
 
+.globl syscall_wait_handler
+syscall_wait_handler:
+    one_arg_syscall_wrapper syscall_wait_c_handler
+
