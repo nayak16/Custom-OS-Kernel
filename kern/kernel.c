@@ -51,8 +51,20 @@ scheduler_t sched;
 mutex_t heap_lock;
 frame_manager_t fm;
 mutex_t console_lock;
-mutex_t scheduler_lock;
 keyboard_t keyboard;
+
+/** @brief Reaper entrypoint
+ *
+ *  @return Does not return
+ */
+#include <thr_helpers.h>
+void reaper_main(){
+    while(1){
+        scheduler_reap(&sched);
+        thr_sleep(100);
+    }
+}
+
 
 /** @brief Kernel entrypoint.
  *
@@ -79,8 +91,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     mutex_init(&heap_lock);
     /* Init console mutex */
     mutex_init(&console_lock);
-    /* Init scheduler mutex */
-    mutex_init(&scheduler_lock);
 
     /* initialize the keyboard buffer */
     keyboard_init(&keyboard, KEYBOARD_BUFFER_SIZE);
@@ -88,34 +98,34 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     fm_init(&fm);
 
     /* initialize idle_pcb */
-    pcb_t idle_pcb;
-    pcb_init(&idle_pcb);
+    pcb_t *idle_pcb = malloc(sizeof(pcb_t));
+    pcb_init(idle_pcb);
 
-    pcb_t work_pcb;
-    pcb_init(&work_pcb);
+    pcb_t *work_pcb = malloc(sizeof(pcb_t));
+    pcb_init(work_pcb);
 
     /* initialize a scheduler */
     scheduler_init(&sched);
 
     /* setup first page table so paging works in pcb_load */
-    set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb.pd));
+    set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb->pd));
     /* Enable Page Global Flag */
     enable_pge();
     /* Enable Paging */
     enable_paging();
 
     /* Load idle program */
-    pcb_load_prog(&idle_pcb, "idle", 0, NULL);
+    pcb_load_prog(idle_pcb, "idle", 0, NULL);
 
     /* add idle process to scheduler */
-    scheduler_add_idle_process(&sched, &idle_pcb);
+    scheduler_add_idle_process(&sched, idle_pcb);
 
     /* Load in actual work pcb */
-    set_pdbr((uint32_t) pd_get_base_addr(&work_pcb.pd));
-    pcb_load_prog(&work_pcb, "test_sleep", 0, NULL);
+    set_pdbr((uint32_t) pd_get_base_addr(&work_pcb->pd));
+    pcb_load_prog(work_pcb, "test_sleep", 0, NULL);
 
     /* Add work pcb into scheduler */
-    scheduler_add_process(&sched, &work_pcb, NULL);
+    scheduler_add_process(&sched, work_pcb, NULL);
 
     // TODO: create and load init task
 

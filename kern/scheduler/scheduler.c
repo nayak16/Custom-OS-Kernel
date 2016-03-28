@@ -398,6 +398,11 @@ int scheduler_wakeup(scheduler_t *sched){
     return tcb_pool_wakeup(&(sched->thr_pool), scheduler_num_ticks);
 }
 
+int scheduler_reap(scheduler_t *sched){
+    return tcb_pool_reap(&(sched->thr_pool));
+}
+
+
 /**
  * @brief Sets the specified tcb to run, and stores it's saved k_stack esp
  * at the specified address

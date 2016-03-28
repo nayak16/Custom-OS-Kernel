@@ -56,7 +56,6 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     /* Set appropriate tid and pcb */
     tcb->tid = tid;
     tcb->pcb = pcb;
-    pcb->num_threads++;
 
     /* Set tcb to runnable */
     tcb->status = RUNNABLE;

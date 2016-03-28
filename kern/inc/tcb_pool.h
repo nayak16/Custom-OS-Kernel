@@ -35,6 +35,7 @@ int tcb_pool_make_waiting(tcb_pool_t *tp, int tid);
 int tcb_pool_make_sleeping(tcb_pool_t *tp, int tid);
 int tcb_pool_make_zombie(tcb_pool_t *tp, int tid);
 int tcb_pool_wakeup(tcb_pool_t *tp, uint32_t curr_time);
+int tcb_pool_reap(tcb_pool_t *tp);
 
 int tcb_pool_get_next_tcb(tcb_pool_t *tp, tcb_t **next_tcbp);
 int tcb_pool_find_tcb(tcb_pool_t *tp, int tid, tcb_t **tcbp);

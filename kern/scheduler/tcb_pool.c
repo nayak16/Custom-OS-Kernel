@@ -145,6 +145,24 @@ int tcb_pool_wakeup(tcb_pool_t *tp, uint32_t curr_time){
     }
     return 0;
 }
+
+int tcb_pool_reap(tcb_pool_t *tp){
+    if (tp == NULL) return -1;
+    tcb_t *tcb;
+    pcb_t *pcb;
+    while (ll_size(&(tp->zombie_pool)) > 0){
+        ll_remove_first(&(tp->zombie_pool), (void **)&tcb);
+        /* save the pcb */
+        pcb = tcb->pcb;
+        tcb_destroy(tcb);
+        free(tcb);
+        if (pcb->num_threads == 0){
+            pcb_destroy(pcb);
+            free(pcb);
+        }
+    }
+    return 0;
+}
 /**
  * @brief Moves the node holding the tcb with the specified tid from the
  * runnable pool to the waiting pool. Returns an error if tcb was already
@@ -226,7 +244,6 @@ int tcb_pool_make_runnable(tcb_pool_t *tp, int tid) {
 }
 
 int tcb_pool_make_zombie(tcb_pool_t *tp, int tid){
-    MAGIC_BREAK;
     if (tp == NULL) return -1;
 
     ll_node_t *node;

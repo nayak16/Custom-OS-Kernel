@@ -47,6 +47,7 @@ int scheduler_make_runnable_safe(scheduler_t *sched, int tid);
 int scheduler_make_current_sleeping_safe(scheduler_t *sched, int ticks);
 int scheduler_make_current_zombie_safe(scheduler_t *sched);
 int scheduler_wakeup(scheduler_t *sched);
+int scheduler_reap(scheduler_t *sched);
 
 int scheduler_defer_current_tcb(scheduler_t *sched, uint32_t old_esp);
 
