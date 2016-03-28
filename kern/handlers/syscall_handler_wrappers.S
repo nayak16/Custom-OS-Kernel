@@ -132,3 +132,7 @@ syscall_get_ticks_handler:
 syscall_sleep_handler:
     one_arg_syscall_wrapper syscall_sleep_c_handler
 
+.globl syscall_wait_handler
+syscall_wait_handler:
+    one_arg_syscall_wrapper syscall_wait_c_handler
+

@@ -46,5 +46,6 @@ int tcb_get_status(tcb_t *tcb, int *statusp);
 
 int tcb_destroy(tcb_t *tcb);
 int tcb_gettid(tcb_t *tcb, int *tid);
+int tcb_get_exit_status(tcb_t *tcb, int *status);
 
 #endif /* _TCB_H_ */

@@ -122,7 +122,7 @@ int install_syscall_handlers(){
     INSTALL_SYSCALL(syscall_exec_handler, EXEC_INT);
     INSTALL_SYSCALL(syscall_set_status_handler, SET_STATUS_INT);
     INSTALL_SYSCALL(syscall_vanish_handler, VANISH_INT);
-    // INSTALL_SYSCALL(syscall_wait_handler, WAIT_INT);
+    INSTALL_SYSCALL(syscall_wait_handler, WAIT_INT);
 
     /* thrmgmt */
     INSTALL_SYSCALL(syscall_gettid_handler, GETTID_INT);

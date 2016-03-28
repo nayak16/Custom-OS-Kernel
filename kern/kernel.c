@@ -122,7 +122,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* Load in actual work pcb */
     set_pdbr((uint32_t) pd_get_base_addr(&work_pcb->pd));
-    pcb_load_prog(work_pcb, "test_sleep", 0, NULL);
+    pcb_load_prog(work_pcb, "wait_getpid", 0, NULL);
 
     /* Add work pcb into scheduler */
     scheduler_add_process(&sched, work_pcb, NULL);
