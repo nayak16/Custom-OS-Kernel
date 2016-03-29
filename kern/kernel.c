@@ -61,7 +61,6 @@ keyboard_t keyboard;
 void reaper_main(){
     while(1){
         scheduler_reap(&sched);
-        thr_sleep(100);
     }
 }
 
