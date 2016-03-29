@@ -46,6 +46,7 @@
 #include <debug.h>
 
 #define KEYBOARD_BUFFER_SIZE 256
+#define NUM_FRAME_BINS 20
 
 scheduler_t sched;
 mutex_t heap_lock;
@@ -93,8 +94,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* initialize the keyboard buffer */
     keyboard_init(&keyboard, KEYBOARD_BUFFER_SIZE);
+    MAGIC_BREAK;
     /* init frame manager */
-    fm_init(&fm);
+    fm_init(&fm, NUM_FRAME_BINS);
 
     /* initialize idle_pcb */
     pcb_t *idle_pcb = malloc(sizeof(pcb_t));

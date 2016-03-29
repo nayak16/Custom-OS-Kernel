@@ -34,8 +34,19 @@ int vmm_deep_copy(page_directory_t *pd_dest){
     }
 
     page_directory_t *pd_src = &(cur_pcb->pd);
+    uint32_t p_addr, i;
+    uint32_t num_pages = 0;
+    for (i = 0; i < ll_size(pd_dest->user_frames); i++){
+        frame_t *frame;
+        ll_peek(pd_dest->user_frames, (void **)&frame);
+        num_pages += frame->num_pages;
+        ll_cycle(pd_dest->user_frames);
+    }
+
+    fm_alloc(&fm, num_pages, (void **)&p_addr);
+
     /* shallow copy page directory structure */
-    if (pd_deep_copy(pd_dest, pd_src, &fm) < 0)
+    if (pd_deep_copy(pd_dest, pd_src, p_addr) < 0)
         return -1;
     return 0;
 }
@@ -62,19 +73,20 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
     v_addr_high = PAGE_ALIGN_UP(v_addr_high)-1;
 
     uint32_t num_pages =((v_addr_high-v_addr_low)+1)/PAGE_SIZE;
+    uint32_t phys_addr;
+
+    if (fm_alloc(&fm, num_pages, (void **)&phys_addr) < 0)
+        MAGIC_BREAK;
+    pd_add_frame(pd, phys_addr);
+
     /* check for enough frames */
-    if (num_pages > fm_num_free_frames(&fm)) return -2;
     uint32_t cur_addr = v_addr_low;
 
-    /* for each page allocate a frame and map it */
+    /* mape each frame */
     int i;
     for (i = 0; i < num_pages; i++){
-        uint32_t p_addr, pte_f, pde_f;
+        uint32_t pte_f, pde_f;
         mem_section_t *ms = NULL;
-        if (fm_alloc(&fm, (void **)&p_addr) < 0){
-            panic("Cannot allocate enough frames despite\
-                    having enough frames avaliable");
-        }
         if (ms_get_bounding_section(secs, num_secs, cur_addr,
                     cur_addr + (PAGE_SIZE-1), &ms) < 0)
             return -3;
@@ -90,9 +102,10 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
             pde_f = ms->pde_f;
         }
         /* create the mapping */
-        if (pd_create_mapping(pd, cur_addr, p_addr,
+        if (pd_create_mapping(pd, cur_addr, phys_addr,
                     pte_f, pde_f) < 0) return -4;
         cur_addr += PAGE_SIZE;
+        phys_addr += PAGE_SIZE;
     }
     /* zero out newly mapped memory */
     memset((void *)v_addr_low, 0, num_pages*PAGE_SIZE/sizeof(void*));
@@ -116,9 +129,6 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
 int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
     if (pd == NULL || num_pages == 0 || num_pages > 0xFFFF)
         return -1;
-    /* check for enough physical frames */
-    if (fm_num_free_frames(&fm) < num_pages)
-        return -2;
     uint32_t v_addr = base;
     uint32_t i;
     /* check for overflow */
@@ -135,11 +145,10 @@ int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
     }
     /* allocate frames and create the mapping */
     v_addr = base;
+    uint32_t p_addr;
+    fm_alloc(&fm, num_pages, (void **)&p_addr);
+    pd_add_frame(pd, p_addr);
     for (i = 0; i < num_pages; i++){
-        uint32_t p_addr;
-        if (fm_alloc(&fm, (void **)&p_addr) < 0){
-            panic("Uh oh...");
-        }
         uint32_t pte_f = USER_WR;
         uint32_t pde_f = USER_WR;
         /* add custom flags to denote start and stop of a user allocated
@@ -155,6 +164,7 @@ int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
 
         memset((void *)v_addr, 0, PAGE_SIZE);
         v_addr += PAGE_SIZE;
+        p_addr += PAGE_SIZE;
     }
     return 0;
 }
@@ -174,6 +184,12 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
      * the end of a user new_pages */
     uint32_t v_addr = base;
     pte = 0;
+
+    /* give frame back to frame manager */
+    uint32_t p_addr = REMOVE_FLAGS(pte);
+    fm_dealloc(&fm, (void *)p_addr);
+    pd_remove_frame(pd, p_addr);
+
     do {
         if (v_addr - PAGE_SIZE > v_addr)
             panic("Overflowed while deallocating stack space!!");
@@ -183,8 +199,6 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
         pd_remove_mapping(pd, v_addr);
         /* flush mapping in tlb */
         flush_tlb((uint32_t)v_addr);
-        /* give frame back to frame manager */
-        fm_dealloc(&fm, (void *)REMOVE_FLAGS(pte));
         v_addr += PAGE_SIZE;
     } while (!IS_USER_END(pte));
 
@@ -193,13 +207,13 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
 
 int vmm_clear_user_space(page_directory_t *pd){
     uint32_t v_addr, pte;
+    /* remove all frames */
+    pd_remove_all_frames(pd);
     /* go until we overflow */
     for (v_addr = USER_MEM_START; v_addr != 0; v_addr+=PAGE_SIZE){
         pd_get_mapping(pd, v_addr, &pte);
         /* remove mapping */
         pd_remove_mapping(pd, v_addr);
-        /* give frame back to frame manager */
-        fm_dealloc(&fm, (void *)REMOVE_FLAGS(pte));
     }
     /* flush mapping in tlb */
     flush_tlb((uint32_t)v_addr);

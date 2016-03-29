@@ -361,6 +361,17 @@ int ll_unlink_node(ll_t *ll, ll_node_t *node) {
     return 0;
 }
 
+int ll_get_first(ll_t *ll, ll_node_t **node){
+    if (ll == NULL || ll->size == 0 || node == NULL) return -1;
+    *node = ll->head;
+    return 0;
+}
+
+int ll_get_last(ll_t *ll, ll_node_t **node){
+    if (ll == NULL || ll->size == 0 || node == NULL) return -1;
+    *node = ll->tail;
+    return 0;
+}
 /**
  * @brief Remove a linked list node from ll and free it
  *
@@ -377,6 +388,22 @@ int ll_remove_node(ll_t *ll, ll_node_t *node) {
     return 0;
 }
 
+int ll_find_node(ll_t *ll, void *(*func)(void*), void *c_val, ll_node_t **node_p){
+    if (ll == NULL || func == NULL){
+        return -1;
+    }
+    ll_node_t *node = ll->head;
+
+    /* Loop through linked list */
+    while (node != NULL){
+        if ((*func)(node->e) == c_val){
+            *node_p = node;
+            return 0;
+        }
+        node = node->next;
+    }
+    return -2; /* not found */
+}
 
 /**
  * @brief Finds data in the linked list that satisfies the condition
@@ -391,20 +418,10 @@ int ll_remove_node(ll_t *ll, ll_node_t *node) {
  *
  */
 int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr){
-    if (ll == NULL || func == NULL){
-        return -1;
-    }
-    ll_node_t *node = ll->head;
-
-    /* Loop through linked list */
-    while (node != NULL){
-        if ((*func)(node->e) == c_val){
-            *val_ptr = node->e;
-            return 0;
-        }
-        node = node->next;
-    }
-    return -2; /* not found */
+    ll_node_t *node;
+    if (ll_find_node(ll, func, c_val, &node) < 0) return -1;
+    *val_ptr = node->e;
+    return 0;
 }
 
 
