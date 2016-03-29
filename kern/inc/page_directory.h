@@ -94,6 +94,9 @@ int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages);
 int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr);
 int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list);
 int pd_num_frames(page_directory_t *pd);
+
+void pd_destroy(page_directory_t *pd);
+
 #endif /* _PAGE_DIRECTORY_H_ */
 
 

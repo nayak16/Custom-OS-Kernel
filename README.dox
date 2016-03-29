@@ -14,6 +14,7 @@ think about ZFOD and COW
 make all scheduler assigns atomic (xchng)
 Make idle thread run runnable_pool is empty
 Get rid of restore_context and instead return esp in exec and yield
+Page directories should share same kernel page tables
 
 Design Decision Rationales:
 

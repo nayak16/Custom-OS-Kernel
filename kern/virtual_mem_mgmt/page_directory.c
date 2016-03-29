@@ -425,3 +425,18 @@ int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list){
     }
     return 0;
 }
+
+void pd_destroy(page_directory_t *pd) {
+    int i;
+    for (i = 0 ; i < PD_NUM_ENTRIES ; i++) {
+        uint32_t entry = pd->directory[i];
+        if (entry_present(entry) == ENTRY_PRESENT){
+            /* Free each page table */
+            uint32_t pt = REMOVE_FLAGS(entry);
+            free((void*) pt);
+        }
+
+    }
+    /* Free whole directory */
+    free(pd->directory);
+}
