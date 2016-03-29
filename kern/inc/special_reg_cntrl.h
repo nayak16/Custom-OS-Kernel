@@ -12,6 +12,7 @@
 // TODO: Fill in with EFLAGS manipulation functions
 
 void set_pdbr(uint32_t new_pdbr);
+void set_cur_esp(uint32_t new_esp);
 
 uint32_t get_pdbr();
 

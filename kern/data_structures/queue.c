@@ -27,7 +27,7 @@ int queue_deq(queue_t *q, void **value_ptr){
 void queue_destroy(queue_t *q){
     if (q == NULL) return;
     ll_destroy(q->ll);
-    free(q);
+    free(q->ll);
 }
 int queue_peek(queue_t *q, void **value_ptr){
     if (q == NULL) return -1;

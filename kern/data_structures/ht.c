@@ -104,7 +104,6 @@ int ht_remove(ht_t *t, key_t key, void **valp) {
     free(e);
     t->size--;
     return 0;
-
 }
 
 /**

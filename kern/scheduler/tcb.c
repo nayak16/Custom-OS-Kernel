@@ -105,7 +105,6 @@ int tcb_get_init_stack(tcb_t *tcb, void **stack) {
 }
 
 int tcb_destroy(tcb_t *tcb) {
-    tcb->pcb->num_threads--;
     free(tcb->k_stack_bot);
     return 0;
 }

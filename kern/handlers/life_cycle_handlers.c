@@ -11,9 +11,11 @@
 #include <string.h>
 #include <dispatcher.h>
 #include <virtual_mem_mgmt.h>
+#include <special_reg_cntrl.h>
 #include <common_kern.h>
 #include <x86/asm.h>
 #include <loader.h>
+#include <thr_helpers.h>
 
 #include <simics.h>
 /**
@@ -153,6 +155,7 @@ void syscall_vanish_c_handler(){
     lprintf("Vanishing");
     pcb_t *cur_pcb, *parent_pcb;
     tcb_t *cur_tcb;
+
     /* get current pcb and tcb */
     scheduler_get_current_tcb(&sched, &cur_tcb);
     tcb_get_pcb(cur_tcb, &cur_pcb);
@@ -173,9 +176,12 @@ void syscall_vanish_c_handler(){
     /* signal the status to parent_pcb */
     pcb_signal_status(parent_pcb, exit_status, original_tid);
 
-    /* move the current thread to zombie pool for clean up*/
-    scheduler_make_current_zombie_safe(&sched);
-    while(1);
+    /* Clean up current thread */
+    scheduler_cleanup_current_safe(&sched);
+
+    /* Yield to another thread */
+    thr_yield(0,-1);
+
 }
 
 int syscall_wait_c_handler(int *status_ptr){
@@ -187,3 +193,4 @@ int syscall_wait_c_handler(int *status_ptr){
         return -2;
     return original_pid;
 }
+

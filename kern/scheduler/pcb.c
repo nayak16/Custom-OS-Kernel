@@ -45,17 +45,18 @@ int pcb_init(pcb_t *pcb){
 }
 
 int pcb_destroy(pcb_t *pcb){
-    panic("pcb_destroy: Not yet implemented");
+    if (pcb == NULL) return -1;
     sem_destroy(&(pcb->wait_sem));
     queue_destroy(&(pcb->status_queue));
-    if (pcb == NULL) return -1;
     return 0;
 }
 
 int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb) {
     if(source_pcb == NULL || dest_pcb == NULL) return -1;
+
     /* Set ppid of dest_pcb to pid of source_pcb */
     dest_pcb->ppid = source_pcb->pid;
+
     /* Copy address space */
     if(vmm_deep_copy(&(dest_pcb->pd)) < 0) {
         return -3;
@@ -102,11 +103,15 @@ int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
 int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_pid){
     if (pcb == NULL) return -1;
     sem_wait(&(pcb->wait_sem));
+
     pcb_metadata_t *metadata;
     if (queue_deq(&(pcb->status_queue), (void **)&metadata) < 0)
         return -2;
     if (status_ptr != NULL) *status_ptr = metadata->status;
     if (original_pid != NULL) *original_pid = metadata->original_tid;
+
+    /* Free metadata struct */
+    free(metadata);
     return 0;
 }
 

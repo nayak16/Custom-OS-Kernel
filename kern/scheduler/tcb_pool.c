@@ -79,6 +79,22 @@ int tcb_pool_add_pcb(tcb_pool_t *tp, pcb_t *pcb) {
     return 0;
 }
 
+int tcb_pool_remove_pcb(tcb_pool_t *tp, int pid) {
+    if (tp == NULL) return -1;
+
+    ll_node_t *node;
+    /* Get specified node and pcb from hash table */
+    if (ht_remove(&(tp->processes), (key_t) pid, (void**) &node) < 0) {
+        /* Not found */
+        return -2;
+    }
+
+    /* Free the node containing the pcb */
+    free(node);
+    return 0;
+}
+
+
 int tcb_pool_get_next_tcb(tcb_pool_t *tp, tcb_t **next_tcb) {
     if (tp == NULL || next_tcb == NULL) return -1;
 
@@ -312,7 +328,39 @@ int tcb_pool_make_zombie(tcb_pool_t *tp, int tid){
     return 0;
 }
 
-int tcb_pool_remove_tcb(tcb_pool_t *tp, int id);
+int tcb_pool_remove_tcb(tcb_pool_t *tp, int tid) {
+    if (tp == NULL) return -1;
+
+    ll_node_t *node;
+    /* Get specified node and tcb from hash table */
+    if (ht_remove(&(tp->threads), (key_t) tid, (void**) &node) < 0) {
+        /* Not found */
+        return -2;
+    }
+
+    tcb_t *tcb;
+    if (ll_node_get_data(node, (void**)&tcb) < 0) {
+        return -3;
+    }
+
+    /* Remove from appropriate pool */
+    switch(tcb->status) {
+        case RUNNABLE:
+        case RUNNING:
+            if (ll_unlink_node(&(tp->runnable_pool), node) < 0) return -5;
+            break;
+        case WAITING:
+            if (ll_unlink_node(&(tp->waiting_pool), node) < 0) return -5;
+            break;
+        default:
+            return -4;
+    }
+    /* Free the node containing the tcb */
+    free(node);
+
+    return 0;
+}
+
 int tcb_pool_remove_pcb(tcb_pool_t *tp, int id);
 
 

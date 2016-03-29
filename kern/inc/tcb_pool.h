@@ -33,6 +33,8 @@ typedef struct tcb_pool {
 int tcb_pool_init(tcb_pool_t *tp);
 int tcb_pool_add_runnable_tcb(tcb_pool_t *tp, tcb_t *tcb);
 int tcb_pool_add_pcb(tcb_pool_t *tp, pcb_t *pcb);
+int tcb_pool_remove_pcb(tcb_pool_t *tp, int pid);
+
 int tcb_pool_make_runnable(tcb_pool_t *tp, int tid);
 int tcb_pool_make_waiting(tcb_pool_t *tp, int tid);
 int tcb_pool_make_sleeping(tcb_pool_t *tp, int tid);
@@ -41,6 +43,7 @@ int tcb_pool_wakeup(tcb_pool_t *tp, uint32_t curr_time);
 int tcb_pool_reap(tcb_pool_t *tp);
 
 int tcb_pool_get_next_tcb(tcb_pool_t *tp, tcb_t **next_tcbp);
+int tcb_pool_remove_tcb(tcb_pool_t *tp, int tid);
 int tcb_pool_find_tcb(tcb_pool_t *tp, int tid, tcb_t **tcbp);
 int tcb_pool_find_pcb(tcb_pool_t *tp, int pid, pcb_t **pcbp);
 

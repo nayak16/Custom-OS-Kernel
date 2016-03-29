@@ -20,10 +20,6 @@
 
 uint32_t scheduler_num_ticks = 0;
 
-int is_started(scheduler_t *sched) {
-    return sched->cur_tcb != NULL;
-}
-
 /**
  * @brief Initialize a scheduler's internal data structures and values
  * including internal thread and process pools
@@ -74,6 +70,59 @@ int scheduler_get_tcb_by_tid(scheduler_t *sched,
 
     /* Find the correct tcb from the pool */
     if (tcb_pool_find_tcb(&(sched->thr_pool), target_tid, tcbp) < 0) return -2;
+
+    return 0;
+}
+
+/**
+ * @brief Gets the tcb with the specified tid
+ *
+ * @param sched Scheduler to get next tcb from
+ * @param target_tid tid to look for
+ * @param tcbp Address to store pointer to tcb
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int scheduler_get_pcb_by_pid(scheduler_t *sched,
+                             int target_pid, pcb_t **pcbp) {
+    if (sched == NULL || pcbp == NULL) return -1;
+
+    if (tcb_pool_find_pcb(&(sched->thr_pool), target_pid, pcbp) < 0) return -2;
+
+    return 0;
+}
+
+
+int scheduler_cleanup_current_safe(scheduler_t *sched) {
+    disable_interrupts();
+    /* Use the idle tcb's stack and pdbr to cleanup */
+    set_cur_esp((uint32_t) sched->idle_tcb->orig_k_stack);
+    set_pdbr((uint32_t) pd_get_base_addr(&(sched->idle_tcb->pcb->pd)));
+
+    if (tcb_pool_remove_tcb(&(sched->thr_pool),
+                            sched->cur_tcb->tid) < 0) {
+        // TODO: revert changes
+        return -2;
+    }
+    pcb_t *cur_pcb = sched->cur_tcb->pcb;
+
+    /* Destroy current tcb */
+    tcb_destroy(sched->cur_tcb);
+    /* Free the current tcb */
+    free(sched->cur_tcb);
+
+    /* Check how many threads process has left */
+    if (cur_pcb->num_threads == 1) {
+       /* if (tcb_pool_remove_pcb(&(sched->thr_pool), cur_pcb->pid) < 0) {
+            panic("CANT FIND PCB");
+        } */
+        pcb_destroy(cur_pcb);
+        free(cur_pcb);
+    } else {
+        cur_pcb->num_threads--;
+    }
+    sched->cur_tcb = NULL;
+    enable_interrupts();
 
     return 0;
 }
@@ -424,7 +473,7 @@ int scheduler_start(scheduler_t *sched){
  */
 int scheduler_defer_current_tcb(scheduler_t *sched, uint32_t old_esp) {
     /* Check there is any running tcb */
-    if (is_started(sched)) {
+    if (sched->cur_tcb != NULL) {
 
         /* Save k_stack esp */
         sched->cur_tcb->tmp_k_stack = (uint32_t *)old_esp;
