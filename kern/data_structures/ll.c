@@ -348,11 +348,12 @@ int ll_unlink_node(ll_t *ll, ll_node_t *node) {
     } /* Node is tail */
     else if (node == ll->tail) {
         ll->tail = node->prev;
-    } /* Node is in between other nodes */
-    else {
-        node->next->prev = node->prev;
-        node->prev->next = node->next;
     }
+
+    /* Node is in between other nodes */
+    if (node->next != NULL) node->next->prev = node->prev;
+    if (node->prev != NULL) node->prev->next = node->next;
+
     /* Remove any old links */
     node->next = NULL;
     node->prev = NULL;
