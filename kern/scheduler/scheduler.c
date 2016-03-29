@@ -210,6 +210,9 @@ int scheduler_make_runnable_safe(scheduler_t *sched, int tid) {
 int scheduler_make_current_sleeping(scheduler_t *sched, int ticks) {
     if (sched == NULL || ticks < 0) return -1;
 
+    /* Return immediately if ticks == 0 */
+    if (ticks == 0) return 0;
+
     /* Somehow already sleeping...?*/
     if (sched->cur_tcb->status == SLEEPING) return -4;
     /* Set current tcb to RUNNABLE */

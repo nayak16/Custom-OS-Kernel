@@ -132,7 +132,7 @@ syscall_deschedule_handler:
     movl %esp, %eax /* Save esp */
     pushl %esi /* push the reject arg onto the stack*/
     pushl %eax /* Push old_esp arg onto the stack */
-    call syscall_deschedule_c_handler /* call yield c handler */
+    call syscall_deschedule_c_handler /* call deschedule c handler */
     addl $8, %esp /* skip both arguments */
     restore_context
 
@@ -146,5 +146,12 @@ syscall_get_ticks_handler:
 
 .globl syscall_sleep_handler
 syscall_sleep_handler:
-    one_arg_syscall_wrapper syscall_sleep_c_handler
+    save_context
+    movl %esp, %eax /* Save esp */
+    pushl %esi /* push the ticks arg onto the stack*/
+    pushl %eax /* Push old_esp arg onto the stack */
+    call syscall_sleep_c_handler /* call sleep c handler */
+    addl $8, %esp /* skip both arguments */
+    restore_context
+
 

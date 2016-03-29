@@ -38,16 +38,13 @@ int thr_make_runnable(int tid) {
     return 0;
 }
 
-int thr_sleep(int ticks) {
-    tcb_t *my_tcb;
-    if(scheduler_get_current_tcb(&sched, &my_tcb) < 0) return -2;
+int thr_sleep(uint32_t old_esp, int ticks) {
 
+    /* Make the current tcb sleep */
     if (scheduler_make_current_sleeping_safe(&sched, ticks) < 0) return -3;
-    //TODO: yield
-    int status;
-    do {
-        if(tcb_get_status(my_tcb, &status) < 0) return -4;
-    } while (status != RUNNING);
+
+    /* Yield to another thread */
+    thr_yield(old_esp, -1);
 
     return 0;
 

@@ -33,8 +33,8 @@ unsigned int syscall_get_ticks_c_handler(){
     return scheduler_num_ticks;
 }
 
-int syscall_sleep_c_handler(int ticks){
+int syscall_sleep_c_handler(uint32_t old_esp, int ticks){
     if (ticks < 0) return -1;
     if (ticks == 0) return 0;
-    return thr_sleep(ticks);
+    return thr_sleep(old_esp, ticks);
 }
