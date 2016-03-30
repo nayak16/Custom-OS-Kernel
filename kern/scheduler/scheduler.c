@@ -55,6 +55,7 @@ int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
     *tidp = sched->cur_tcb->tid;
     return 0;
 }
+
 /**
  * @brief Gets the tcb with the specified tid
  *
@@ -93,8 +94,20 @@ int scheduler_get_pcb_by_pid(scheduler_t *sched,
 }
 
 
+/**
+ * @brief Removes current tcb from thr_pool and cleans up its resources
+ * appropriately
+ *
+ * Called in vanish and exception handlers
+ *
+ * @param sched Scheduler to clean up from
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int scheduler_cleanup_current_safe(scheduler_t *sched) {
     disable_interrupts();
+
     /* Use the idle tcb's stack and pdbr to cleanup */
     set_cur_esp((uint32_t) sched->idle_tcb->orig_k_stack);
     set_pdbr((uint32_t) pd_get_base_addr(&(sched->idle_tcb->pcb->pd)));
@@ -106,6 +119,7 @@ int scheduler_cleanup_current_safe(scheduler_t *sched) {
     }
     pcb_t *cur_pcb = sched->cur_tcb->pcb;
 
+    lprintf("Thread %d exited with status %d", sched->cur_tcb->tid, sched->cur_tcb->exit_status);
     /* Destroy current tcb */
     tcb_destroy(sched->cur_tcb);
     /* Free the current tcb */
@@ -113,9 +127,7 @@ int scheduler_cleanup_current_safe(scheduler_t *sched) {
 
     /* Check how many threads process has left */
     if (cur_pcb->num_threads == 1) {
-       /* if (tcb_pool_remove_pcb(&(sched->thr_pool), cur_pcb->pid) < 0) {
-            panic("CANT FIND PCB");
-        } */
+        tcb_pool_remove_pcb(&(sched->thr_pool), cur_pcb->pid);
         pcb_destroy(cur_pcb);
         free(cur_pcb);
     } else {

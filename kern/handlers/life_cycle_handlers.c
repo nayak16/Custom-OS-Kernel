@@ -142,46 +142,11 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
 }
 
 void syscall_set_status_c_handler(int status){
-    lprintf("<set_status NYI> status = %d", status);
-    tcb_t *cur_tcb;
-    if (scheduler_get_current_tcb(&sched, &cur_tcb) < 0) {
-        return;
-    }
-    cur_tcb->exit_status = status;
-    return;
+    thr_set_status(status);
 }
 
 void syscall_vanish_c_handler(){
-    lprintf("Vanishing");
-    pcb_t *cur_pcb, *parent_pcb;
-    tcb_t *cur_tcb;
-
-    /* get current pcb and tcb */
-    scheduler_get_current_tcb(&sched, &cur_tcb);
-    tcb_get_pcb(cur_tcb, &cur_pcb);
-
-    /* from cur_pcb, get parent_pcb */
-    if (scheduler_get_pcb_by_pid(&sched, pcb_get_ppid(cur_pcb), &parent_pcb) < 0){
-        lprintf("Could not retrieve parent pid, routing return status to init");
-        while (1);
-        //TODO: get the init pcb and signal it's pcb
-    }
-    int exit_status;
-    if (tcb_get_exit_status(cur_tcb, &exit_status) < 0)
-        exit_status = -2;
-
-    int original_tid;
-    pcb_get_original_tid(cur_pcb, &original_tid);
-
-    /* signal the status to parent_pcb */
-    pcb_signal_status(parent_pcb, exit_status, original_tid);
-
-    /* Clean up current thread */
-    scheduler_cleanup_current_safe(&sched);
-
-    /* Yield to another thread */
-    thr_yield(0,-1);
-
+    thr_vanish();
 }
 
 int syscall_wait_c_handler(int *status_ptr){

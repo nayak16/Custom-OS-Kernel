@@ -12,6 +12,7 @@
 #include <thr_helpers.h>
 #include <dispatcher.h>
 #include <tcb.h>
+#include <simics.h>
 
 int thr_deschedule(uint32_t old_esp, int *reject) {
 
@@ -36,6 +37,47 @@ int thr_deschedule(uint32_t old_esp, int *reject) {
 int thr_make_runnable(int tid) {
     if (scheduler_make_runnable_safe(&sched, tid) < 0) return -3;
     return 0;
+}
+
+void thr_set_status(int status) {
+    tcb_t *cur_tcb;
+    if (scheduler_get_current_tcb(&sched, &cur_tcb) < 0) {
+        return;
+    }
+    cur_tcb->exit_status = status;
+    return;
+}
+
+void thr_vanish(void) {
+
+    pcb_t *cur_pcb, *parent_pcb;
+    tcb_t *cur_tcb;
+
+    /* get current pcb and tcb */
+    scheduler_get_current_tcb(&sched, &cur_tcb);
+    tcb_get_pcb(cur_tcb, &cur_pcb);
+
+    /* from cur_pcb, get parent_pcb */
+    if (scheduler_get_pcb_by_pid(&sched, pcb_get_ppid(cur_pcb), &parent_pcb) < 0){
+        lprintf("Could not retrieve parent pid, routing return status to init");
+        while (1);
+        //TODO: get the init pcb and signal it's pcb
+    }
+    int exit_status;
+    if (tcb_get_exit_status(cur_tcb, &exit_status) < 0)
+        exit_status = -2;
+
+    int original_tid;
+    pcb_get_original_tid(cur_pcb, &original_tid);
+
+    /* signal the status to parent_pcb */
+    pcb_signal_status(parent_pcb, exit_status, original_tid);
+
+    /* Clean up current thread */
+    scheduler_cleanup_current_safe(&sched);
+
+    /* Yield to another thread */
+    thr_yield(0,-1);
 }
 
 int thr_sleep(uint32_t old_esp, int ticks) {

@@ -12,18 +12,15 @@
 /* panic inc */
 #include <stdlib.h>
 #include <debug.h>
+#include <thr_helpers.h>
 
 #include <x86/cr.h>
 #include <kern_internals.h>
 
 void page_fault_c_handler(void){
-    lprintf("Page fault occured!");
-    print_control_regs();
-    //page_directory_t *pd_temp = malloc(sizeof(page_directory_t));
-    //pd_temp->directory = (uint32_t *)(get_cr3() & ~0xFFF);
-    //print_page_directory(pd_temp, 1023, 1, 1);
-    MAGIC_BREAK;
-    //panic("page_fault_c_handler: Not yet implemented");
+    lprintf("Segmentation Fault");
+    thr_set_status(-1);
+    thr_vanish();
 }
 
 void double_fault_c_handler(void){
