@@ -72,7 +72,8 @@
 
 typedef struct page_directory {
     uint32_t *directory;
-    ll_t *user_mem_sections;
+    uint32_t num_pages;
+    ll_t p_addr_list;
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
@@ -84,10 +85,12 @@ int pd_is_user_read_write(page_directory_t *pd, uint32_t v_addr);
 int pd_is_user_readable(page_directory_t *pd, uint32_t v_addr);
 int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr);
 int pd_entry_present(uint32_t v);
-int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src, frame_manager_t *fm);
+int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src, uint32_t p_addr_start);
 int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
         uint32_t num_secs);
 void *pd_get_base_addr(page_directory_t *pd);
+
+int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages);
 #endif /* _PAGE_DIRECTORY_H_ */
 
 

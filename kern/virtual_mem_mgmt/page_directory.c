@@ -271,6 +271,9 @@ int pd_init(page_directory_t *pd){
         pd->directory = NULL;
         return -1;
     }
+    pd->num_pages = 0;
+    ll_init(&pd->p_addr_list);
+
     return 0;
 }
 
@@ -301,7 +304,7 @@ int p_copy(void **target_pte, void *v_addr, void *p_addr){
 
 
 int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i,
-        frame_manager_t *fm){
+        uint32_t *p_addr_p){
     uint32_t i;
     /* copy each page table entry */
     for (i = 0; i < PT_NUM_ENTRIES; i++){
@@ -309,8 +312,8 @@ int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i,
         uint32_t flags = entry & 0xFFF;
         /* copy over present mappings */
         if (entry_present(entry) == ENTRY_PRESENT){
-            void *p_addr;
-            if (fm_alloc(fm, &p_addr) < 0) return -2;
+            void *p_addr = (void *)(*p_addr_p);
+            *p_addr_p += PAGE_SIZE;
             /* calculate the virtual address of current page being copied so
              * that p_copy can *v_addr to write to the new physical address
              * after remapping*/
@@ -341,11 +344,13 @@ int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i,
  *  @return 0 On success -1 on failure
  */
 int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
-        frame_manager_t *fm){
+        uint32_t p_addr_start){
     if (pd_dest == NULL || pd_src == NULL) return -1;
 
     /* copy the upper level page directory */
     uint32_t i;
+
+    uint32_t p_addr = p_addr_start;
     /* copy over non-kernel space */
     for (i = NUM_KERNEL_PDE; i < PD_NUM_ENTRIES; i++){
         /* for each present entry, create a new page table  */
@@ -360,10 +365,15 @@ int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
             uint32_t flags = EXTRACT_FLAGS(entry);
             /* map page directory to new page table */
             pd_dest->directory[i] = (uint32_t)new_pt | flags;
-            pt_copy(new_pt, (uint32_t *)REMOVE_FLAGS(entry), i, fm);
+            pt_copy(new_pt, (uint32_t *)REMOVE_FLAGS(entry), i, &p_addr);
         }
     }
     return 0;
 }
 
 
+int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages){
+    if (pd == NULL) return -1;
+    pd->num_pages += num_pages;
+    return 0;
+}

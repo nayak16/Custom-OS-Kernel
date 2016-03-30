@@ -473,3 +473,14 @@ void ll_destroy(ll_t *ll){
     }
 }
 
+
+int ll_head(ll_t *ll, ll_node_t **node){
+    if (ll == NULL || node == NULL) return -1;
+    *node = ll->head;
+    return 0;
+}
+int ll_tail(ll_t *ll, ll_node_t **node){
+    if (ll == NULL || node == NULL) return -1;
+    *node = ll->tail;
+    return 0;
+}
