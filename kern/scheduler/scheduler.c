@@ -35,6 +35,9 @@ int scheduler_init(scheduler_t *sched){
     sched->next_pid = 0;
     sched->cur_tcb = NULL;
 
+    /* Malloc a cleanup_stack */
+    sched->cleanup_stack = malloc(sizeof(void*) * (PAGE_SIZE/4));
+
     /* Init tcb pool */
     if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
 
@@ -108,8 +111,10 @@ int scheduler_get_pcb_by_pid(scheduler_t *sched,
 int scheduler_cleanup_current_safe(scheduler_t *sched) {
     disable_interrupts();
 
-    /* Use the idle tcb's stack and pdbr to cleanup */
-    set_cur_esp((uint32_t) sched->idle_tcb->orig_k_stack);
+    /* Use the cleanup stack to clean up */
+    set_cur_esp((uint32_t) sched->cleanup_stack);
+
+    /* Use the idle tcb's page directory to access kernel mappings */
     set_pdbr((uint32_t) pd_get_base_addr(&(sched->idle_tcb->pcb->pd)));
 
     if (tcb_pool_remove_tcb(&(sched->thr_pool),

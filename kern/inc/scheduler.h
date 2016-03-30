@@ -13,6 +13,7 @@
 typedef struct scheduler{
     int next_tid;
     int next_pid;
+    void *cleanup_stack;
     tcb_t *idle_tcb;
 
     tcb_pool_t thr_pool;
