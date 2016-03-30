@@ -75,8 +75,9 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
     uint32_t num_pages =((v_addr_high-v_addr_low)+1)/PAGE_SIZE;
     uint32_t phys_addr;
 
-    if (fm_alloc(&fm, num_pages, (void **)&phys_addr) < 0)
+    if (fm_alloc(&fm, num_pages, (void **)&phys_addr) < 0){
         MAGIC_BREAK;
+    }
     pd_add_frame(pd, phys_addr);
 
     /* check for enough frames */

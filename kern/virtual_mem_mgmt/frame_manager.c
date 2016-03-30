@@ -21,6 +21,8 @@
 /* uint32_t */
 #include <stdint.h>
 
+#include <simics.h>
+
 #include <frame_manager.h>
 #include "contracts.h"
 
@@ -47,11 +49,9 @@ int fm_request_split(frame_manager_t *fm, uint32_t i){
     int num_frames = ll_size(frame_bin);
     if (num_frames == 0)
         if (fm_request_split(fm, i+1) < 0) return -3;
-    if (num_frames < 0)
-        panic("Linked list scrobbled");
+    if (num_frames < 0) panic("Linked list scrobbled");
 
-    /* atleast one block exists: retrieve pointer to the frame and move it
-     * to the alloc pool */
+    /* atleast one block exists */
 
     ll_node_t *node;
     frame_t *frame;
@@ -62,7 +62,6 @@ int fm_request_split(frame_manager_t *fm, uint32_t i){
     ll_node_get_data(node, (void **)&frame);
     /* move node to alloc_frames */
     frame->allocated = FRAME_ALLOCATED;
-    ll_link_node_last(fm->alloc_frames, node);
 
     /* create two children */
     frame_t *frame_left = malloc(sizeof(frame_t));
@@ -79,15 +78,15 @@ int fm_request_split(frame_manager_t *fm, uint32_t i){
 
 
     /* initialize both children */
-    frame_left->parent = node;
-    frame_left->buddy = node_right;
+    frame_left->parent = frame;
+    frame_left->buddy = frame_right;
     frame_left->addr = frame->addr;
     frame_left->num_pages = frame->num_pages/2;
     frame_left->allocated = FRAME_UNALLOCATED;
     frame_left->i = i-1;
 
-    frame_right->parent = node;
-    frame_right->buddy = node_left;
+    frame_right->parent = frame;
+    frame_right->buddy = frame_left;
     frame_right->addr = frame->addr + ((frame->num_pages/2) * PAGE_SIZE);
     frame_right->num_pages = frame->num_pages/2;
     frame_right->allocated = FRAME_UNALLOCATED;
@@ -96,6 +95,10 @@ int fm_request_split(frame_manager_t *fm, uint32_t i){
     /* add both children to the lower pool */
     ll_link_node_last(fm->frame_bins[i-1], node_right);
     ll_link_node_last(fm->frame_bins[i-1], node_left);
+
+    /* register both children in the hash table */
+    ht_put(fm->frame_lookup, (key_t)(frame_left->addr), node_left);
+    ht_put(fm->frame_lookup, (key_t)(frame_right->addr), node_right);
 
     return 0;
 }
@@ -124,8 +127,6 @@ int fm_request(frame_manager_t *fm, uint32_t i, void **addr){
     ll_node_get_data(node, (void **)&frame);
     *addr = (void *)frame->addr;
     frame->allocated = FRAME_ALLOCATED;
-    /* move node to alloc_frames */
-    ll_link_node_last(fm->alloc_frames, node);
     return 0;
 
 }
@@ -147,7 +148,8 @@ int fm_alloc(frame_manager_t *fm, uint32_t num_pages, void **addr){
             break;
         }
     }
-
+    lprintf("Allocating %d pages for request sized %d", TWO_POW(i),
+            (unsigned int)num_pages);
     int status = fm_request(fm, i, addr);
 
     mutex_unlock(&(fm->m));
@@ -166,10 +168,11 @@ int fm_dealloc(frame_manager_t *fm, void *addr){
 
     mutex_lock(&(fm->m));
 
-    if (ll_find_node(fm->alloc_frames, &frame_get_addr, addr, &node) < 0){
+    if (ht_get(fm->frame_lookup, (key_t)addr, &node) < 0){
         mutex_unlock(&(fm->m));
         return -2;
     }
+
     if (ll_node_get_data(node, (void **)&frame) < 0){
         mutex_unlock(&(fm->m));
         return -3;
@@ -177,9 +180,7 @@ int fm_dealloc(frame_manager_t *fm, void *addr){
     /* get buddy if present */
     frame_t *buddy_frame;
     if (frame->buddy != NULL){
-        if (ll_node_get_data(frame->buddy, (void **)&buddy_frame) < 0)
-            panic("could not find buddy info!");
-
+        ll_node_t *buddy_node;
         if (buddy_frame->allocated == FRAME_UNALLOCATED){
             ASSERT(buddy_frame->buddy == frame);
             ASSERT(buddy_frame->num_pages == frame->num_pages);
@@ -212,23 +213,40 @@ int fm_dealloc(frame_manager_t *fm, void *addr){
 }
 
 int fm_alloc_user_space(frame_manager_t *fm){
+    MAGIC_BREAK;
     uint32_t addr = USER_MEM_START;
     uint32_t num_pages = (0xFFFFFFFF - USER_MEM_START + 1)/PAGE_SIZE;
-    uint32_t i;
+    int i;
     for (i = fm->num_bins-1; i >= 0; i--){
         while (TWO_POW(i) <= num_pages){
-            num_pages -= TWO_POW(i);
+
             frame_t *new_frame = malloc(sizeof(frame_t));
+            ll_node_t *new_node = malloc(sizeof(ll_node_t));
+
             new_frame->addr = addr;
-            addr += TWO_POW(i) * PAGE_SIZE;
             new_frame->num_pages = TWO_POW(i);
             new_frame->allocated = FRAME_UNALLOCATED;
             new_frame->i = i;
             new_frame->parent = NULL;
             new_frame->buddy = NULL;
+
+            ll_node_init(new_node, new_frame);
+            ll_link_node_last(fm->frame_bins[i], (void *)new_node);
+
+            ht_put(fm->frame_lookup, (key_t)(new_frame->addr), new_frame);
+
+            num_pages -= TWO_POW(i);
+            addr += TWO_POW(i) * PAGE_SIZE;
         }
+        lprintf("fm_alloc_user_space: pages left %d", (unsigned int) num_pages);
     }
     return 0;
+}
+
+int frame_node_ht_get_addr(key_t node){
+    frame_t *frame;
+    ll_node_get_data(((ll_node_t *)node), (void **)&frame;
+    return (int)frame->addr;
 }
 
 int fm_init(frame_manager_t *fm, uint32_t num_bins){
@@ -242,12 +260,14 @@ int fm_init(frame_manager_t *fm, uint32_t num_bins){
     if (mutex_init(&(fm->m)) < 0) return -1;
     fm->num_bins = num_bins;
 
-    fm->alloc_frames = malloc(sizeof(ll_t));
-    ll_init(fm->alloc_frames);
+    fm->frame_lookup = malloc(sizeof(ht_t));
+    //TODO: decide on an appropriate bin size
+    ht_init(fm->frame_lookup, 64, &frame_node_ht_get_addr);
 
-    fm->frame_bins = malloc(num_bins * sizeof(ll_t));
+    fm->frame_bins = malloc(num_bins * sizeof(ll_t *));
     uint32_t i;
     for (i = 0; i < num_bins; i++){
+        fm->frame_bins[i] = malloc(sizeof(ll_t));
         ll_init(fm->frame_bins[i]);
     }
     return fm_alloc_user_space(fm);
@@ -256,7 +276,6 @@ int fm_init(frame_manager_t *fm, uint32_t num_bins){
 void fm_destroy(frame_manager_t *fm){
     if (fm == NULL) return;
     mutex_destroy(&(fm->m));
-    ll_destroy(fm->alloc_frames);
     uint32_t i;
     for (i=0; i < fm->num_bins; i++){
         free(fm->frame_bins[i]);

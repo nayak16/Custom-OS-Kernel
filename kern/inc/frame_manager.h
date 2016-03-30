@@ -18,12 +18,12 @@ typedef struct frame_manager{
     /* largest page size = 2^(num_bin-1) */
     uint32_t num_bins;
     ll_t **frame_bins;
-    ll_t *alloc_frames;
+    ht_t *frame_lookup;
 } frame_manager_t;
 
 typedef struct frame{
-    ll_node_t *buddy;
-    ll_node_t *parent;
+    frame_t *buddy;
+    frame_t *parent;
     uint32_t addr;
     uint32_t num_pages;
     uint32_t allocated;
