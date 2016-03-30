@@ -119,8 +119,8 @@ int ll_add_first(ll_t *ll, void *value){
 /**
  * @brief Remove an element from the front of a linked list and get its value
  *
- * @param ll Pointer to linked list to dequeue from
- * @param val Address to put the dequeued value
+ * @param ll Pointer to linked list to remove from
+ * @param val Address to put the removed value
  *
  * @return 0 on success, -1 on error
  */
@@ -129,12 +129,12 @@ int ll_remove_first(ll_t *ll, void **val){
     /* Check if empty */
     if (ll->size == 0) return -2;
 
-    /* save head of queue */
+    /* save head of ll */
     ll_node_t *head = ll->head;
     if (head == ll->tail){
         ll->tail = NULL;
     }
-    /* update head of queue */
+    /* update head of ll */
     ll->head = head->next;
     if (ll->head != NULL) ll->head->prev = NULL;
 
@@ -212,6 +212,7 @@ int ll_cycle(ll_t *ll) {
 
     /* Set new head */
     ll->head = orig_head->next;
+    ll->head->prev = NULL;
 
     /* orig_head next now points to nothing */
     orig_head->next = NULL;
