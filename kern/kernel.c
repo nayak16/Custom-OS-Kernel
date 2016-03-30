@@ -94,7 +94,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* initialize the keyboard buffer */
     keyboard_init(&keyboard, KEYBOARD_BUFFER_SIZE);
     /* init frame manager */
-    fm_init(&fm);
+    fm_init(&fm, 15);
 
     /* initialize idle_pcb */
     pcb_t *idle_pcb = malloc(sizeof(pcb_t));
@@ -121,7 +121,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* Load in actual work pcb */
     set_pdbr((uint32_t) pd_get_base_addr(&work_pcb->pd));
-    pcb_load_prog(work_pcb, "test_sleep", 0, NULL);
+    pcb_load_prog(work_pcb, "test_hello", 0, NULL);
 
     /* Add work pcb into scheduler */
     scheduler_add_process(&sched, work_pcb, NULL);
