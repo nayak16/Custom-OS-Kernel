@@ -161,13 +161,11 @@ int pcb_get_original_tid(pcb_t *pcb, int *tid){
 
 int pcb_add_child(pcb_t *pcb) {
     pcb->num_child_proc++;
-    lprintf("+++++++++Parent %d added child, count: %u", pcb->pid, (unsigned int)pcb->num_child_proc);
     return 0;
 }
 
 int pcb_remove_child(pcb_t *pcb) {
     pcb->num_child_proc--;
-    lprintf("---------Parent %d lost child, count: %u", pcb->pid, (unsigned int)pcb->num_child_proc);
     return 0;
 }
 
