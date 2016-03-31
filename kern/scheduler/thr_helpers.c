@@ -73,11 +73,10 @@ void thr_vanish(void) {
         /* signal the status to parent_pcb */
         pcb_signal_status(parent_pcb, exit_status, original_tid);
 
-        /* Remove child from parent pcb */
-        pcb_remove_child(parent_pcb);
     }
-    /* Clean up current thread */
-    scheduler_cleanup_current_safe(&sched);
+
+    /* Make current tcb a zombie */
+    scheduler_make_current_zombie_safe(&sched);
 
     /* Yield to another thread */
     thr_yield(0,-1);

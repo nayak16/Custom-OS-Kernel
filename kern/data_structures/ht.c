@@ -85,7 +85,7 @@ int ht_get(ht_t *t, key_t key, void **valp) {
  * @return 0 on success, negative error code otherwise
  *
  */
-int ht_remove(ht_t *t, key_t key, void **valp) {
+int ht_remove(ht_t *t, key_t key, void **valp, circ_buf_t *addrs_to_free) {
     if(t == NULL) return -1;
 
     /* Index into correct bucket */
@@ -93,15 +93,19 @@ int ht_remove(ht_t *t, key_t key, void **valp) {
 
     ht_entry_t *e;
     /* Remove from bucket */
-    if (ll_remove(&(t->arr[idx]), extract_key, (void*) key, (void**) &e) < 0) {
+    if (ll_remove(&(t->arr[idx]), extract_key, (void*) key, (void**) &e, addrs_to_free) < 0) {
         /* Not found */
         return -2;
     }
     /* Store value */
     if (valp != NULL) *valp = e->val;
 
-    /* Free entry */
-    free(e);
+    /* Save addr to free or free right now */
+    if (addrs_to_free != NULL) {
+        circ_buf_write(addrs_to_free, (void*) e);
+    } else {
+        free(e);
+    }
     t->size--;
     return 0;
 }

@@ -160,9 +160,6 @@ int syscall_wait_c_handler(int *status_ptr){
     /* get the current running pcb */
     if (scheduler_get_current_pcb(&sched, &cur_pcb) < 0) return -1;
 
-    /* Check if pcb has children to wait on */
-    //if (pcb_get_child_count(cur_pcb) == 0) return -2;
-
     /* pcb has children, wait until they report their status */
     if (pcb_wait_on_status(cur_pcb, status_ptr, &original_pid) < 0)
         return -2;

@@ -10,6 +10,8 @@
 #ifndef _LL_H_
 #define _LL_H_
 
+#include <circ_buffer.h>
+
 /**
  * @brief Struct representing a doubly linked linked list node
  */
@@ -63,7 +65,8 @@ int ll_head(ll_t *ll, ll_node_t **node);
 int ll_tail(ll_t *ll, ll_node_t **node);
 
 int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr);
-int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val, void **valp);
+int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val,
+                void **valp, circ_buf_t *addrs_to_free);
 
 int ll_size(ll_t *ll);
 void ll_destroy(ll_t *ll);

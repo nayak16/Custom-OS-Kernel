@@ -10,6 +10,7 @@
 #include <scheduler.h>
 #include <dispatcher.h>
 #include <queue.h>
+#include <circ_buffer.h>
 #include <tcb_pool.h>
 /* pdbr */
 #include <special_reg_cntrl.h>
@@ -37,6 +38,8 @@ int scheduler_init(scheduler_t *sched){
 
     /* Malloc a cleanup_stack */
     sched->cleanup_stack = malloc(sizeof(void*) * (PAGE_SIZE/4));
+
+    if (circ_buf_init(&(sched->addrs_to_free), 10) < 0) return -2;
 
     /* Init tcb pool */
     if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
@@ -109,37 +112,7 @@ int scheduler_get_pcb_by_pid(scheduler_t *sched,
  *
  */
 int scheduler_cleanup_current_safe(scheduler_t *sched) {
-    disable_interrupts();
 
-    /* Use the cleanup stack to clean up */
-    set_cur_esp((uint32_t) sched->cleanup_stack);
-
-    /* Use the idle tcb's page directory to access kernel mappings */
-    set_pdbr((uint32_t) pd_get_base_addr(&(sched->idle_tcb->pcb->pd)));
-
-    if (tcb_pool_remove_tcb(&(sched->thr_pool),
-                            sched->cur_tcb->tid) < 0) {
-        // TODO: revert changes
-        return -2;
-    }
-    pcb_t *cur_pcb = sched->cur_tcb->pcb;
-
-    lprintf("Thread %d exited with status %d", sched->cur_tcb->tid, sched->cur_tcb->exit_status);
-    /* Destroy current tcb */
-    tcb_destroy(sched->cur_tcb);
-    /* Free the current tcb */
-    free(sched->cur_tcb);
-
-    /* Check how many threads process has left */
-    if (cur_pcb->num_threads == 1) {
-        tcb_pool_remove_pcb(&(sched->thr_pool), cur_pcb->pid);
-        pcb_destroy(cur_pcb);
-        free(cur_pcb);
-    } else {
-        cur_pcb->num_threads--;
-    }
-    sched->cur_tcb = NULL;
-    enable_interrupts();
 
     return 0;
 }
@@ -356,6 +329,8 @@ int scheduler_make_current_zombie(scheduler_t *sched) {
     if (tcb_pool_make_zombie(&(sched->thr_pool), sched->cur_tcb->tid) < 0) {
         return -2;
     }
+    sched->cur_tcb->pcb->num_threads--;
+    sched->cur_tcb = NULL;
     return 0;
 }
 

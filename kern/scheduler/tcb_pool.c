@@ -17,6 +17,7 @@
 #include <ht.h>
 #include <tcb_pool.h>
 #include <tcb.h>
+#include <x86/asm.h>
 
 #include <simics.h>
 
@@ -79,12 +80,12 @@ int tcb_pool_add_pcb(tcb_pool_t *tp, pcb_t *pcb) {
     return 0;
 }
 
-int tcb_pool_remove_pcb(tcb_pool_t *tp, int pid) {
+int tcb_pool_remove_pcb(tcb_pool_t *tp, int pid, circ_buf_t *addrs_to_free) {
     if (tp == NULL) return -1;
 
     ll_node_t *node;
     /* Get specified node and pcb from hash table */
-    if (ht_remove(&(tp->processes), (key_t) pid, (void**) &node) < 0) {
+    if (ht_remove(&(tp->processes), (key_t) pid, (void**) &node, addrs_to_free) < 0) {
         /* Not found */
         return -2;
     }
@@ -194,26 +195,53 @@ int tcb_pool_wakeup(tcb_pool_t *tp, uint32_t curr_time){
 
 int tcb_pool_reap(tcb_pool_t *tp){
     if (tp == NULL) return -1;
+    int num_zombies = ll_size(&(tp->zombie_pool));
     tcb_t *tcb;
     pcb_t *pcb;
+    circ_buf_t addrs_to_free;
+    circ_buf_t zombie_tcbs;
+    if (circ_buf_init(&addrs_to_free, 64) < 0) return -2;
+    if (circ_buf_init(&zombie_tcbs, num_zombies) < 0) return -2;
+
+    disable_interrupts();
     while (ll_size(&(tp->zombie_pool)) > 0){
-        ll_remove_first(&(tp->zombie_pool), (void **)&tcb);
-        /* save the pcb */
+
+        /* Get first zombie */
+        ll_peek(&(tp->zombie_pool), (void **)&tcb);
+
+        /* Remove from tcb hash table and zombie pool */
+        if (tcb_pool_remove_tcb(tp, tcb->tid, &addrs_to_free) < 0) {
+            break;
+        }
         pcb = tcb->pcb;
-        /* save return status */
-        int exit_status = tcb->exit_status;
+        /* Remove if last thread in pcb */
+        if (tcb->pcb->num_threads == 0) {
+            tcb_pool_remove_pcb(tp, pcb->pid, &addrs_to_free);
+        }
+        /* Add tcb to zombie tcbs circ buf */
+        circ_buf_write(&zombie_tcbs, (void*) tcb);
+
+    }
+    enable_interrupts();
+
+    /* Cleanup all the zombies */
+    while(circ_buf_read(&zombie_tcbs, (void**) &tcb) >= 0) {
+        /* Check if pcb has no more threads running */
+        if (tcb->pcb->num_threads == 0) {
+            pcb_destroy(tcb->pcb);
+            free(tcb->pcb);
+        }
+        /* Destroy tcb itself */
         tcb_destroy(tcb);
         free(tcb);
-        if (pcb->num_threads == 0){
-            int ppid = pcb->ppid;
-            lprintf("Signaling process %d with exit_status %d", ppid, exit_status);
-            //TODO: lookup in hash table
-            //TODO: enqueue exit status to buffer
-            //TODO: sem_signal wait_sem
-            pcb_destroy(pcb);
-            free(pcb);
-        }
     }
+
+    void *addr;
+    /* Free rest of the addresses */
+    while(circ_buf_read(&addrs_to_free, (void**) &addr) >= 0) {
+        free(addr);
+    }
+
     return 0;
 }
 /**
@@ -328,12 +356,13 @@ int tcb_pool_make_zombie(tcb_pool_t *tp, int tid){
     return 0;
 }
 
-int tcb_pool_remove_tcb(tcb_pool_t *tp, int tid) {
+int tcb_pool_remove_tcb(tcb_pool_t *tp, int tid, circ_buf_t *addrs_to_free) {
     if (tp == NULL) return -1;
 
     ll_node_t *node;
     /* Get specified node and tcb from hash table */
-    if (ht_remove(&(tp->threads), (key_t) tid, (void**) &node) < 0) {
+    if (ht_remove(&(tp->threads), (key_t) tid,
+                    (void**) &node, addrs_to_free) < 0) {
         /* Not found */
         return -2;
     }
@@ -352,15 +381,21 @@ int tcb_pool_remove_tcb(tcb_pool_t *tp, int tid) {
         case WAITING:
             if (ll_unlink_node(&(tp->waiting_pool), node) < 0) return -5;
             break;
+        case ZOMBIE:
+            if (ll_unlink_node(&(tp->zombie_pool), node) < 0) return -5;
+            break;
         default:
             return -4;
     }
-    /* Free the node containing the tcb */
-    free(node);
+    /* Check if node addr needs to be saved */
+    if (addrs_to_free != NULL) {
+        circ_buf_write(addrs_to_free, (void*) node);
+    } /* Otherwise free right now */
+    else {
+        free(node);
+    }
 
     return 0;
 }
-
-int tcb_pool_remove_pcb(tcb_pool_t *tp, int id);
 
 

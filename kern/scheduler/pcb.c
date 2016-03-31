@@ -94,23 +94,42 @@ typedef struct pcb_metadata{
 
 int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
     if (pcb == NULL) return -1;
+
+    /* Create struct to hold meta data */
     pcb_metadata_t *metadata = malloc(sizeof(pcb_metadata_t));
     metadata->status = status;
     metadata->original_tid = original_tid;
+
+    /* Put status to collect into queue */
     if (queue_enq(&(pcb->status_queue), (void *) metadata) < 0) return -2;
+
+    /* Signal that a status is available */
     sem_signal(&(pcb->wait_sem));
     return 0;
 }
 
 int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_pid){
     if (pcb == NULL) return -1;
+
+    /* Check if there's any child processes left to wait on */
+    if (pcb->num_child_proc == 0) {
+        return -2;
+    }
+
+    /* Wait on available statuses */
     sem_wait(&(pcb->wait_sem));
 
+    /* Get next available status form queue */
     pcb_metadata_t *metadata;
     if (queue_deq(&(pcb->status_queue), (void **)&metadata) < 0)
         return -2;
+
+    /* Extract status ptr and orig pid */
     if (status_ptr != NULL) *status_ptr = metadata->status;
     if (original_pid != NULL) *original_pid = metadata->original_tid;
+
+    /* Remove collected child from pcb */
+    pcb_remove_child(pcb);
 
     /* Free metadata struct */
     free(metadata);
@@ -142,11 +161,13 @@ int pcb_get_original_tid(pcb_t *pcb, int *tid){
 
 int pcb_add_child(pcb_t *pcb) {
     pcb->num_child_proc++;
+    lprintf("+++++++++Parent %d added child, count: %u", pcb->pid, (unsigned int)pcb->num_child_proc);
     return 0;
 }
 
 int pcb_remove_child(pcb_t *pcb) {
     pcb->num_child_proc--;
+    lprintf("---------Parent %d lost child, count: %u", pcb->pid, (unsigned int)pcb->num_child_proc);
     return 0;
 }
 

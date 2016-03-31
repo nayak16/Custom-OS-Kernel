@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <contracts.h>
 
-/* Thread Library includes*/
+/* P3 Library includes*/
 #include <ll.h>
 
 #include <simics.h>
@@ -140,7 +140,10 @@ int ll_remove_first(ll_t *ll, void **val){
 
     /* save value before freeing struct */
     if (val != NULL) *val = head->e;
+
+    /* Free head */
     free(head);
+
     ll->size--;
     return 0;
 }
@@ -371,10 +374,15 @@ int ll_unlink_node(ll_t *ll, ll_node_t *node) {
  * @return 0 on success, negative error code if node not found or error
  *
  */
-int ll_remove_node(ll_t *ll, ll_node_t *node) {
+int ll_remove_node(ll_t *ll, ll_node_t *node, circ_buf_t *addrs_to_free) {
     if (ll == NULL || node == NULL) return -1;
     ll_unlink_node(ll, node);
-    free(node);
+
+    if (addrs_to_free != NULL) {
+        circ_buf_write(addrs_to_free, (void*) node);
+    } else {
+        free(node);
+    }
     return 0;
 }
 
@@ -420,7 +428,8 @@ int ll_find(ll_t *ll, void *(*func)(void*), void *c_val, void **val_ptr){
  * @return 0 on success, negative if error or data not found
  *
  */
-int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val, void** valp){
+int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val,
+                void** valp, circ_buf_t *addrs_to_free){
     if (ll == NULL || func == NULL){
         return -1;
     }
@@ -432,7 +441,7 @@ int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val, void** valp){
             /* Save node data */
             if (valp != NULL) *valp = node->e;
             /* Remove and free node */
-            return ll_remove_node(ll, node);
+            return ll_remove_node(ll, node, addrs_to_free);
         }
         node = node->next;
     }
