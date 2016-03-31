@@ -25,6 +25,7 @@ typedef struct pcb{
     page_directory_t pd;
 
     uint32_t num_threads;
+    uint32_t num_child_proc;
     sem_t wait_sem;
     queue_t status_queue;
 } pcb_t;
@@ -39,5 +40,9 @@ int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb);
 int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_tid);
 int pcb_signal_status(pcb_t *pcb, int status, int original_tid);
 int pcb_get_ppid(pcb_t *pcb);
+
+int pcb_add_child(pcb_t *pcb);
+int pcb_remove_child(pcb_t *pcb);
+int pcb_get_child_count(pcb_t *pcb);
 
 #endif /* _PCB_T_H_ */

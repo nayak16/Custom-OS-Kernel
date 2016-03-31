@@ -34,6 +34,7 @@ int pcb_init(pcb_t *pcb){
     pcb->pid = -1;
     pcb->ppid = -1;
     pcb->original_tid = -1;
+    pcb->num_child_proc = 0;
     // TODO: set this to 0 and find good place to increment count
     pcb->num_threads = 1;
     /* Initialize an empty queue; use semaphore to allocate resources
@@ -138,3 +139,18 @@ int pcb_get_original_tid(pcb_t *pcb, int *tid){
     *tid = pcb->original_tid;
     return 0;
 }
+
+int pcb_add_child(pcb_t *pcb) {
+    pcb->num_child_proc++;
+    return 0;
+}
+
+int pcb_remove_child(pcb_t *pcb) {
+    pcb->num_child_proc--;
+    return 0;
+}
+
+int pcb_get_child_count(pcb_t *pcb) {
+    return pcb->num_child_proc;
+}
+

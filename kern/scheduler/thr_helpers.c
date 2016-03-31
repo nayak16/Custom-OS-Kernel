@@ -72,6 +72,9 @@ void thr_vanish(void) {
 
         /* signal the status to parent_pcb */
         pcb_signal_status(parent_pcb, exit_status, original_tid);
+
+        /* Remove child from parent pcb */
+        pcb_remove_child(parent_pcb);
     }
     /* Clean up current thread */
     scheduler_cleanup_current_safe(&sched);

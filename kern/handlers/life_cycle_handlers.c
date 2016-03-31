@@ -52,6 +52,10 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
                 duplicate_pcb, saved_regs)) < 0) {
         return -6;
     }
+
+    /* Add child to current process */
+    pcb_add_child(cur_pcb);
+
     return tid;
 }
 
@@ -152,8 +156,14 @@ void syscall_vanish_c_handler(){
 int syscall_wait_c_handler(int *status_ptr){
     pcb_t *cur_pcb;
     int original_pid;
+
     /* get the current running pcb */
     if (scheduler_get_current_pcb(&sched, &cur_pcb) < 0) return -1;
+
+    /* Check if pcb has children to wait on */
+    //if (pcb_get_child_count(cur_pcb) == 0) return -2;
+
+    /* pcb has children, wait until they report their status */
     if (pcb_wait_on_status(cur_pcb, status_ptr, &original_pid) < 0)
         return -2;
     return original_pid;
