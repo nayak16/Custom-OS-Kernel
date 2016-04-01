@@ -62,6 +62,53 @@ int address_shift_hash(key_t addr){
     return ((int)addr);
 }
 
+int request_join(frame_manager_t *fm, frame_t *frame){
+    if (frame == NULL) return -1;
+
+    ASSERT(frame->status == FRAME_PARENT);
+
+    if (frame->buddy != NULL && frame->buddy->status == FRAME_DEALLOC){
+        lprintf("Coalesing again!");
+        ASSERT(frame->parent == frame->buddy->parent && frame->parent != NULL);
+        /* call recursive join on parent */
+        if (request_join(fm, frame->parent) < 0){
+            panic("Invalid parent pointer!");
+        }
+        /* destroy current frame and its buddy */
+        ll_node_t *buddy_node, *curr_node;
+        if (ht_remove(fm->parents, (key_t)(frame->addr | frame->i),
+                    (void *)&curr_node) < 0){
+            panic("Could not remove frame from parents!");
+        }
+        if (ht_remove(fm->deallocated, (key_t)(frame->buddy->addr),
+                    (void *)&buddy_node)< 0){
+            panic("Could not remove buddy node from dealloc!");
+        }
+        ll_unlink_node(fm->frame_bins[frame->i], buddy_node);
+        free(frame->buddy);
+        free(frame);
+        free(buddy_node);
+        free(curr_node);
+    } else {
+        /* base case when there is no buddy and no parent to further attempt to
+         * join or when the buddy is currently unavaliable to join on */
+
+        ll_node_t *node;
+        /* remove mapping in parents ht */
+        if (ht_remove(fm->parents, (key_t)(frame->addr | frame->i),
+                    (void **)&node) < 0){
+            panic("Could not locate parent in parent ht");
+        }
+        /* add mapping to deallocated ht */
+        if (ht_put(fm->deallocated, frame->addr, (void **)&node) < 0){
+            panic("Could not register parent to deallocated");
+        }
+        frame->status = FRAME_DEALLOC;
+        ll_link_node_last(fm->frame_bins[frame->i], node);
+    }
+    return 0;
+}
+
 int request_split(frame_manager_t *fm, int i){
     if (i >= fm->num_bins || i == 0 || fm == NULL) return -1;
     if (ll_size(fm->frame_bins[i]) < 0) panic("Invalid linked list!");
@@ -211,34 +258,24 @@ int fm_dealloc(frame_manager_t *fm, uint32_t p_addr){
         lprintf(">> Coalescing %p with %p to %p", (void *)frame->addr, (void *)buddy_frame->addr,
                 (void *)frame->parent);
 
-        frame_t *parent_frame;
-        ll_node_t *parent_node, *buddy_node;
-
-        /* remove mapping in parents ht */
-        if (ht_remove(fm->parents, (key_t)((frame->parent)->addr | (frame->parent)->i),
-                    (void **)&parent_node) < 0){
-            panic("Could not locate parent in parent ht");
-        }
+        frame_t *parent_frame = frame->parent;
+        ll_node_t *buddy_node;
 
         /* remove buddy mapping in deallocated pool */
         if (ht_remove(fm->deallocated, (key_t)buddy_frame->addr, (void **)&buddy_node) < 0){
             panic("Could not remove buddy from dealloc ht");
         }
-        /* remove from bin pool */
+        /* remove from deallocated bin pool */
         ll_unlink_node(fm->frame_bins[buddy_frame->i], buddy_node);
-        ll_node_get_data(parent_node, (void **)&parent_frame);
 
         /* free resources */
         free(frame);
         free(buddy_frame);
         free(buddy_node);
         free(node);
-        if (ht_put(fm->deallocated, parent_frame->addr, (void **)&parent_node) < 0){
-            panic("Could not register parent to deallocated");
-        }
-        parent_frame->status = FRAME_DEALLOC;
-        ll_link_node_last(fm->frame_bins[parent_frame->i], parent_node);
-        //TODO: coalesece recursive
+
+        /* recursively coalesce parent frame */
+        request_join(fm, parent_frame);
     } else {
         /* register with dealloc and put into the linked list */
         ht_put(fm->deallocated, (key_t)frame->addr, node);
