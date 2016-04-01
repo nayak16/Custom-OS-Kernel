@@ -45,7 +45,7 @@
 #include <simics.h>                 /* lprintf() */
 #include <debug.h>
 
-#define KEYBOARD_BUFFER_SIZE 256
+#define KEYBOARD_BUFFER_SIZE 1024
 
 scheduler_t sched;
 mutex_t heap_lock;
@@ -121,7 +121,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* Load in actual work pcb */
     set_pdbr((uint32_t) pd_get_base_addr(&work_pcb->pd));
-    pcb_load_prog(work_pcb, "remove_pages_test1", 0, NULL);
+    pcb_load_prog(work_pcb, "shell", 0, NULL);
 
     /* Add work pcb into scheduler */
     scheduler_add_process(&sched, work_pcb, NULL);
