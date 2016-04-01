@@ -484,3 +484,16 @@ int ll_tail(ll_t *ll, ll_node_t **node){
     *node = ll->tail;
     return 0;
 }
+
+void ll_foreach(ll_t *ll, void (*f)(void *)){
+    if (ll == NULL) return;
+    ll_node_t *ptr = ll->head;
+    ll_node_t *next;
+    while (ptr != NULL){
+        next = ptr->next;
+        f(ptr->e);
+        ptr = next;
+    }
+}
+
+

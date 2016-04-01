@@ -38,7 +38,6 @@ int syscall_remove_pages_c_handler(void *base){
         return -2;
     }
     page_directory_t *pd = &(cur_pcb->pd);
-
     if (vmm_remove_user_page(pd, (uint32_t)base) < 0) return -1;
     return 0;
 }

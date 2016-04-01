@@ -1,12 +1,12 @@
 #include <simics.h>
 #include <syscall.h>
+#include <stdio.h>
 
 int main(){
-    int i;
-    for (i = 0; i < 10; i++){
-        continue;
+    int i = fork();
+    while(1){
+        printf("foo %d\n", i);
+        yield(-1);
     }
-    halt();
-    lprintf("returned from halt");
     return 0;
 }

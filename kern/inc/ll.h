@@ -68,5 +68,7 @@ int ll_remove(ll_t *ll, void *(*func)(void*), void *c_val, void **valp);
 int ll_size(ll_t *ll);
 void ll_destroy(ll_t *ll);
 
+void ll_foreach(ll_t *ll, void (*f)(void *));
+
 
 #endif /* _LL_H_ */

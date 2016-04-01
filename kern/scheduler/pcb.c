@@ -53,7 +53,7 @@ int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb) {
     if(source_pcb == NULL || dest_pcb == NULL) return -1;
 
     /* Copy address space */
-    if(vmm_deep_copy(&(dest_pcb->pd), &(source_pcb->pd)) < 0) {
+    if(vmm_deep_copy(&(dest_pcb->pd)) < 0) {
         return -3;
     }
 

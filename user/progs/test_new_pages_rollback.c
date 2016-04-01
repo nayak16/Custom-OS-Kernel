@@ -8,7 +8,8 @@
 
 int main(){
     /* allocate more than half of the total physical memory */
-    new_pages((void *)0x2000000, 524288);
+    if (new_pages((void *)0x2000000, 2139095040) == 0){
+    }
     lprintf("Allocated a lot of pages...");
     if (fork() == 0){
         lprintf("Somehow, forked passed haha...");
