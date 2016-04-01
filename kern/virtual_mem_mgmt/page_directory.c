@@ -37,6 +37,9 @@
 #define ENTRY_PRESENT 0
 #define ENTRY_NOT_PRESENT 1
 
+#define NEW_PAGE 0
+#define NOT_NEW_PAGE 1
+
 /* Predeclaration */
 
 int pd_init(page_directory_t *pd);
@@ -272,7 +275,8 @@ int pd_init(page_directory_t *pd){
         return -1;
     }
     pd->num_pages = 0;
-    ll_init(&pd->p_addr_list);
+    pd->p_addr_list = malloc(sizeof(ll_t));
+    ll_init(pd->p_addr_list);
 
     return 0;
 }
@@ -368,12 +372,56 @@ int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
             pt_copy(new_pt, (uint32_t *)REMOVE_FLAGS(entry), i, &p_addr);
         }
     }
+    /* add new physical address space to our new pd's address list */
+
     return 0;
 }
 
 
+typedef struct pd_frame_metadata{
+    uint32_t p_addr;
+    uint32_t num_pages;
+} pd_frame_metadata_t;
+
+void *pd_frame_metadata_addr(void *metadata){
+    return (void *)((pd_frame_metadata_t *)metadata)->p_addr;
+}
+
 int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages){
     if (pd == NULL) return -1;
     pd->num_pages += num_pages;
+    /* add first for better locality */
+    pd_frame_metadata_t *metadata = malloc(sizeof(pd_frame_metadata_t));
+    metadata->p_addr = p_addr;
+    metadata->num_pages = num_pages;
+    ll_add_first(pd->p_addr_list, (void *)metadata);
+    return 0;
+}
+
+int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr){
+    if (pd == NULL) return -1;
+    pd_frame_metadata_t *metadata;
+    if (ll_remove(pd->p_addr_list, &pd_frame_metadata_addr,
+            (void *)p_addr, (void **)&metadata) < 0)
+        return -2;
+    pd->num_pages -= metadata->num_pages;
+    free(metadata);
+    return 0;
+}
+
+int pd_num_frames(page_directory_t *pd){
+    if (pd == NULL) return -1;
+    return ll_size(pd->p_addr_list);
+}
+
+int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list){
+    if (pd == NULL || addr_list == NULL) return -1;
+    int arr_i = 0;
+    while (pd_num_frames(pd) > 0){
+        pd_frame_metadata_t *metadata;
+        ll_remove_first(pd->p_addr_list, (void **)&metadata);
+        addr_list[arr_i] = metadata->p_addr;
+        arr_i++;
+    }
     return 0;
 }

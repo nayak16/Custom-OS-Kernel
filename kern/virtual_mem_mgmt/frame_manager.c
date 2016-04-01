@@ -54,12 +54,12 @@ int frame_init(frame_t *frame, uint32_t addr, uint32_t num_pages,
 }
 
 
-
-
-
-
 int address_hash(key_t addr){
     return (int)addr;
+}
+
+int address_shift_hash(key_t addr){
+    return ((int)addr);
 }
 
 int request_split(frame_manager_t *fm, int i){
@@ -85,7 +85,7 @@ int request_split(frame_manager_t *fm, int i){
 
     /* deregister node from deallocated and register in parent */
     ht_remove(fm->deallocated, parent_frame->addr, NULL);
-    ht_put(fm->parents, parent_frame->addr, parent_node);
+    ht_put(fm->parents, (parent_frame->addr | parent_frame->i), parent_node);
     parent_frame->status = FRAME_PARENT;
 
     /* create two new nodes and register in dealloc */
@@ -129,15 +129,19 @@ int request_split(frame_manager_t *fm, int i){
 
 }
 
-int fm_alloc(frame_manager_t *fm, uint32_t num_pages, void **p_addr){
+int fm_alloc(frame_manager_t *fm, uint32_t num_pages, uint32_t *p_addr){
     int j;
+    mutex_lock(&fm->m);
     uint32_t frame_size = TWO_POW(fm->num_bins-1);
     if (num_pages > frame_size){
         lprintf("Requested %d pages, which exceeds maximum frame size of %d",
                 (unsigned int)num_pages, (unsigned int)frame_size);
+        mutex_unlock(&fm->m);
         return -1;
     }
     if (num_pages == 0){
+        lprintf("Number of pages requested is 0");
+        mutex_unlock(&fm->m);
         return -1;
     }
     for (j = fm->num_bins-1; j > 0; j--){
@@ -152,6 +156,7 @@ int fm_alloc(frame_manager_t *fm, uint32_t num_pages, void **p_addr){
     if (ll_size(fm->frame_bins[j]) == 0){
         if (request_split(fm, j+1) < 0){
             lprintf("No blocks of size %d found", (unsigned int)frame_size);
+            mutex_unlock(&fm->m);
             return -2;
         }
     }
@@ -165,43 +170,62 @@ int fm_alloc(frame_manager_t *fm, uint32_t num_pages, void **p_addr){
     ll_head(fm->frame_bins[j], &node);
     ll_unlink_node(fm->frame_bins[j], node);
     ll_node_get_data(node, (void **)&frame);
+    ASSERT(frame->status == FRAME_DEALLOC);
 
     /* deregister node from deallocated and register in allocated */
     ht_remove(fm->deallocated, frame->addr, NULL);
     ht_put(fm->allocated, frame->addr, node);
     frame->status = FRAME_ALLOC;
 
-    *p_addr = (void *)frame->addr;
+    lprintf("Allocated %p to %p", (void *)frame->addr, (void *)(frame->addr + (PAGE_SIZE * frame->num_pages)));
 
+    *p_addr = frame->addr;
+
+    mutex_unlock(&fm->m);
     return 0;
 }
 
-int fm_dealloc(frame_manager_t *fm, void *p_addr){
+int fm_dealloc(frame_manager_t *fm, uint32_t p_addr){
     if (fm == NULL) return -1;
     ll_node_t *node;
+    mutex_lock(&fm->m);
+
     if (ht_remove(fm->allocated, (key_t)p_addr, (void **)&node) < 0){
         lprintf("Could not locate address in allocated ht");
+        mutex_unlock(&fm->m);
         return -2;
     }
     frame_t *frame;
     ll_node_get_data(node, (void **)&frame);
-    frame_t *buddy = frame->buddy;
+    ASSERT(frame->status == FRAME_ALLOC);
+    lprintf("Deallocating %p to %p", (void *)frame->addr, (void *)(frame->addr + PAGE_SIZE*frame->num_pages));
+    frame_t *buddy_frame = frame->buddy;
 
-    if (buddy != NULL && buddy->status == FRAME_DEALLOC){
-        lprintf("Coalescing!");
-        frame_t *parent_frame, *buddy_frame;
+    ASSERT( (!buddy_frame) ||
+            (buddy_frame->parent == frame->parent
+             && buddy_frame->i == frame->i
+             && buddy_frame->num_pages == frame->num_pages
+             && buddy_frame->buddy == frame));
+
+    if (buddy_frame != NULL && buddy_frame->status == FRAME_DEALLOC){
+        lprintf(">> Coalescing %p with %p to %p", (void *)frame->addr, (void *)buddy_frame->addr,
+                (void *)frame->parent);
+
+        frame_t *parent_frame;
         ll_node_t *parent_node, *buddy_node;
+
         /* remove mapping in parents ht */
-        if (ht_remove(fm->parents, (key_t)((frame->parent)->addr), (void **)&parent_node) < 0){
+        if (ht_remove(fm->parents, (key_t)((frame->parent)->addr | (frame->parent)->i),
+                    (void **)&parent_node) < 0){
             panic("Could not locate parent in parent ht");
         }
+
         /* remove buddy mapping in deallocated pool */
-        if (ht_remove(fm->deallocated, (key_t)buddy->addr, (void **)&buddy_node) < 0){
+        if (ht_remove(fm->deallocated, (key_t)buddy_frame->addr, (void **)&buddy_node) < 0){
             panic("Could not remove buddy from dealloc ht");
         }
         /* remove from bin pool */
-        ll_unlink_node(fm->frame_bins[buddy->i], buddy_node);
-        ll_node_get_data(buddy_node,(void **)&buddy_frame);
+        ll_unlink_node(fm->frame_bins[buddy_frame->i], buddy_node);
         ll_node_get_data(parent_node, (void **)&parent_frame);
 
         /* free resources */
@@ -221,11 +245,13 @@ int fm_dealloc(frame_manager_t *fm, void *p_addr){
         ll_link_node_last(fm->frame_bins[frame->i], node);
         frame->status = FRAME_DEALLOC;
     }
+    mutex_unlock(&fm->m);
     return 0;
 }
 
 int fm_init_user_space(frame_manager_t *fm, uint32_t num_frames){
     if (fm == NULL || num_frames == 0) return -1;
+    mutex_lock(&fm->m);
     int i;
     uint32_t num_bins = fm->num_bins;
     int frames_remaining = num_frames;
@@ -237,6 +263,7 @@ int fm_init_user_space(frame_manager_t *fm, uint32_t num_frames){
             lprintf("Allocating a frame with %d pages; %d remaining",
                     (unsigned int)frame_size,
                     (unsigned int)(frames_remaining - frame_size));
+
             /* create a new frame */
             frame_t *new_frame = malloc(sizeof(frame_t));
             frame_init(new_frame,
@@ -256,8 +283,10 @@ int fm_init_user_space(frame_manager_t *fm, uint32_t num_frames){
 
             frames_remaining -= frame_size;
             p_addr += PAGE_SIZE * frame_size;
+
         }
     }
+    mutex_unlock(&fm->m);
     return 0;
 }
 
@@ -276,10 +305,19 @@ int fm_init(frame_manager_t *fm, uint32_t num_bins){
     if (mutex_init(&(fm->m)) < 0) return -1;
 
     /* initialize hash tables */
+    /* allocated and deallocate frames should have unique addresses
+     * which are also page aligned. Therefore, for a decent hash
+     * function we should ignore the bottom 12 bits since they are
+     * all the same */
     fm->allocated = malloc(sizeof(ht_t));
-    ht_init(fm->allocated, 64, &address_hash);
+    ht_init(fm->allocated, 64, &address_shift_hash);
     fm->deallocated = malloc(sizeof(ht_t));
-    ht_init(fm->deallocated, 64, &address_hash);
+    ht_init(fm->deallocated, 64, &address_shift_hash);
+    /* Since parent address can be the same, we need a different key to hash
+     * We know that there cannot be multiple entries with the same address and
+     * the same bin size, we can use the bottom 12 bits of the address to store
+     * addition information about the address and thus we should not page shift
+     * them away when hashing*/
     fm->parents = malloc(sizeof(ht_t));
     ht_init(fm->parents, 64, &address_hash);
 
@@ -304,3 +342,21 @@ void fm_destroy(frame_manager_t *fm){
     return;
 }
 
+void frame_print(void *ptr){
+    frame_t *f = (frame_t *)ptr;
+    if (ptr == NULL) lprintf("(NULL_FRAME)");
+    else lprintf("<%p>(%d)%d: [%p, %p), parent: %p, buddy: %p",
+            ptr,
+            (unsigned int)f->i, (unsigned int)f->num_pages, (void *)f->addr,
+            (void *)(f->addr + PAGE_SIZE*f->num_pages),
+            (void *)(f->parent), (void *)(f->buddy));
+}
+
+void fm_print(frame_manager_t *fm){
+    if (fm == NULL) return;
+    int i;
+    for (i = 0; i < fm->num_bins; i++){
+        lprintf("******** BIN %d ********", i);
+        ll_foreach(fm->frame_bins[i], &frame_print);
+    }
+}

@@ -36,7 +36,12 @@ int vmm_deep_copy(page_directory_t *pd_dest){
     page_directory_t *pd_src = &(cur_pcb->pd);
 
     uint32_t p_addr_start;
-    fm_alloc(&fm, pd_dest->num_pages, (void **)&p_addr_start);
+    if (fm_alloc(&fm, pd_src->num_pages, &p_addr_start) < 0){
+        lprintf("Failed allocate %d pages in vmm_deep_copy",
+                (unsigned int)pd_dest->num_pages);
+        MAGIC_BREAK;
+    }
+    pd_alloc_frame(pd_dest, p_addr_start, pd_src->num_pages);
 
     /* deep copy page directory structure */
     if (pd_deep_copy(pd_dest, pd_src, p_addr_start) < 0)
@@ -68,12 +73,16 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
     uint32_t num_pages =((v_addr_high-v_addr_low)+1)/PAGE_SIZE;
     /* check for enough frames */
     uint32_t cur_addr = v_addr_low;
-    MAGIC_BREAK;
     uint32_t p_addr;
-    if (fm_alloc(&fm, num_pages, (void **)&p_addr) < 0){
+
+    /* Allocate all the frames */
+    if (fm_alloc(&fm, num_pages, &p_addr) < 0){
         panic("Could not find enough frames to map sections!");
     }
-    pd_alloc_frame(pd, p_addr, num_pages);
+    /* Update PD's frame tracker */
+    if (pd_alloc_frame(pd, p_addr, num_pages) < 0){
+        panic("Could not allocate frame to page directory!");
+    }
 
     /* for each page allocate a frame and map it */
     int i;
@@ -138,8 +147,13 @@ int vmm_new_user_page(page_directory_t *pd, uint32_t base, uint32_t num_pages){
     }
     /* allocate frames and create the mapping */
     uint32_t p_addr;
-    if (fm_alloc(&fm, num_pages, (void **)&p_addr) < 0) return -2;
-    pd_alloc_frame(pd, p_addr, num_pages);
+    if (fm_alloc(&fm, num_pages, &p_addr) < 0){
+        lprintf("vmm_new_user_page unable to fm_alloc");
+        return -2;
+    }
+    if (pd_alloc_frame(pd, p_addr, num_pages) < 0){
+        panic("Could not allocate frame to page directory");
+    }
 
     v_addr = base;
     for (i = 0; i < num_pages; i++){
@@ -173,7 +187,18 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
     }
     /* check to ensure that said page table is the start of a new_pages
      * allocation */
-    if (!IS_USER_START(pte)) return -3;
+    if (!IS_USER_START(pte)){
+        return -3;
+    } else {
+        /* lookup frame in the fm allocated frame pool */
+        if (fm_dealloc(&fm, REMOVE_FLAGS(pte)) < 0){
+            lprintf("Could not find frame in allocated frame pool");
+            return -4;
+        }
+        if (pd_dealloc_frame(pd, REMOVE_FLAGS(pte)) < 0){
+            lprintf("Could not deallocate user frame");
+        }
+    }
     /* go through all the addresses until we get an address that signifies
      * the end of a user new_pages */
     uint32_t v_addr = base;
@@ -188,7 +213,6 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
         /* flush mapping in tlb */
         flush_tlb((uint32_t)v_addr);
         /* give frame back to frame manager */
-        fm_dealloc(&fm, (void *)REMOVE_FLAGS(pte));
         v_addr += PAGE_SIZE;
     } while (!IS_USER_END(pte));
 
@@ -196,14 +220,20 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
 }
 
 int vmm_clear_user_space(page_directory_t *pd){
-    uint32_t v_addr, pte;
+    uint32_t v_addr, pte, i;
+    /* deallocate all frames from page directory; use the resulting list
+     * to update the frame manager */
+    int num_frames = pd_num_frames(pd);
+    uint32_t frames[num_frames];
+    pd_dealloc_all_frames(pd, frames);
+    for (i = 0; i < num_frames; i++){
+        fm_dealloc(&fm, frames[i]);
+    }
     /* go until we overflow */
     for (v_addr = USER_MEM_START; v_addr != 0; v_addr+=PAGE_SIZE){
         pd_get_mapping(pd, v_addr, &pte);
         /* remove mapping */
         pd_remove_mapping(pd, v_addr);
-        /* give frame back to frame manager */
-        fm_dealloc(&fm, (void *)REMOVE_FLAGS(pte));
     }
     /* flush mapping in tlb */
     flush_tlb((uint32_t)v_addr);
