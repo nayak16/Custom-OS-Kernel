@@ -47,6 +47,7 @@
 
 #define KEYBOARD_BUFFER_SIZE 1024
 
+/* Global vars */
 scheduler_t sched;
 mutex_t heap_lock;
 frame_manager_t fm;
@@ -106,8 +107,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     pcb_t *reaper_pcb = malloc(sizeof(pcb_t));
     pcb_init(reaper_pcb);
 
-    pcb_t *work_pcb = malloc(sizeof(pcb_t));
-    pcb_init(work_pcb);
+    pcb_t *init_pcb = malloc(sizeof(pcb_t));
+    pcb_init(init_pcb);
 
     /* initialize a scheduler */
     scheduler_init(&sched);
@@ -125,19 +126,19 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* add idle process to scheduler */
     scheduler_add_idle_process(&sched, idle_pcb);
 
-    /* add idle process to scheduler */
+    /* add reaper process to scheduler */
     scheduler_add_reaper_proc(&sched, reaper_pcb, reaper_main);
 
-    /* Load in actual work pcb */
-    set_pdbr((uint32_t) pd_get_base_addr(&work_pcb->pd));
-    pcb_load_prog(work_pcb, "init", 0, NULL);
+    /* Load init pcb */
+    set_pdbr((uint32_t) pd_get_base_addr(&init_pcb->pd));
+    pcb_load_prog(init_pcb, "init", 0, NULL);
 
-    /* Add work pcb into scheduler */
-    scheduler_add_process(&sched, work_pcb, NULL);
+    /* Save init pcb into scheduler */
+    scheduler_add_init_process(&sched, init_pcb);
 
-    // TODO: create and load init task
+    /* Add init pcb into scheduler */
+    //scheduler_add_process(&sched, init_pcb, NULL);
 
-    // TODO: set first thread running
     scheduler_start(&sched); // enable intterupts
 
     while (1) {

@@ -59,23 +59,30 @@ void thr_vanish(void) {
     tcb_get_pcb(cur_tcb, &cur_pcb);
 
     int exit_status;
-    if (tcb_get_exit_status(cur_tcb, &exit_status) < 0)
-        exit_status = -2;
+    /* Get exit status of exited tcb */
+    if (tcb_get_exit_status(cur_tcb, &exit_status) < 0) exit_status = -2;
+
+    int original_tid;
+    /* Get the original tid of the original thread of current pcb */
+    pcb_get_original_tid(cur_pcb, &original_tid);
+
 
     /* from cur_pcb, get parent_pcb */
     if (scheduler_get_pcb_by_pid(&sched, pcb_get_ppid(cur_pcb), &parent_pcb) < 0){
         lprintf("Could not retrieve parent pid, routing return status to init");
-        //TODO: get the init pcb and signal it's pcb
+
+        pcb_t *init_pcb;
+        /* Get init pcb from scheduler */
+        if (scheduler_get_init_pcb(&sched, &init_pcb) >= 0) {
+            /* There exists an init pcb */
+            pcb_signal_status(init_pcb, exit_status, original_tid);
+        }
+
     } else {
-
-        int original_tid;
-        pcb_get_original_tid(cur_pcb, &original_tid);
-
         /* signal the status to parent_pcb */
         pcb_signal_status(parent_pcb, exit_status, original_tid);
-
     }
-
+    lprintf("Thread %d exited with status: %d", cur_tcb->tid, exit_status);
     /* Make current tcb a zombie */
     scheduler_make_current_zombie_safe(&sched);
 

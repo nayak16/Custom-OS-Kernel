@@ -15,6 +15,8 @@ typedef struct scheduler{
     int next_pid;
     void *reaper_stack_bot;
     void *reaper_stack_top;
+
+    pcb_t *init_pcb;
     tcb_t *reaper_tcb;
     tcb_t *idle_tcb;
 
@@ -27,6 +29,7 @@ extern uint32_t scheduler_num_ticks;
 
 int scheduler_init(scheduler_t *sched);
 
+int scheduler_add_init_process(scheduler_t *sched, pcb_t *init_pcb);
 int scheduler_add_idle_process(scheduler_t *sched, pcb_t *idle_pcb);
 
 int scheduler_add_reaper_proc(scheduler_t *sched,
@@ -43,6 +46,8 @@ int scheduler_get_tcb_by_tid(scheduler_t *sched,
                              int target_tid, tcb_t **tcbp);
 int scheduler_get_pcb_by_pid(scheduler_t *sched,
                              int target_pid, pcb_t **pcbp);
+
+int scheduler_get_init_pcb(scheduler_t *pcb, pcb_t **init_pcbp);
 
 int scheduler_check_is_runnable(scheduler_t *sched, int target_tid);
 

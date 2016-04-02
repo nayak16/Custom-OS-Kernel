@@ -22,6 +22,11 @@ Implement thread_fork
 Implement swexn
 Look through all TODO comments
 
+BUG LIST FUCK:
+fork_exit_bomb - page faults around 800
+cho - Double faults/Buddy allocator panics
+make_crash - Double Faults/Buddy Allocator panics
+
 Design Decision Rationales:
 
 New pages & remove pages - One interesting thing about remove pages is that

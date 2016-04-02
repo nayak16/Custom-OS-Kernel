@@ -42,6 +42,7 @@ int scheduler_init(scheduler_t *sched){
     sched->reaper_stack_top = (void*)((uint32_t)sched->reaper_stack_bot
                                         + (uint32_t) PAGE_SIZE);
 
+    sched->init_pcb = NULL;
 
     /* Init tcb pool */
     if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
@@ -136,6 +137,14 @@ int scheduler_get_pcb_by_pid(scheduler_t *sched,
 
     if (tcb_pool_find_pcb(&(sched->thr_pool), target_pid, pcbp) < 0) return -2;
 
+    return 0;
+}
+
+int scheduler_get_init_pcb(scheduler_t *sched, pcb_t **pcbp) {
+    if (sched == NULL || pcbp == NULL) return -1;
+    if (sched->init_pcb == NULL) return -2;
+
+    *pcbp = sched->init_pcb;
     return 0;
 }
 
@@ -340,9 +349,38 @@ int scheduler_make_current_zombie_safe(scheduler_t *sched) {
     return status;
 }
 
-int scheduler_get_current_tcb(scheduler_t *sched, tcb_t **tcb) {
+/**
+ * @brief Gets the current running tcb from the scheduler
+ *
+ * @param sched Scheduler to get current tcb from
+ * @param tcbp Address to save current tcb
+ *
+ * 0 on success, negative error code otherwise
+ */
+int scheduler_get_current_tcb(scheduler_t *sched, tcb_t **tcbp) {
     if (sched == NULL) return -1;
-    *tcb = sched->cur_tcb;
+    *tcbp = sched->cur_tcb;
+    return 0;
+}
+
+
+/**
+ * @brief Adds the OS/shell init process to the scheduler
+ *
+ * Saves the pcb so future vanished threads can report to this process
+ *
+ * @param sched Scheduler to add to
+ * @param init_pcb Pcb containing the init program
+ *
+ * @return 0 on success, -1 on error
+ */
+int scheduler_add_init_process(scheduler_t *sched, pcb_t *init_pcb) {
+    if (sched == NULL || init_pcb == NULL) return -1;
+
+    sched->init_pcb = init_pcb;
+
+    if (scheduler_add_process(sched, init_pcb, NULL) < 0) return -2;
+
     return 0;
 }
 
