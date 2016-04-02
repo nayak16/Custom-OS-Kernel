@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <x86/asm.h>
+#include <x86/seg.h>
 #include <pcb.h>
 #include <tcb.h>
 #include <scheduler.h>
@@ -37,9 +38,10 @@ int scheduler_init(scheduler_t *sched){
     sched->cur_tcb = NULL;
 
     /* Malloc a cleanup_stack */
-    sched->cleanup_stack = malloc(sizeof(void*) * (PAGE_SIZE/4));
+    sched->reaper_stack_bot = malloc(sizeof(void) * (PAGE_SIZE));
+    sched->reaper_stack_top = (void*)((uint32_t)sched->reaper_stack_bot
+                                        + (uint32_t) PAGE_SIZE);
 
-    if (circ_buf_init(&(sched->addrs_to_free), 10) < 0) return -2;
 
     /* Init tcb pool */
     if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
@@ -331,6 +333,10 @@ int scheduler_make_current_zombie(scheduler_t *sched) {
     }
     sched->cur_tcb->pcb->num_threads--;
     sched->cur_tcb = NULL;
+
+    /* Wake up reaper thread */
+    if (scheduler_make_runnable(sched, sched->reaper_tcb->tid) < 0) return -3;
+
     return 0;
 }
 
@@ -390,6 +396,53 @@ int scheduler_add_idle_process(scheduler_t *sched, pcb_t *idle_pcb) {
     return tid;
 }
 
+int scheduler_add_reaper_proc(scheduler_t *sched,
+                              pcb_t *reaper_pcb, void (*reap_func)(void)) {
+    if (sched == NULL) return -1;
+
+    uint32_t regs[REGS_SIZE];
+
+    /* Construct reg values */
+    regs[SS_IDX] = SEGSEL_KERNEL_DS;
+    regs[ESP_IDX] = (uint32_t) sched->reaper_stack_top;
+    regs[EFLAGS_IDX] = get_user_eflags();
+    regs[CS_IDX] = SEGSEL_KERNEL_CS;
+    regs[EIP_IDX] = (uint32_t) reap_func;
+    regs[ECX_IDX] = 0;
+    regs[EDX_IDX] = 0;
+    regs[EBX_IDX] = 0;
+    regs[EBP_IDX] = (uint32_t) sched->reaper_stack_top;
+    regs[ESI_IDX] = 0;
+    regs[EDI_IDX] = 0;
+    regs[DS_IDX] = SEGSEL_KERNEL_DS;
+    regs[ES_IDX] = SEGSEL_KERNEL_DS;
+    regs[FS_IDX] = SEGSEL_KERNEL_DS;
+    regs[GS_IDX] = SEGSEL_KERNEL_DS;
+
+    /* Create reaper tcb */
+    tcb_t *reaper_tcb = malloc(sizeof(tcb_t));
+    if (reaper_tcb == NULL) return -2;
+    int tid = sched->next_tid++;
+
+    /* Init new tcb */
+    if (tcb_init(reaper_tcb, tid, reaper_pcb, regs) < 0) {
+        free(reaper_tcb);
+        return -3;
+    }
+
+    /* Save reaper tcb */
+    sched->reaper_tcb = reaper_tcb;
+
+    /* Add the pcb to the pool */
+    if (tcb_pool_add_pcb(&(sched->thr_pool), reaper_pcb) < 0) return -4;
+    /* Add a runnable tcb to pool */
+    if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), reaper_tcb) < 0) return -3;
+
+
+    return 0;
+
+}
+
 /**
  * @brief Creates a tcb to run the specified pcb and adds
  * it to the scheduler's runnable pool
@@ -414,7 +467,8 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     tcb_t *tcb = malloc(sizeof(tcb_t));
     if (tcb == NULL) return -2;
     int tid = sched->next_tid++;
-    tcb_init(tcb, tid, pcb, regs);
+
+    if(tcb_init(tcb, tid, pcb, regs) < 0) return -5;
 
     /* Add the pcb to the pool */
     if (tcb_pool_add_pcb(&(sched->thr_pool), pcb) < 0) return -4;

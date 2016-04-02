@@ -20,6 +20,27 @@
 #define RUNNING 4
 #define SLEEPING 5
 
+#define REGS_SIZE 17
+
+#define SS_IDX 16
+#define ESP_IDX 15
+#define EFLAGS_IDX 14
+#define CS_IDX 13
+#define EIP_IDX 12
+// Skip EAX reg 11
+#define ECX_IDX 10
+#define EDX_IDX 9
+#define EBX_IDX 8
+// Skip ESP reg 7
+#define EBP_IDX 6
+#define ESI_IDX 5
+#define EDI_IDX 4
+#define DS_IDX 3
+#define ES_IDX 2
+#define FS_IDX 1
+#define GS_IDX 0
+
+
 typedef struct tcb{
 
     int tid;

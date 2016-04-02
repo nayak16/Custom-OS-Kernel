@@ -29,6 +29,7 @@ int thr_deschedule(uint32_t old_esp, int *reject) {
     if (scheduler_deschedule_current_safe(&sched) < 0) return -3;
 
     /* Yield to another thread */
+    if (my_tcb->tid == 191) MAGIC_BREAK;
     thr_yield(old_esp, -1);
 
     return 0;

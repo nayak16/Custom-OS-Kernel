@@ -35,24 +35,6 @@ typedef struct tcb{
 } tcb_t;
 */
 
-#define SS_IDX 16
-#define ESP_IDX 15
-#define EFLAGS_IDX 14
-#define CS_IDX 13
-#define EIP_IDX 12
-// Skip EAX reg 11
-#define ECX_IDX 10
-#define EDX_IDX 9
-#define EBX_IDX 8
-// Skip ESP reg 7
-#define EBP_IDX 6
-#define ESI_IDX 5
-#define EDI_IDX 4
-#define DS_IDX 3
-#define ES_IDX 2
-#define FS_IDX 1
-#define GS_IDX 0
-
 int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
 
     /* Set appropriate tid and pcb */
@@ -87,10 +69,10 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     k_stack_top[-12] = regs == NULL ? 0 : regs[ESI_IDX];  // esi
     k_stack_top[-13] = regs == NULL ? 0 : regs[EDI_IDX];  // edi
     /* --------- Extra Segment Selectors -------- */
-    k_stack_top[-14] = SEGSEL_USER_DS; // ds
-    k_stack_top[-15] = SEGSEL_USER_DS; // es
-    k_stack_top[-16] = SEGSEL_USER_DS; // fs
-    k_stack_top[-17] = SEGSEL_USER_DS; // gs
+    k_stack_top[-14] = regs == NULL ? SEGSEL_USER_DS : regs[DS_IDX];
+    k_stack_top[-15] = regs == NULL ? SEGSEL_USER_DS : regs[ES_IDX];
+    k_stack_top[-16] = regs == NULL ? SEGSEL_USER_DS : regs[FS_IDX];
+    k_stack_top[-17] = regs == NULL ? SEGSEL_USER_DS : regs[GS_IDX];
 
     tcb->orig_k_stack = (void *)(&(k_stack_top[-17]));
     tcb->tmp_k_stack = tcb->orig_k_stack;

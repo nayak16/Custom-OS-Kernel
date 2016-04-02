@@ -59,8 +59,10 @@ keyboard_t keyboard;
  */
 #include <thr_helpers.h>
 void reaper_main(){
+    int reject = 0;
     while(1){
         scheduler_reap(&sched);
+        thr_kern_deschedule(&reject);
     }
 }
 
@@ -100,6 +102,10 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     pcb_t *idle_pcb = malloc(sizeof(pcb_t));
     pcb_init(idle_pcb);
 
+    /* initialize reaper_pcb */
+    pcb_t *reaper_pcb = malloc(sizeof(pcb_t));
+    pcb_init(reaper_pcb);
+
     pcb_t *work_pcb = malloc(sizeof(pcb_t));
     pcb_init(work_pcb);
 
@@ -119,9 +125,12 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* add idle process to scheduler */
     scheduler_add_idle_process(&sched, idle_pcb);
 
+    /* add idle process to scheduler */
+    scheduler_add_reaper_proc(&sched, reaper_pcb, reaper_main);
+
     /* Load in actual work pcb */
     set_pdbr((uint32_t) pd_get_base_addr(&work_pcb->pd));
-    pcb_load_prog(work_pcb, "actual_wait", 0, NULL);
+    pcb_load_prog(work_pcb, "fork_exit_bomb", 0, NULL);
 
     /* Add work pcb into scheduler */
     scheduler_add_process(&sched, work_pcb, NULL);

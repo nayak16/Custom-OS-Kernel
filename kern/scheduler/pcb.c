@@ -61,7 +61,7 @@ int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb) {
 
     /* Copy address space */
     if(vmm_deep_copy(&(dest_pcb->pd)) < 0) {
-        return -3;
+        return -2;
     }
 
     return 0;

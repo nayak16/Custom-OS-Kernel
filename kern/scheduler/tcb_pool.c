@@ -90,8 +90,13 @@ int tcb_pool_remove_pcb(tcb_pool_t *tp, int pid, circ_buf_t *addrs_to_free) {
         return -2;
     }
 
-    /* Free the node containing the pcb */
-    free(node);
+    /* Check if node addr needs to be saved */
+    if (addrs_to_free != NULL) {
+        circ_buf_write(addrs_to_free, (void*) node);
+    } /* Otherwise free right now */
+    else {
+        free(node);
+    }
     return 0;
 }
 
@@ -196,13 +201,17 @@ int tcb_pool_wakeup(tcb_pool_t *tp, uint32_t curr_time){
 int tcb_pool_reap(tcb_pool_t *tp){
     if (tp == NULL) return -1;
     int num_zombies = ll_size(&(tp->zombie_pool));
+    if (num_zombies == 0) return -1;
+
     tcb_t *tcb;
-    pcb_t *pcb;
     circ_buf_t addrs_to_free;
     circ_buf_t zombie_tcbs;
-    if (circ_buf_init(&addrs_to_free, 64) < 0) return -2;
-    if (circ_buf_init(&zombie_tcbs, num_zombies) < 0) return -2;
 
+    // TODO: Document (~ 5 addrs to free per zombie)
+    if (circ_buf_init(&addrs_to_free, 5*(num_zombies+1)) < 0) return -2;
+    if (circ_buf_init(&zombie_tcbs, num_zombies+1) < 0) return -2;
+
+    /* Disable interrupts before modifying scheduler data structures */
     disable_interrupts();
     while (ll_size(&(tp->zombie_pool)) > 0){
 
@@ -213,15 +222,16 @@ int tcb_pool_reap(tcb_pool_t *tp){
         if (tcb_pool_remove_tcb(tp, tcb->tid, &addrs_to_free) < 0) {
             break;
         }
-        pcb = tcb->pcb;
+
         /* Remove if last thread in pcb */
         if (tcb->pcb->num_threads == 0) {
-            tcb_pool_remove_pcb(tp, pcb->pid, &addrs_to_free);
+            tcb_pool_remove_pcb(tp, tcb->pcb->pid, &addrs_to_free);
         }
         /* Add tcb to zombie tcbs circ buf */
         circ_buf_write(&zombie_tcbs, (void*) tcb);
 
     }
+    /* Enable interrupts before freeing and attempting to acquire heap lock */
     enable_interrupts();
 
     /* Cleanup all the zombies */
@@ -241,6 +251,10 @@ int tcb_pool_reap(tcb_pool_t *tp){
     while(circ_buf_read(&addrs_to_free, (void**) &addr) >= 0) {
         free(addr);
     }
+
+    /* Destroy circ bufs containing addresses to free */
+    circ_buf_destroy(&addrs_to_free);
+    circ_buf_destroy(&zombie_tcbs);
 
     return 0;
 }
