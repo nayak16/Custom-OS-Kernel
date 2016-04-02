@@ -19,8 +19,6 @@
 
 void page_fault_c_handler(void){
     lprintf("Segmentation Fault");
-    print_control_regs();
-    MAGIC_BREAK;
     thr_set_status(-1);
     thr_vanish();
 }

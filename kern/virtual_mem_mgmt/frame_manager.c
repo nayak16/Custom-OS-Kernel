@@ -77,11 +77,11 @@ int request_join(frame_manager_t *fm, frame_t *frame){
         /* destroy current frame and its buddy */
         ll_node_t *buddy_node, *curr_node;
         if (ht_remove(fm->parents, (key_t)(frame->addr | frame->i),
-                    (void *)&curr_node) < 0){
+                    (void *)&curr_node, NULL) < 0){
             panic("Could not remove frame from parents!");
         }
         if (ht_remove(fm->deallocated, (key_t)(frame->buddy->addr),
-                    (void *)&buddy_node)< 0){
+                    (void *)&buddy_node, NULL)< 0){
             panic("Could not remove buddy node from dealloc!");
         }
         ll_unlink_node(fm->frame_bins[frame->i], buddy_node);
@@ -96,7 +96,7 @@ int request_join(frame_manager_t *fm, frame_t *frame){
         ll_node_t *node;
         /* remove mapping in parents ht */
         if (ht_remove(fm->parents, (key_t)(frame->addr | frame->i),
-                    (void **)&node) < 0){
+                    (void **)&node, NULL) < 0){
             panic("Could not locate parent in parent ht");
         }
         /* add mapping to deallocated ht */
@@ -131,7 +131,7 @@ int request_split(frame_manager_t *fm, int i){
     ASSERT(parent_frame->status == FRAME_DEALLOC);
 
     /* deregister node from deallocated and register in parent */
-    ht_remove(fm->deallocated, parent_frame->addr, NULL);
+    ht_remove(fm->deallocated, parent_frame->addr, NULL, NULL);
     ht_put(fm->parents, (parent_frame->addr | parent_frame->i), parent_node);
     parent_frame->status = FRAME_PARENT;
 
@@ -220,7 +220,7 @@ int fm_alloc(frame_manager_t *fm, uint32_t num_pages, uint32_t *p_addr){
     ASSERT(frame->status == FRAME_DEALLOC);
 
     /* deregister node from deallocated and register in allocated */
-    ht_remove(fm->deallocated, frame->addr, NULL);
+    ht_remove(fm->deallocated, frame->addr, NULL, NULL);
     ht_put(fm->allocated, frame->addr, node);
     frame->status = FRAME_ALLOC;
 
@@ -237,7 +237,7 @@ int fm_dealloc(frame_manager_t *fm, uint32_t p_addr){
     ll_node_t *node;
     mutex_lock(&fm->m);
 
-    if (ht_remove(fm->allocated, (key_t)p_addr, (void **)&node) < 0){
+    if (ht_remove(fm->allocated, (key_t)p_addr, (void **)&node, NULL) < 0){
         lprintf("Could not locate address in allocated ht");
         mutex_unlock(&fm->m);
         return -2;
@@ -262,7 +262,8 @@ int fm_dealloc(frame_manager_t *fm, uint32_t p_addr){
         ll_node_t *buddy_node;
 
         /* remove buddy mapping in deallocated pool */
-        if (ht_remove(fm->deallocated, (key_t)buddy_frame->addr, (void **)&buddy_node) < 0){
+        if (ht_remove(fm->deallocated, (key_t)buddy_frame->addr,
+                        (void **)&buddy_node, NULL) < 0){
             panic("Could not remove buddy from dealloc ht");
         }
         /* remove from deallocated bin pool */

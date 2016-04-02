@@ -16,6 +16,8 @@ Make idle thread run runnable_pool is empty
 Get rid of restore_context and instead return esp in exec and yield
 Page directories should share same kernel page tables
 check for valid pointers in exec
+Make vanish signal init if parent already died
+Use reject pointer to control reaper main descheduling
 Implement thread_fork
 Implement swexn
 Look through all TODO comments

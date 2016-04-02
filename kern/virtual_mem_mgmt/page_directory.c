@@ -402,7 +402,7 @@ int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr){
     if (pd == NULL) return -1;
     pd_frame_metadata_t *metadata;
     if (ll_remove(pd->p_addr_list, &pd_frame_metadata_addr,
-            (void *)p_addr, (void **)&metadata) < 0)
+            (void *)p_addr, (void **)&metadata, NULL) < 0)
         return -2;
     pd->num_pages -= metadata->num_pages;
     free(metadata);

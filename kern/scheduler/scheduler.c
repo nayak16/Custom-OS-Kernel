@@ -84,25 +84,6 @@ int scheduler_get_tcb_by_tid(scheduler_t *sched,
 }
 
 /**
- * @brief Gets the tcb with the specified tid
- *
- * @param sched Scheduler to get next tcb from
- * @param target_tid tid to look for
- * @param tcbp Address to store pointer to tcb
- *
- * @return 0 on success, negative error code otherwise
- */
-int scheduler_get_pcb_by_pid(scheduler_t *sched,
-                             int target_pid, pcb_t **pcbp) {
-    if (sched == NULL || pcbp == NULL) return -1;
-
-    if (tcb_pool_find_pcb(&(sched->thr_pool), target_pid, pcbp) < 0) return -2;
-
-    return 0;
-}
-
-
-/**
  * @brief Removes current tcb from thr_pool and cleans up its resources
  * appropriately
  *
@@ -141,11 +122,11 @@ int scheduler_check_is_runnable(scheduler_t *sched, int target_tid) {
 
 }
 /**
- * @brief Gets the tcb with the specified tid
+ * @brief Gets the pcb with the specified pid
  *
- * @param sched Scheduler to get next tcb from
- * @param target_tid tid to look for
- * @param tcbp Address to store pointer to tcb
+ * @param sched Scheduler to pcb from
+ * @param target_pid pid to look for
+ * @param tcbp Address to store pointer to pcb
  *
  * @return 0 on success, negative error code otherwise
  */
