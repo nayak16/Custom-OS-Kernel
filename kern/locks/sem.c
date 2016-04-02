@@ -63,7 +63,6 @@ void sem_wait( sem_t *sem ) {
         /* only deschedules if awoken by sem_signal */
         while(!(metadata.reject)) {
             thr_kern_deschedule(&(metadata.reject));
-            MAGIC_BREAK;
         }
     } else {
         /* resource avaliable! */
