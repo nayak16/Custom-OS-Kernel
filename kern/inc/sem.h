@@ -20,6 +20,7 @@ typedef struct sem {
 
 /* semaphore functions */
 int sem_init( sem_t *sem, int count );
+int sem_get_value(sem_t *sem, int *sval);
 void sem_wait( sem_t *sem );
 void sem_signal( sem_t *sem );
 void sem_destroy( sem_t *sem );

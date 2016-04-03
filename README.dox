@@ -29,6 +29,27 @@ make_crash - Double Faults/Buddy Allocator panics
 
 Design Decision Rationales:
 
+Frame manager design - Our first naive implementation of a frame manager was to
+use a linked list of avaliable physical pages. This worked well for checkpoint
+1, however we figured later on that we needed a smarter, more efficient manager.
+What we ended up with was a buddy memory allocator. The buddy allocator allows
+us to keep track of a large number of pages by grouping physical pages into
+larger frames, each of which has 2^i pages. This saves a great deal of space if
+we choose an appropriate number of bins. In addition, allocating space is
+significantly easier: all we need to know is how many pages we will end up
+needing, and then calling fm_alloc once to get an appropriate sized frame. A
+call to fm_alloc goes along the line of finding the log_2 ceiling of the
+requestd number of pages, then going to that index in the frame manager's pool,
+and removing one frame from the pool, or, if the pool is empty, by recursively
+splitting larger blocks into smaller blocks until we can satisfy the request.
+Upon returning split blocks to the frame manager, they will coalesce into larger
+blocks using the "buddying" mechanism: each split frame has a "buddy" which
+together forms the parent block which overally decreases the amount of external
+fragmentation we have. The downside to this design is the obvious internal
+fragmentation resulting from allocating only in powers of two. However, all the
+other perks of this implementation - decrease in speed and space overhead -
+outweighs this inefficiency.
+
 New pages & remove pages - One interesting thing about remove pages is that
 it does not need to know how long the length of the allocated chunk of memory
 that data should be remembered from a call to new_pages. We do this by using 2
