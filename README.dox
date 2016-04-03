@@ -9,17 +9,18 @@ Same drill as last time.
 
 TODO LIST:
 implement rollbacks on resource failure
-think about readline
+<DONE> think about readline
 think about ZFOD and COW
 make all scheduler assigns atomic (xchng)
-Make idle thread run runnable_pool is empty
-Get rid of restore_context and instead return esp in exec and yield
+<DONE> Make idle thread run runnable_pool is empty
+<DONE> Get rid of restore_context and instead return esp in exec and yield
 Page directories should share same kernel page tables
 check for valid pointers in exec
-Make vanish signal init if parent already died
+<DONE> Make vanish signal init if parent already died
 Use reject pointer to control reaper main descheduling
 Implement thread_fork
 Implement swexn
+Implement readfile: test "ls"
 Look through all TODO comments
 
 BUG LIST FUCK:

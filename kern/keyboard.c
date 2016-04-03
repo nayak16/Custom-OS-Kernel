@@ -119,9 +119,16 @@ int keyboard_read(keyboard_t *k, int len, char *buf){
             mutex_unlock(&(k->m));
             return -2;
         }
-        if ((char)val == '\n') break;
+        if ((char)val == '\n'){
+            if (i == 0){
+                temp_buf[i] = (char)val;
+                i = 1;
+            }
+            break;
+        }
         temp_buf[i] = (char)val;
     }
+
     memcpy(buf, temp_buf, i*sizeof(char));
     mutex_unlock(&(k->m));
     return i;
