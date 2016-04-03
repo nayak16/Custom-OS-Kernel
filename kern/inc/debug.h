@@ -11,6 +11,16 @@
 #include <page_directory.h>
 #include <elf/elf_410.h>
 
+//#define DEBUG
+
+#ifdef DEBUG
+#define DEBUG_PRINT(...) do{ lprintf(__VA_ARGS__ ); } while( false )
+#else
+#define DEBUG_PRINT(...) do{ } while ( false )
+#endif
+
+
+
 void print_page_directory(page_directory_t *pd, int s, int l, int v);
 
 void print_control_regs(void);

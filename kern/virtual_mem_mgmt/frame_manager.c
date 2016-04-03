@@ -21,6 +21,7 @@
 /* uint32_t */
 #include <stdint.h>
 #include <simics.h>
+#include <debug.h>
 #include "contracts.h"
 #include <frame_manager.h>
 
@@ -68,7 +69,7 @@ int request_join(frame_manager_t *fm, frame_t *frame){
     ASSERT(frame->status == FRAME_PARENT);
 
     if (frame->buddy != NULL && frame->buddy->status == FRAME_DEALLOC){
-        lprintf("Coalesing again!");
+        DEBUG_PRINT("Coalesing again!");
         ASSERT(frame->parent == frame->buddy->parent && frame->parent != NULL);
         /* call recursive join on parent */
         if (request_join(fm, frame->parent) < 0){
@@ -114,7 +115,7 @@ int request_split(frame_manager_t *fm, int i){
     if (ll_size(fm->frame_bins[i]) < 0) panic("Invalid linked list!");
     if (ll_size(fm->frame_bins[i]) == 0){
         if (request_split(fm, i+1) < 0){
-            lprintf("No blocks of size %d found", TWO_POW(i));
+            DEBUG_PRINT("No blocks of size %d found", TWO_POW(i));
             return -2;
         }
     }
@@ -181,13 +182,13 @@ int fm_alloc(frame_manager_t *fm, uint32_t num_pages, uint32_t *p_addr){
     mutex_lock(&fm->m);
     uint32_t frame_size = TWO_POW(fm->num_bins-1);
     if (num_pages > frame_size){
-        lprintf("Requested %d pages, which exceeds maximum frame size of %d",
+        DEBUG_PRINT("Requested %d pages, which exceeds maximum frame size of %d",
                 (unsigned int)num_pages, (unsigned int)frame_size);
         mutex_unlock(&fm->m);
         return -1;
     }
     if (num_pages == 0){
-        lprintf("Number of pages requested is 0");
+        DEBUG_PRINT("Number of pages requested is 0");
         mutex_unlock(&fm->m);
         return -1;
     }
@@ -196,13 +197,13 @@ int fm_alloc(frame_manager_t *fm, uint32_t num_pages, uint32_t *p_addr){
         if (num_pages <= frame_size && num_pages > TWO_POW(j-1)) break;
     }
     frame_size = TWO_POW(j);
-    lprintf("Requested %d pages, finding frame of size %d",
+    DEBUG_PRINT("Requested %d pages, finding frame of size %d",
             (unsigned int)num_pages, (unsigned int)frame_size);
 
     if (ll_size(fm->frame_bins[j]) < 0) panic("Invalid linked list!");
     if (ll_size(fm->frame_bins[j]) == 0){
         if (request_split(fm, j+1) < 0){
-            lprintf("No blocks of size %d found", (unsigned int)frame_size);
+            DEBUG_PRINT("No blocks of size %d found", (unsigned int)frame_size);
             mutex_unlock(&fm->m);
             return -2;
         }
@@ -224,7 +225,7 @@ int fm_alloc(frame_manager_t *fm, uint32_t num_pages, uint32_t *p_addr){
     ht_put(fm->allocated, frame->addr, node);
     frame->status = FRAME_ALLOC;
 
-    lprintf("Allocated %p to %p", (void *)frame->addr, (void *)(frame->addr + (PAGE_SIZE * frame->num_pages)));
+    DEBUG_PRINT("Allocated %p to %p", (void *)frame->addr, (void *)(frame->addr + (PAGE_SIZE * frame->num_pages)));
 
     *p_addr = frame->addr;
 
@@ -238,14 +239,14 @@ int fm_dealloc(frame_manager_t *fm, uint32_t p_addr){
     mutex_lock(&fm->m);
 
     if (ht_remove(fm->allocated, (key_t)p_addr, (void **)&node, NULL) < 0){
-        lprintf("Could not locate address in allocated ht");
+        DEBUG_PRINT("Could not locate address in allocated ht");
         mutex_unlock(&fm->m);
         return -2;
     }
     frame_t *frame;
     ll_node_get_data(node, (void **)&frame);
     ASSERT(frame->status == FRAME_ALLOC);
-    lprintf("Deallocating %p to %p", (void *)frame->addr, (void *)(frame->addr + PAGE_SIZE*frame->num_pages));
+    DEBUG_PRINT("Deallocating %p to %p", (void *)frame->addr, (void *)(frame->addr + PAGE_SIZE*frame->num_pages));
     frame_t *buddy_frame = frame->buddy;
 
     ASSERT( (!buddy_frame) ||
@@ -255,7 +256,7 @@ int fm_dealloc(frame_manager_t *fm, uint32_t p_addr){
              && buddy_frame->buddy == frame));
 
     if (buddy_frame != NULL && buddy_frame->status == FRAME_DEALLOC){
-        lprintf(">> Coalescing %p with %p to %p", (void *)frame->addr, (void *)buddy_frame->addr,
+        DEBUG_PRINT(">> Coalescing %p with %p to %p", (void *)frame->addr, (void *)buddy_frame->addr,
                 (void *)frame->parent);
 
         frame_t *parent_frame = frame->parent;
@@ -298,7 +299,7 @@ int fm_init_user_space(frame_manager_t *fm, uint32_t num_frames){
     for (i = num_bins-1; i != -1; i--){
         uint32_t frame_size = TWO_POW(i);
         while(frames_remaining >= frame_size){
-            lprintf("Allocating a frame with %d pages; %d remaining",
+            DEBUG_PRINT("Allocating a frame with %d pages; %d remaining",
                     (unsigned int)frame_size,
                     (unsigned int)(frames_remaining - frame_size));
 
