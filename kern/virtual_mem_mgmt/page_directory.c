@@ -40,8 +40,14 @@
 #define NEW_PAGE 0
 #define NOT_NEW_PAGE 1
 
-/* Predeclaration */
+#define FALSE 0
+#define TRUE 1
 
+uint32_t kernel_pde[NUM_KERNEL_PDE];
+int is_kernel_initialized = FALSE;
+
+/* Predeclaration */
+int pd_init_kernel();
 int pd_init(page_directory_t *pd);
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t *pte);
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
@@ -69,12 +75,16 @@ int entry_permissions(uint32_t v, uint32_t *priv, uint32_t *access){
     return 0;
 }
 
-/** @brief Initializes the kernel mappings of a page directory
- *  @param pd The page directory
- *  @return 0 on success -1 on failure
- */
-int initialize_kernel(page_directory_t *pd){
-    if (pd == NULL) return -1;
+int pd_init_kernel(){
+    if (is_kernel_initialized){
+        panic("pd_init_kernel called twice!");
+    }
+
+    /* create a temporary page directory and assign its directory
+     * to the global variable kernel_pde */
+    page_directory_t pd_temp;
+    pd_temp.directory = kernel_pde;
+
     /* present, rw enabled, supervisor mode, dont flush */
     uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET);
     /* present, rw enabled, supervisor mode */
@@ -84,11 +94,25 @@ int initialize_kernel(page_directory_t *pd){
     /* Leave 0th page unmapped */
     for (i = 1; i < NUM_KERNEL_PTE; i++){
         uint32_t direct_addr = i << PAGE_SHIFT;
-        if (pd_create_mapping(pd, direct_addr, direct_addr,
+        if (pd_create_mapping(&pd_temp, direct_addr, direct_addr,
                     pte_flags, pde_flags) < 0){
             return -1;
         }
     }
+    is_kernel_initialized = 1;
+    return 0;
+}
+/** @brief Initializes the kernel mappings of a page directory
+ *  @param pd The page directory
+ *  @return 0 on success -1 on failure
+ */
+int initialize_kernel(page_directory_t *pd){
+    if (pd == NULL) return -1;
+    if (!is_kernel_initialized){
+        panic("Kernel pages have not been preallocated..\
+                Call pd_init_kernel()");
+    }
+    memcpy(pd->directory, kernel_pde, sizeof(uint32_t)*NUM_KERNEL_PDE);
     return 0;
 }
 
@@ -428,14 +452,14 @@ int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list){
 
 void pd_destroy(page_directory_t *pd) {
     int i;
-    for (i = 0 ; i < PD_NUM_ENTRIES ; i++) {
+    /* destroy all non-kernel page tables */
+    for (i = NUM_KERNEL_PDE ; i < PD_NUM_ENTRIES ; i++) {
         uint32_t entry = pd->directory[i];
         if (entry_present(entry) == ENTRY_PRESENT){
             /* Free each page table */
             uint32_t pt = REMOVE_FLAGS(entry);
             free((void*) pt);
         }
-
     }
     /* Free whole directory */
     free(pd->directory);

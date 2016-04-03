@@ -14,7 +14,7 @@ think about ZFOD and COW
 make all scheduler assigns atomic (xchng)
 <DONE> Make idle thread run runnable_pool is empty
 <DONE> Get rid of restore_context and instead return esp in exec and yield
-Page directories should share same kernel page tables
+<DONE> Page directories should share same kernel page tables
 check for valid pointers in exec
 <DONE> Make vanish signal init if parent already died
 Use reject pointer to control reaper main descheduling
