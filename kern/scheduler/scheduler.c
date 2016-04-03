@@ -43,6 +43,7 @@ int scheduler_init(scheduler_t *sched){
                                         + (uint32_t) PAGE_SIZE);
 
     sched->init_pcb = NULL;
+    sched->reaper_tcb = NULL;
 
     /* Init tcb pool */
     if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
@@ -324,8 +325,10 @@ int scheduler_make_current_zombie(scheduler_t *sched) {
     sched->cur_tcb->pcb->num_threads--;
     sched->cur_tcb = NULL;
 
-    /* Wake up reaper thread */
-    if (scheduler_make_runnable(sched, sched->reaper_tcb->tid) < 0) return -3;
+    /* Wake up reaper thread if there exists one */
+    if (sched->reaper_tcb != NULL &&
+            scheduler_make_runnable(sched, sched->reaper_tcb->tid) < 0)
+        return -3;
 
     return 0;
 }

@@ -18,14 +18,12 @@ DEF_TEST_NAME("exec_basic:");
 int main(int argc, char** argv)
 {
 
-    lprintf("argc: %d", argc);
-    int i;
-    for (i = 0 ; i < argc ; i++) {
-        lprintf("arg%d: %s, argv: %p", i+1, argv[i], &(argv[i]));
+    int tid = fork();
+    if (tid == 0) {
+        char *args[] = {"", "RECURSIVE", 0};
+        exec("actual_wait",args);
     }
-  char *args[] = {"test_exec1", "RECURSIVE", 0};
-    MAGIC_BREAK;
-  exec("test_exec1",args);
-
-  exit(-1);
+    int status;
+    wait(&status);
+    exit(0);
 }
