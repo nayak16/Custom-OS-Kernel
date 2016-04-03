@@ -97,6 +97,7 @@ int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
 
     /* Create struct to hold meta data */
     pcb_metadata_t *metadata = malloc(sizeof(pcb_metadata_t));
+    if (metadata == NULL) return -2;
     metadata->status = status;
     metadata->original_tid = original_tid;
 

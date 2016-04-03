@@ -21,6 +21,7 @@
 /* P3 Specific includes */
 #include <mutex.h>
 #include <kern_internals.h>
+#include <thr_helpers.h>
 
 /** @brief Initializes a mutex
  *  @param mp Pointer to mutex to be intialized
@@ -48,7 +49,7 @@ void mutex_destroy( mutex_t *mp ){
 void mutex_lock( mutex_t *mp ){
     /* Keep trying to until lock is free and key is accepted */
     while (!xchng(&mp->lock, 0)) {
-        /* TODO: Insert our own scheduler yield function */
+        thr_kern_yield(-1);
     }
     mp->lock = 0;
     return;

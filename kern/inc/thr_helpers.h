@@ -15,6 +15,7 @@
 int thr_deschedule(uint32_t old_esp, int *reject);
 int thr_kern_deschedule(int *reject);
 int thr_make_runnable(int tid);
+int thr_kern_yield(int tid);
 int thr_yield(uint32_t old_esp, int tid);
 int thr_gettid(void);
 int thr_sleep(uint32_t old_esp, int ticks);
