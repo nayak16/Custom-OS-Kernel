@@ -98,6 +98,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     keyboard_init(&keyboard, KEYBOARD_BUFFER_SIZE);
     /* init frame manager */
     fm_init(&fm, 15);
+    /* initialize pd kernel pages */
+    pd_init_kernel();
 
     /* initialize idle_pcb */
     pcb_t *idle_pcb = malloc(sizeof(pcb_t));

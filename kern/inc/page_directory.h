@@ -77,6 +77,7 @@ typedef struct page_directory {
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
+int pd_init_kernel(void);
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t *pte);
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr, uint32_t pte_flags, uint32_t pde_flags);
 int pd_get_permissions(page_directory_t *pd, uint32_t v_addr,

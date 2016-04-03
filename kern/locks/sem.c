@@ -114,3 +114,10 @@ void sem_destroy( sem_t *sem ) {
     mutex_destroy(&(sem->m));
 }
 
+int sem_get_value(sem_t *sem, int *sval){
+    if (sem == NULL || sval == NULL) return -1;
+    mutex_lock(&(sem->m));
+    *sval = sem->count;
+    mutex_unlock(&(sem->m));
+    return 0;
+}
