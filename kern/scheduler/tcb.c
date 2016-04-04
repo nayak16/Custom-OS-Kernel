@@ -134,10 +134,14 @@ int tcb_get_exit_status(tcb_t *tcb, int *status_ptr){
     return 0;
 }
 
-int tcb_deregister_swexn_handler(tcb_t *tcb){
+int tcb_deregister_swexn_handler(tcb_t *tcb, void **esp3,
+        void (**eip)(void *arg, ureg_t *ureg), void **arg){
     if (tcb == NULL) return -1;
+    if (esp3 != NULL) *esp3 = tcb->swexn_handler_esp;
     tcb->swexn_handler_esp = NULL;
+    if (arg != NULL) *arg = tcb->swexn_handler_arg;
     tcb->swexn_handler_arg = NULL;
+    if (eip != NULL) *eip = tcb->swexn_handler;
     tcb->swexn_handler = NULL;
     return 0;
 }

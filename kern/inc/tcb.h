@@ -38,10 +38,10 @@
 #define EBP_IDX 6
 #define ESI_IDX 5
 #define EDI_IDX 4
-#define DS_IDX 3
-#define ES_IDX 2
-#define FS_IDX 1
-#define GS_IDX 0
+#define GS_IDX 3
+#define FS_IDX 2
+#define ES_IDX 1
+#define DS_IDX 0
 
 
 typedef struct tcb{
@@ -62,7 +62,7 @@ typedef struct tcb{
     void (*swexn_handler)(void *arg, ureg_t *ureg);
     void *swexn_handler_arg;
     void *swexn_handler_esp;
-
+    ureg_t *swexn_ureg;
 } tcb_t;
 
 int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs);
@@ -77,7 +77,8 @@ int tcb_destroy(tcb_t *tcb);
 int tcb_gettid(tcb_t *tcb, int *tid);
 int tcb_get_exit_status(tcb_t *tcb, int *status);
 
-int tcb_deregister_swexn_handler(tcb_t *tcb);
+int tcb_deregister_swexn_handler(tcb_t *tcb, void **esp3,
+        void (**eip)(void *arg, ureg_t *ureg), void **arg);
 int tcb_register_swexn_handler(tcb_t *tcb, void *esp3,
         void (*eip)(void *arg, ureg_t *ureg), void *arg);
 

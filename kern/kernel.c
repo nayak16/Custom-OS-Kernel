@@ -140,7 +140,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* Add init pcb into scheduler */
     //scheduler_add_process(&sched, init_pcb, NULL);
-    MAGIC_BREAK;
     scheduler_start(&sched); // enable intterupts
 
     while (1) {

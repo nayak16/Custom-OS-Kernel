@@ -2,16 +2,16 @@
 
 .macro save_context
     pusha
-    push %ds
-    push %es
-    push %fs
     push %gs
+    push %fs
+    push %es
+    push %ds
 .endm
 .macro restore_context
-    pop %gs
-    pop %fs
-    pop %es
     pop %ds
+    pop %es
+    pop %fs
+    pop %gs
     popa
     addl $4, %esp /* skip error_code */
     iret

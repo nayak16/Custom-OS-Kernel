@@ -8,17 +8,17 @@
     pushl %ebp
     pushl %esi
     pushl %edi
-    push %ds
-    push %es
-    push %fs
     push %gs
+    push %fs
+    push %es
+    push %ds
 .endm
 
 .macro restore_context
-    pop %gs
-    pop %fs
-    pop %es
     pop %ds
+    pop %es
+    pop %fs
+    pop %gs
     popl %edi
     popl %esi
     popl %ebp
@@ -57,16 +57,6 @@
     restore_context
 .endm
 
-.macro four_arg_syscall_wrapper func
-    save_context
-    pushl 12(%esi) /* push 4th argument onto the stack */
-    pushl 8(%esi) /* push 3rd argument onto the stack */
-    pushl 4(%esi) /* push 2nd argument onto the stack */
-    pushl (%esi) /* push 1st argument onto the stack*/
-    call \func /* call c handler with 1 argument */
-    addl $16, %esp /* skip 4 arguments */
-    restore_context
-.endm
 
 
 .globl syscall_gettid_handler
@@ -173,12 +163,13 @@ syscall_wait_handler:
 .globl syscall_swexn_handler
 syscall_swexn_handler:
     save_context
+    pushl %esp
     pushl 12(%esi) /* push 4th argument onto the stack */
     pushl 8(%esi) /* push 3rd argument onto the stack */
     pushl 4(%esi) /* push 2nd argument onto the stack */
     pushl (%esi) /* push 1st argument onto the stack*/
     call syscall_swexn_c_handler /* call c handler with 1 argument */
-    addl $16, %esp /* skip 4 arguments */
+    addl $20, %esp /* skip 5 arguments */
     restore_context
 
 

@@ -23,17 +23,17 @@
     pushl %ebp
     pushl %esi
     pushl %edi
-    push %ds
-    push %es
-    push %fs
     push %gs
+    push %fs
+    push %es
+    push %ds
 .endm
 
 .macro restore_regs
-    pop %gs
-    pop %fs
-    pop %es
     pop %ds
+    pop %es
+    pop %fs
+    pop %gs
     popl %edi
     popl %esi
     popl %ebp
