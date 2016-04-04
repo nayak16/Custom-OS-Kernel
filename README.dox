@@ -18,6 +18,7 @@ make all scheduler assigns atomic (xchng)
 check for valid pointers in exec
 <DONE> Make vanish signal init if parent already died
 Use reject pointer to control reaper main descheduling
+Move all init/reaper init functions into scheduler_init (out of kernel)
 Implement thread_fork
 Implement swexn
 Implement readfile: test "ls"

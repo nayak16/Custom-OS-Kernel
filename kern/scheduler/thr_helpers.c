@@ -69,12 +69,14 @@ void thr_vanish(void) {
 
     /* from cur_pcb, get parent_pcb */
     if (scheduler_get_pcb_by_pid(&sched, pcb_get_ppid(cur_pcb), &parent_pcb) < 0){
-        lprintf("Could not retrieve parent pid, routing return status to init");
 
         pcb_t *init_pcb;
-        /* Get init pcb from scheduler */
+        /* Parent died so get init pcb from scheduler */
         if (scheduler_get_init_pcb(&sched, &init_pcb) >= 0) {
-            /* There exists an init pcb */
+            /* Let init know that it has an orphan grandchild */
+            pcb_add_child(init_pcb);
+
+            /* Now signal init to collect grandchild's status */
             pcb_signal_status(init_pcb, exit_status, original_tid);
         }
 
