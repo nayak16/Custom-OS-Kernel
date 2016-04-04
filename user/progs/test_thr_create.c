@@ -21,6 +21,8 @@
 void* foo(void* i) {
 
     lprintf("Hello from child! %d", gettid());
+    int tid = fork();
+    lprintf("Good I shouldn't be allowed to fork %d", tid);
     return 0;
 }
 
@@ -35,7 +37,8 @@ int main()
 
     int tid = thr_create(foo, (void*) i);
 
-    lprintf("Created child thread: %d, Now exiting!", tid);
+    lprintf("Created child thread: %d, Now sleeping!", tid);
+    sleep(200);
     return 0;
 
 }

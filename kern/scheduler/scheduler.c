@@ -322,7 +322,7 @@ int scheduler_make_current_zombie(scheduler_t *sched) {
     if (tcb_pool_make_zombie(&(sched->thr_pool), sched->cur_tcb->tid) < 0) {
         return -2;
     }
-    sched->cur_tcb->pcb->num_threads--;
+    /* Make current tcb NULL */
     sched->cur_tcb = NULL;
 
     /* Wake up reaper thread if there exists one */
