@@ -485,18 +485,50 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     /* Assign next pid */
     pcb->pid = sched->next_pid++;
 
-    /* Create a new tcb to run the pcb */
-    tcb_t *tcb = malloc(sizeof(tcb_t));
-    if (tcb == NULL) return -2;
+    /* Get next tid */
     int tid = sched->next_tid++;
 
-    if(tcb_init(tcb, tid, pcb, regs) < 0) return -5;
+    /* Add a new tcb to run the pcb*/
+    tcb_t *new_tcb = malloc(sizeof(tcb_t));
+    if (new_tcb == NULL) return -2;
+
+    /* Init new tcb */
+    if (tcb_init(new_tcb, tid, pcb, regs) < 0) return -3;
+
+    /* Set the original tid of the pcb */
+    pcb_set_original_tid(pcb, tid);
+    /* Inc num threads in pcb */
+    pcb_inc_threads(pcb);
 
     /* Add the pcb to the pool */
     if (tcb_pool_add_pcb(&(sched->thr_pool), pcb) < 0) return -4;
     /* Add a runnable tcb to pool */
-    if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), tcb) < 0) return -3;
+    if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), new_tcb) < 0) return -3;
 
+    /* Return tid of tcb added */
+    return tid;
+}
+
+int scheduler_add_new_thread(scheduler_t *sched, uint32_t *regs) {
+    if (sched == NULL) return -1;
+
+    /* Get next tid */
+    int tid = sched->next_tid++;
+
+    /* Add a new tcb to run the pcb*/
+    tcb_t *new_tcb = malloc(sizeof(tcb_t));
+    if (new_tcb == NULL) return -2;
+
+    /* Init new tcb */
+    if (tcb_init(new_tcb, tid, sched->cur_tcb->pcb, regs) < 0) return -3;
+
+    /* Inc num threads in pcb */
+    pcb_inc_threads(sched->cur_tcb->pcb);
+    disable_interrupts();
+    /* Add a runnable tcb to pool */
+    if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), new_tcb) < 0) return -3;
+    enable_interrupts();
+    /* Return tid of tcb added */
     return tid;
 }
 
@@ -617,12 +649,10 @@ int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
         /* Runnable Pool is empty, run the idle tcb */
         *tcbp = sched->idle_tcb;
 
-        return 0;
     } else if (ret < 0) {
         /* Some other error */
         return -2;
     }
-
     return 0;
 }
 

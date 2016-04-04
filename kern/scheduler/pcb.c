@@ -35,8 +35,8 @@ int pcb_init(pcb_t *pcb){
     pcb->ppid = -1;
     pcb->original_tid = -1;
     pcb->num_child_proc = 0;
-    // TODO: set this to 0 and find good place to increment count
-    pcb->num_threads = 1;
+    pcb->num_threads = 0;
+
     /* Initialize an empty queue; use semaphore to allocate resources
      * when they become avaliable */
     queue_init(&(pcb->status_queue));
@@ -130,9 +130,6 @@ int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_pid){
     if (status_ptr != NULL) *status_ptr = metadata->status;
     if (original_pid != NULL) *original_pid = metadata->original_tid;
 
-    /* Remove collected child from pcb */
-    pcb_remove_child(pcb);
-
     /* Free metadata struct */
     free(metadata);
     return 0;
@@ -161,17 +158,28 @@ int pcb_get_original_tid(pcb_t *pcb, int *tid){
     return 0;
 }
 
-int pcb_add_child(pcb_t *pcb) {
+int pcb_inc_children(pcb_t *pcb) {
     pcb->num_child_proc++;
     return 0;
 }
 
-int pcb_remove_child(pcb_t *pcb) {
+int pcb_dec_children(pcb_t *pcb) {
     pcb->num_child_proc--;
+    return 0;
+}
+
+int pcb_inc_threads(pcb_t *pcb) {
+    pcb->num_threads++;
+    return 0;
+}
+
+int pcb_dec_threads(pcb_t *pcb) {
+    pcb->num_threads--;
     return 0;
 }
 
 int pcb_get_child_count(pcb_t *pcb) {
     return pcb->num_child_proc;
 }
+
 

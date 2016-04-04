@@ -41,8 +41,12 @@ int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_tid);
 int pcb_signal_status(pcb_t *pcb, int status, int original_tid);
 int pcb_get_ppid(pcb_t *pcb);
 
-int pcb_add_child(pcb_t *pcb);
-int pcb_remove_child(pcb_t *pcb);
+int pcb_inc_children(pcb_t *pcb);
+int pcb_dec_children(pcb_t *pcb);
+
+int pcb_inc_threads(pcb_t *pcb);
+int pcb_dec_threads(pcb_t *pcb);
+
 int pcb_get_child_count(pcb_t *pcb);
 
 #endif /* _PCB_T_H_ */

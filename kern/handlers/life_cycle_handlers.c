@@ -53,10 +53,15 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
         return -6;
     }
 
-    /* Add child to current process */
-    pcb_add_child(cur_pcb);
+    /* Inc children count in current process */
+    pcb_inc_children(cur_pcb);
 
     return tid;
+}
+
+int syscall_thread_fork_c_handler(uint32_t *saved_regs) {
+
+    return scheduler_add_new_thread(&sched, saved_regs);
 }
 
 /**
@@ -163,6 +168,10 @@ int syscall_wait_c_handler(int *status_ptr){
     /* pcb has children, wait until they report their status */
     if (pcb_wait_on_status(cur_pcb, status_ptr, &original_pid) < 0)
         return -2;
+
+    /* Decrement pcb child count */
+    pcb_dec_children(cur_pcb);
+
     return original_pid;
 }
 

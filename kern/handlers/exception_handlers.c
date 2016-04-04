@@ -35,7 +35,8 @@ int swexn_execute(uint32_t cause, uint32_t *stack){
 
 void page_fault_c_handler(uint32_t *stack){
     lprintf("Segmentation Fault");
-
+    print_control_regs();
+    MAGIC_BREAK;
     if (swexn_execute(SWEXN_CAUSE_PAGEFAULT, stack) == 0){
         return;
     }
