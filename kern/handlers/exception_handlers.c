@@ -19,7 +19,7 @@
 
 void page_fault_c_handler(void){
     lprintf("Segmentation Fault");
-    thr_set_status(-1);
+    thr_set_status(-2);
     thr_vanish();
 }
 

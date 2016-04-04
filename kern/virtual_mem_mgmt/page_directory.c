@@ -452,6 +452,12 @@ int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list){
 
 void pd_destroy(page_directory_t *pd) {
     int i;
+    /* At this point we should have already deallocated addresses stored
+     * in p_addr_list so it should be safe to destroy */
+    if (ll_size(pd->p_addr_list) > 0){
+        panic("Destroying page directory before returning all frames!");
+    }
+    ll_destroy(pd->p_addr_list);
     /* destroy all non-kernel page tables */
     for (i = NUM_KERNEL_PDE ; i < PD_NUM_ENTRIES ; i++) {
         uint32_t entry = pd->directory[i];

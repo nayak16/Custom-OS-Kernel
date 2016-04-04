@@ -49,6 +49,7 @@ int pcb_destroy(pcb_t *pcb){
     if (pcb == NULL) return -1;
     sem_destroy(&(pcb->wait_sem));
     queue_destroy(&(pcb->status_queue));
+    vmm_clear_user_space(&(pcb->pd));
     pd_destroy(&(pcb->pd));
     return 0;
 }

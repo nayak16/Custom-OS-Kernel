@@ -22,6 +22,7 @@ Move all init/reaper init functions into scheduler_init (out of kernel)
 Implement thread_fork
 Implement swexn
 Implement readfile: test "ls"
+give back resources upon exception
 Look through all TODO comments
 Yield in mutex lock
 

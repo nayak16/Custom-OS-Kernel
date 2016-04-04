@@ -234,8 +234,8 @@ int vmm_clear_user_space(page_directory_t *pd){
         pd_get_mapping(pd, v_addr, &pte);
         /* remove mapping */
         pd_remove_mapping(pd, v_addr);
+        /* flush mapping in tlb */
+        flush_tlb((uint32_t)v_addr);
     }
-    /* flush mapping in tlb */
-    flush_tlb((uint32_t)v_addr);
     return 0;
 }
