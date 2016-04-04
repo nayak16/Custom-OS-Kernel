@@ -38,4 +38,5 @@ restore_context:
     pop %es
     pop %ds
     popa
+    addl $4, %esp /* skip error_code */
     iret

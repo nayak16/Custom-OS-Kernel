@@ -57,7 +57,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS = getpid_test1 ck1 loader_test1 knife remove_pages_test1 remove_pages_test2 exec_basic exec_basic_helper exec_nonexist readline_basic sleep_test1 fork_wait fork_wait_bomb fork_exit_bomb actual_wait mem_permissions make_crash make_crash_helper wait_getpid wild_test1 print_basic cho cho2 yield_desc_mkrun
+410TESTS = getpid_test1 ck1 loader_test1 knife remove_pages_test1 remove_pages_test2 exec_basic exec_basic_helper exec_nonexist readline_basic sleep_test1 fork_wait fork_wait_bomb fork_exit_bomb actual_wait mem_permissions make_crash make_crash_helper wait_getpid wild_test1 print_basic cho cho2 yield_desc_mkrun swexn_basic_test
 
 ###########################################################################
 # Test programs you have written which you wish to run

@@ -14,6 +14,7 @@
 
 
 .macro save_regs
+    subl $4, %esp /* Skip error code */
     pushl $0   /* Store 0 in eax, in case of success */
     pushl %ecx
     pushl %edx
@@ -40,6 +41,8 @@
     popl %ebx
     popl %edx
     popl %ecx
+    addl $4, %esp /* skip eax */
+    addl $4, %esp /* skip error code */
 .endm
 
 .globl thr_kern_deschedule

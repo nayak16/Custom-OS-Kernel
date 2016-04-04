@@ -59,23 +59,29 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     k_stack_top[-3] = regs == NULL ? get_user_eflags() : regs[EFLAGS_IDX];
     k_stack_top[-4] = regs == NULL ? SEGSEL_USER_CS : regs[CS_IDX];
     k_stack_top[-5] = regs == NULL ? pcb->entry_point : regs[EIP_IDX];
+    k_stack_top[-6] = 0;
     /* ---------- General Purpose Regs ---------- */
-    k_stack_top[-6] = 0;   // eax
-    k_stack_top[-7] = regs == NULL ? 0 : regs[ECX_IDX];   // ecx
-    k_stack_top[-8] = regs == NULL ? 0 : regs[EDX_IDX];   // edx
-    k_stack_top[-9] = regs == NULL ? 0 : regs[EBX_IDX];   // ebx
-    k_stack_top[-10] = 0;  // skip esp
-    k_stack_top[-11] = regs == NULL ? (uint32_t) pcb->stack_top : regs[EBP_IDX];  // ebp
-    k_stack_top[-12] = regs == NULL ? 0 : regs[ESI_IDX];  // esi
-    k_stack_top[-13] = regs == NULL ? 0 : regs[EDI_IDX];  // edi
+    k_stack_top[-7] = 0;   // eax
+    k_stack_top[-8] = regs == NULL ? 0 : regs[ECX_IDX];   // ecx
+    k_stack_top[-9] = regs == NULL ? 0 : regs[EDX_IDX];   // edx
+    k_stack_top[-10] = regs == NULL ? 0 : regs[EBX_IDX];   // ebx
+    k_stack_top[-11] = 0;  // skip esp
+    k_stack_top[-12] = regs == NULL ? (uint32_t) pcb->stack_top : regs[EBP_IDX];  // ebp
+    k_stack_top[-13] = regs == NULL ? 0 : regs[ESI_IDX];  // esi
+    k_stack_top[-14] = regs == NULL ? 0 : regs[EDI_IDX];  // edi
     /* --------- Extra Segment Selectors -------- */
-    k_stack_top[-14] = regs == NULL ? SEGSEL_USER_DS : regs[DS_IDX];
-    k_stack_top[-15] = regs == NULL ? SEGSEL_USER_DS : regs[ES_IDX];
-    k_stack_top[-16] = regs == NULL ? SEGSEL_USER_DS : regs[FS_IDX];
-    k_stack_top[-17] = regs == NULL ? SEGSEL_USER_DS : regs[GS_IDX];
+    k_stack_top[-15] = regs == NULL ? SEGSEL_USER_DS : regs[DS_IDX];
+    k_stack_top[-16] = regs == NULL ? SEGSEL_USER_DS : regs[ES_IDX];
+    k_stack_top[-17] = regs == NULL ? SEGSEL_USER_DS : regs[FS_IDX];
+    k_stack_top[-18] = regs == NULL ? SEGSEL_USER_DS : regs[GS_IDX];
 
-    tcb->orig_k_stack = (void *)(&(k_stack_top[-17]));
+    tcb->orig_k_stack = (void *)(&(k_stack_top[-18]));
     tcb->tmp_k_stack = tcb->orig_k_stack;
+
+    /* initialize swexn handler and arg to NULL */
+    tcb->swexn_handler = NULL;
+    tcb->swexn_handler_arg = NULL;
+    tcb->swexn_handler_esp = NULL;
     return 0;
 }
 
@@ -125,5 +131,22 @@ int tcb_t_wakeup_cmp(void *a, void *b){
 int tcb_get_exit_status(tcb_t *tcb, int *status_ptr){
     if (tcb == NULL) return -1;
     *status_ptr = tcb->exit_status;
+    return 0;
+}
+
+int tcb_deregister_swexn_handler(tcb_t *tcb){
+    if (tcb == NULL) return -1;
+    tcb->swexn_handler_esp = NULL;
+    tcb->swexn_handler_arg = NULL;
+    tcb->swexn_handler = NULL;
+    return 0;
+}
+
+int tcb_register_swexn_handler(tcb_t *tcb, void *esp3,
+    void (*eip)(void *arg, ureg_t *ureg), void *arg){
+    if (tcb == NULL) return -1;
+    tcb->swexn_handler_esp = esp3;
+    tcb->swexn_handler_arg = arg;
+    tcb->swexn_handler = eip;
     return 0;
 }

@@ -1,29 +1,28 @@
 /* TODO: share wrapper macro between this file and exception handler */
-.macro wrapper func
-    pushl %ecx
-    pushl %edx
-    pushl %ebx
-    pushl %ebp
-    pushl %esi
-    pushl %edi
-    pushl %ss
-    pushl %ds
-    pushl %es
-    pushl %fs
-    pushl %gs
-    call \func
-    popl %gs
-    popl %fs
-    popl %es
-    popl %ds
-    popl %ss
-    popl %edi
-    popl %esi
-    popl %ebp
-    popl %ebx
-    popl %edx
-    popl %ecx
+
+.macro save_context
+    pusha
+    push %ds
+    push %es
+    push %fs
+    push %gs
+.endm
+.macro restore_context
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    addl $4, %esp /* skip error_code */
     iret
+.endm
+
+.macro wrapper func
+    save_context
+    pushl %esp
+    call \func
+    addl $4, %esp
+    restore_context
 .endm
 
 .globl page_fault_handler

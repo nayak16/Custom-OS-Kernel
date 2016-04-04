@@ -12,6 +12,7 @@
 
 #include <pcb.h>
 
+#include <ureg.h>
 /* possible tcb statuses */
 #define UNINIT 0
 #define RUNNABLE 1
@@ -20,14 +21,16 @@
 #define RUNNING 4
 #define SLEEPING 5
 
-#define REGS_SIZE 17
+#define REGS_SIZE 18
 
-#define SS_IDX 16
-#define ESP_IDX 15
-#define EFLAGS_IDX 14
-#define CS_IDX 13
-#define EIP_IDX 12
-// Skip EAX reg 11
+#define SS_IDX 17
+#define ESP_IDX 16
+#define EFLAGS_IDX 15
+#define CS_IDX 14
+#define EIP_IDX 13
+#define ERRCODE_IDX 12
+
+#define EAX_IDX 11
 #define ECX_IDX 10
 #define EDX_IDX 9
 #define EBX_IDX 8
@@ -55,6 +58,11 @@ typedef struct tcb{
     uint32_t *orig_k_stack;
     uint32_t *tmp_k_stack;
 
+    /* for swexns */
+    void (*swexn_handler)(void *arg, ureg_t *ureg);
+    void *swexn_handler_arg;
+    void *swexn_handler_esp;
+
 } tcb_t;
 
 int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs);
@@ -68,5 +76,9 @@ int tcb_get_status(tcb_t *tcb, int *statusp);
 int tcb_destroy(tcb_t *tcb);
 int tcb_gettid(tcb_t *tcb, int *tid);
 int tcb_get_exit_status(tcb_t *tcb, int *status);
+
+int tcb_deregister_swexn_handler(tcb_t *tcb);
+int tcb_register_swexn_handler(tcb_t *tcb, void *esp3,
+        void (*eip)(void *arg, ureg_t *ureg), void *arg);
 
 #endif /* _TCB_H_ */

@@ -8,6 +8,8 @@
 #ifndef _IDT_HANDLERS_H_
 #define _IDT_HANDLERS_H_
 
+#include <ureg.h>
+
 /* Exception Handlers */
 
 void page_fault_handler(void);
@@ -24,6 +26,8 @@ int syscall_deschedule_handler(int *);
 int syscall_make_runnable_handler(int);
 int syscall_get_ticks_handler(void);
 int syscall_sleep_handler(int);
+
+int syscall_swexn_handler(void *, void (*)(void *, ureg_t *), void *, ureg_t *);
 
 /* Syscall life cycle handlers */
 

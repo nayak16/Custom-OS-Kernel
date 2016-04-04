@@ -37,6 +37,10 @@ void set_pdbr(uint32_t new_pdbr) {
     set_cr3(new_cr3);
 }
 
+void flush_all_tlb(void){
+    set_cr3(get_cr3());
+}
+
 uint32_t get_pdbr() {
     return get_cr3();
 }

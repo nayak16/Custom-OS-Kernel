@@ -17,8 +17,28 @@
 #include <x86/cr.h>
 #include <kern_internals.h>
 
-void page_fault_c_handler(void){
+#include <tcb.h>
+#include <ureg.h>
+
+int ureg_from_stack(ureg_t *ureg, uint32_t cause, uint32_t *stack){
+    return 0;
+}
+
+int swexn_execute(uint32_t cause, uint32_t *stack){
+    /* get the current context */
+    ureg_t ureg;
+    if (ureg_from_stack(&ureg, cause, stack) < 0) return -1;
+    return -1;
+    /* */
+
+}
+
+void page_fault_c_handler(uint32_t *stack){
     lprintf("Segmentation Fault");
+
+    if (swexn_execute(SWEXN_CAUSE_PAGEFAULT, stack) == 0){
+        return;
+    }
     thr_set_status(-2);
     thr_vanish();
 }

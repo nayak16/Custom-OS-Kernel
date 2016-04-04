@@ -11,6 +11,8 @@
 #include <thr_helpers.h>
 #include <dispatcher.h>
 
+#include <ureg.h>
+
 #include <simics.h>
 
 int syscall_gettid_c_handler(){
@@ -37,4 +39,36 @@ int syscall_sleep_c_handler(uint32_t old_esp, int ticks){
     if (ticks < 0) return -1;
     if (ticks == 0) return 0;
     return thr_sleep(old_esp, ticks);
+}
+
+int syscall_swexn_c_handler(void *esp3, void (*eip)(void *arg, ureg_t *ureg),
+        void *arg, ureg_t *newureg){
+
+    /* get current tcb */
+    tcb_t *cur_tcb;
+    if (scheduler_get_current_tcb(&sched, &cur_tcb) < 0) return -1;
+
+    /* handle newureg */
+    if (newureg != NULL){
+        // check if newureg has any values that would crash the kernel
+        // restore context with newureg
+        // if newureg not valid return negative integer code
+    }
+
+    /* check if we are either installing or uninstalling a handler */
+    if (esp3 == NULL || eip == NULL){
+        /* deregister any custom handlers if any */
+        if (tcb_deregister_swexn_handler(cur_tcb) < 0){
+            //undo newureg
+            return -2;
+        }
+    } else {
+        // check for invalid esp or eip values
+        if (tcb_register_swexn_handler(cur_tcb, esp3, eip, arg) < 0){
+            //undo newureg
+            return -3;
+        }
+    }
+
+    return 0;
 }

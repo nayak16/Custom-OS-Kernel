@@ -3,6 +3,7 @@
 .globl keyboard_handler
 keyboard_handler:
     // Save Registers
+    subl $4, %esp /* skip error code */
     pusha
     push %ds
     push %es
@@ -16,11 +17,13 @@ keyboard_handler:
     pop %es
     pop %ds
     popa
+    addl $4, %esp /* skip error code */
     iret
 
 .globl timer_handler
 timer_handler:
     // Save Register Context
+    subl $4, %esp /* skip error code */
     pusha
     push %ds
     push %es
