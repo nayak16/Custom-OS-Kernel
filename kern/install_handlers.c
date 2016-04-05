@@ -146,7 +146,7 @@ int install_syscall_handlers(){
     INSTALL_SYSCALL(syscall_get_cursor_pos_handler, GET_CURSOR_POS_INT);
 
     /* misc */
-    //INSTALL_SYSCALL(syscall_read_file_handler, READ_FILE_INT);
+    INSTALL_SYSCALL(syscall_readfile_handler, READFILE_INT);
     INSTALL_SYSCALL(syscall_halt_handler, HALT_INT);
 
     return 0;

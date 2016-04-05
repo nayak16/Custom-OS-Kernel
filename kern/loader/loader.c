@@ -59,6 +59,30 @@ int getbytes( const char *filename, int offset, int size, char *buf )
     return -1;
 }
 
+int get_all_files(char *buf, int buf_len) {
+    if (buf == NULL) return -1;
+    int i;
+    int count_bytes = 0;
+    for (i = 0; i < exec2obj_userapp_count; i++){
+        exec2obj_userapp_TOC_entry entry = exec2obj_userapp_TOC[i];
+        const char *filename = entry.execname;
+
+        int filename_len = strlen(filename);
+
+        /* Check if buffer has anymore room */
+        if (filename_len + count_bytes > buf_len) {
+            return -2;
+        }
+        /* Copy in filename */
+        memcpy(buf, filename, filename_len);
+
+        /* Increment count_bytes and filename_len */
+        buf += filename_len;
+        count_bytes += filename_len;
+    }
+    return count_bytes;
+}
+
 int load_elf_exists(const char *filename){
     simple_elf_t elf;
     return (elf_check_header(filename) == ELF_SUCCESS && elf_load_helper(&elf, filename) == ELF_SUCCESS);

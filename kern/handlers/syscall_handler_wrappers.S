@@ -176,8 +176,19 @@ syscall_swexn_handler:
     pushl 8(%esi) /* push 3rd argument onto the stack */
     pushl 4(%esi) /* push 2nd argument onto the stack */
     pushl (%esi) /* push 1st argument onto the stack*/
-    call syscall_swexn_c_handler /* call c handler with 1 argument */
+    call syscall_swexn_c_handler /* call c handler with 4 arguments */
     addl $20, %esp /* skip 5 arguments */
+    restore_context
+
+.globl syscall_readfile_handler
+syscall_readfile_handler:
+    save_context
+    pushl 12(%esi) /* push 4th argument onto the stack */
+    pushl 8(%esi) /* push 3rd argument onto the stack */
+    pushl 4(%esi) /* push 2nd argument onto the stack */
+    pushl (%esi) /* push 1st argument onto the stack*/
+    call syscall_readfile_c_handler /* call c handler with 4 arguments */
+    addl $16, %esp /* skip 4 arguments */
     restore_context
 
 
