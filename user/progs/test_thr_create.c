@@ -19,7 +19,7 @@
  *  @return 0
  */
 void* foo(void* i) {
-
+    MAGIC_BREAK;
     lprintf("Hello from child! %d", gettid());
     int tid = fork();
     lprintf("Good I shouldn't be allowed to fork %d", tid);
@@ -33,7 +33,8 @@ void* foo(void* i) {
 int main()
 {
     int i = 1;
-    thr_init(SIZE);
+    int ret = thr_init(SIZE);
+    lprintf("thr_init returned: %d", ret);
 
     int tid = thr_create(foo, (void*) i);
 

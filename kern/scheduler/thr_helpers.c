@@ -71,11 +71,15 @@ void thr_vanish(void) {
 
         pcb_t *init_pcb;
         /* Orphan child, so get init pcb from scheduler */
-        if (scheduler_get_init_pcb(&sched, &init_pcb) >= 0) {
-            /* Let init know that it has an orphan grandchild, so
-             * it can adpot it momentarily */
-            pcb_inc_children(init_pcb);
+        scheduler_get_init_pcb(&sched, &init_pcb);
+        /* Let init know that it has an orphan grandchild, so
+         * it can adopt it momentarily */
+        pcb_inc_children(init_pcb);
 
+        /* Decrement thread count */
+        pcb_dec_threads(cur_pcb);
+
+        if (cur_pcb->num_threads == 0) {
             /* Now signal init to collect grandchild's status */
             pcb_signal_status(init_pcb, exit_status, original_tid);
         }
@@ -84,8 +88,10 @@ void thr_vanish(void) {
         /* Decrement thread count */
         pcb_dec_threads(cur_pcb);
 
+        if (cur_pcb->num_threads == 0) {
         /* signal the status to parent_pcb */
-        pcb_signal_status(parent_pcb, exit_status, original_tid);
+            pcb_signal_status(parent_pcb, exit_status, original_tid);
+        }
 
     }
     lprintf("Thread %d exited with status: %d", cur_tcb->tid, exit_status);
