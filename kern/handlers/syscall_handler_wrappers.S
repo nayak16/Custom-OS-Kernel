@@ -71,6 +71,14 @@ syscall_fork_handler:
     addl $4, %esp /* skip argument */
     restore_context
 
+.globl syscall_thread_fork_handler
+syscall_thread_fork_handler:
+    save_context
+    pushl %esp /* push stack pointer argument*/
+    call syscall_thread_fork_c_handler /* call c handler with 1 argument */
+    addl $4, %esp /* skip argument */
+    restore_context
+
 .globl syscall_print_handler
 syscall_print_handler:
     two_arg_syscall_wrapper syscall_print_c_handler

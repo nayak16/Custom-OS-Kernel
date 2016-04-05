@@ -118,7 +118,7 @@ void idt_install_entry(uint32_t offset, uint16_t seg_sel, uint8_t p,
 int install_syscall_handlers(){
     /* Life cycle */
     INSTALL_SYSCALL(syscall_fork_handler, FORK_INT);
-    // INSTALL_SYSCALL(syscall_thread_fork_handler, THREAD_FORK_INT);
+    INSTALL_SYSCALL(syscall_thread_fork_handler, THREAD_FORK_INT);
     INSTALL_SYSCALL(syscall_exec_handler, EXEC_INT);
     INSTALL_SYSCALL(syscall_set_status_handler, SET_STATUS_INT);
     INSTALL_SYSCALL(syscall_vanish_handler, VANISH_INT);

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1996-1995 The University of Utah and
  * the Computer Systems Laboratory at the University of Utah (CSL).
  * All rights reserved.
@@ -24,25 +24,28 @@
 #include <stdlib.h>
 #include <simics.h>
 
-/*
- * This function is called by the assert() macro defined in assert.h;
- * it's also a nice simple general-purpose panic function.
+#include <syscall.h>
+
+/* @brief Wrapper function that is called on assertion fails
+ * @param fmt String format to be printed
+ * @param ... Arguments to string format
+ * @return Does not return
  */
 void panic(const char *fmt, ...)
 {
 	va_list vl;
+	char buf[80];
+
+	va_start(vl, fmt);
+	vsnprintf(buf, sizeof (buf), fmt, vl);
+	va_end(vl);
+	lprintf(buf);
 
 	va_start(vl, fmt);
 	vprintf(fmt, vl);
 	va_end(vl);
-
 	printf("\n");
-
-	volatile static int side_effect = 0;
-	while (1) {
-		// exact authorship uncertain, popularized by Heinlein
-		printf("When in danger or in doubt, run in circles, scream and shout.\n");
-		lprintf("When in danger or in doubt, run in circles, scream and shout.");
-		++side_effect;
-	}
+    /* just halt; something went terribly wrong and the kernel is very
+     * unlikely to recover, so we should just stop all processes. */
+    halt();
 }

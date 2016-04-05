@@ -29,7 +29,6 @@ int thr_deschedule(uint32_t old_esp, int *reject) {
     if (scheduler_deschedule_current_safe(&sched) < 0) return -3;
 
     /* Yield to another thread */
-    if (my_tcb->tid == 191) MAGIC_BREAK;
     thr_yield(old_esp, -1);
 
     return 0;
@@ -71,18 +70,23 @@ void thr_vanish(void) {
     if (scheduler_get_pcb_by_pid(&sched, pcb_get_ppid(cur_pcb), &parent_pcb) < 0){
 
         pcb_t *init_pcb;
-        /* Parent died so get init pcb from scheduler */
+        /* Orphan child, so get init pcb from scheduler */
         if (scheduler_get_init_pcb(&sched, &init_pcb) >= 0) {
-            /* Let init know that it has an orphan grandchild */
-            pcb_add_child(init_pcb);
+            /* Let init know that it has an orphan grandchild, so
+             * it can adpot it momentarily */
+            pcb_inc_children(init_pcb);
 
             /* Now signal init to collect grandchild's status */
             pcb_signal_status(init_pcb, exit_status, original_tid);
         }
 
     } else {
+        /* Decrement thread count */
+        pcb_dec_threads(cur_pcb);
+
         /* signal the status to parent_pcb */
         pcb_signal_status(parent_pcb, exit_status, original_tid);
+
     }
     lprintf("Thread %d exited with status: %d", cur_tcb->tid, exit_status);
     /* Make current tcb a zombie */

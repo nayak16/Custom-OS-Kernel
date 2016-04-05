@@ -37,26 +37,33 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
     if(scheduler_get_current_pcb(&sched, &cur_pcb) < 0) {
         return -2;
     }
+    /* If the current pcb has > 1 threads reject fork */
+    if (cur_pcb->num_threads > 1) return -3;
 
     /* Allocate space for a duplicate pcb */
     pcb_t *duplicate_pcb = malloc(sizeof(pcb_t));
-    if(duplicate_pcb == NULL) return -3;
-    if (pcb_init(duplicate_pcb) < 0) return -4;
+    if(duplicate_pcb == NULL) return -4;
+    if (pcb_init(duplicate_pcb) < 0) return -5;
 
     /* Create copy of current pcb with duplicate address space */
-    if (pcb_copy(duplicate_pcb, cur_pcb) < 0) return -5;
+    if (pcb_copy(duplicate_pcb, cur_pcb) < 0) return -6;
 
     int tid;
     /* Add duplicate to scheduler runnable queue */
     if((tid = scheduler_add_process_safe(&sched,
                 duplicate_pcb, saved_regs)) < 0) {
-        return -6;
+        return -7;
     }
 
-    /* Add child to current process */
-    pcb_add_child(cur_pcb);
+    /* Inc children count in current process */
+    pcb_inc_children(cur_pcb);
 
     return tid;
+}
+
+int syscall_thread_fork_c_handler(uint32_t *saved_regs) {
+
+    return scheduler_add_new_thread(&sched, saved_regs);
 }
 
 /**
@@ -72,11 +79,26 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
  */
 int syscall_exec_c_handler(char *execname, char **argvec) {
     if (execname == NULL || argvec == NULL) return -1;
-    lprintf("Exec called with %s", execname);
+
+    /* Check if elf filename exists */
     if (!load_elf_exists(execname)){
-        lprintf("Could not locate file with name %s", execname);
         return -2;
     }
+
+    /* Get current tcb */
+    tcb_t *cur_tcb;
+    if (scheduler_get_current_tcb(&sched, &cur_tcb) < 0) {
+        // TODO: Fatal Error
+        panic("Can't obtain current pcb");
+        return -4;
+    }
+    /* Get current pcb */
+    pcb_t *cur_pcb;
+    if (tcb_get_pcb(cur_tcb, &cur_pcb) < 0) return -5;
+
+    /* If the current pcb has > 1 threads reject exec */
+    if (cur_pcb->num_threads > 1) return -3;
+
     // TODO: Check validity and mapping of each string and arg
     /* Parse args and get argc*/
     char **argp = argvec;
@@ -103,20 +125,8 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
         memcpy(local_argv[i], argvec[i], len);
     }
 
-    /* Get current tcb */
-    tcb_t *cur_tcb;
-    if (scheduler_get_current_tcb(&sched, &cur_tcb) < 0) {
-        // TODO: Fatal Error
-        panic("Can't obtain current pcb");
-        MAGIC_BREAK;
-        return -3;
-    }
-    /* Get current pcb */
-    pcb_t *cur_pcb;
-    if (tcb_get_pcb(cur_tcb, &cur_pcb) < 0) return -3;
-
     /* Clear old pcb user space mappings */
-    if (vmm_clear_user_space(&(cur_pcb->pd)) < 0) return -4;
+    if (vmm_clear_user_space(&(cur_pcb->pd)) < 0) return -6;
 
     /* Load in new program */
     lprintf("Loading new program...");
@@ -163,6 +173,10 @@ int syscall_wait_c_handler(int *status_ptr){
     /* pcb has children, wait until they report their status */
     if (pcb_wait_on_status(cur_pcb, status_ptr, &original_pid) < 0)
         return -2;
+
+    /* Decrement pcb child count */
+    pcb_dec_children(cur_pcb);
+
     return original_pid;
 }
 

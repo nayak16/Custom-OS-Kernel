@@ -41,8 +41,6 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     tcb->tid = tid;
     tcb->pcb = pcb;
 
-    pcb_set_original_tid(pcb, tid);
-
     /* Set tcb to runnable */
     tcb->status = RUNNABLE;
 

@@ -16,9 +16,9 @@
 
 #define USER_STACK_TOP 0xfffffff0
 
-#define USER_STACK_BOTTOM 0xffffe000
+#define USER_STACK_BOTTOM 0xfffebff0
 
-#define USER_STACK_SIZE (PAGE_SIZE*2)
+#define USER_STACK_SIZE (PAGE_SIZE*20)
 
 /* --- Prototypes --- */
 
