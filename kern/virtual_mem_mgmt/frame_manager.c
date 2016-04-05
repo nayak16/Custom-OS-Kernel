@@ -71,10 +71,9 @@ int request_join(frame_manager_t *fm, frame_t *frame){
     if (frame->buddy != NULL && frame->buddy->status == FRAME_DEALLOC){
         DEBUG_PRINT("Coalesing again!");
         ASSERT(frame->parent == frame->buddy->parent && frame->parent != NULL);
-        /* call recursive join on parent */
-        if (request_join(fm, frame->parent) < 0){
-            panic("Invalid parent pointer!");
-        }
+
+        frame_t *parent_frame = frame->parent;
+
         /* destroy current frame and its buddy */
         ll_node_t *buddy_node, *curr_node;
         if (ht_remove(fm->parents, (key_t)(frame->addr | frame->i),
@@ -90,6 +89,12 @@ int request_join(frame_manager_t *fm, frame_t *frame){
         free(frame);
         free(buddy_node);
         free(curr_node);
+
+        /* call recursive join on parent */
+        if (request_join(fm, parent_frame) < 0){
+            panic("Invalid parent pointer!");
+        }
+
     } else {
         /* base case when there is no buddy and no parent to further attempt to
          * join or when the buddy is currently unavaliable to join on */
