@@ -101,7 +101,7 @@ int request_join(frame_manager_t *fm, frame_t *frame){
             panic("Could not locate parent in parent ht");
         }
         /* add mapping to deallocated ht */
-        if (ht_put(fm->deallocated, frame->addr, (void **)&node) < 0){
+        if (ht_put(fm->deallocated, frame->addr, node) < 0){
             panic("Could not register parent to deallocated");
         }
         frame->status = FRAME_DEALLOC;
