@@ -11,6 +11,7 @@
 
 #include <page_directory.h>
 #include <constants.h>
+#include <tcb.h>
 
 #include <simics.h>
 
@@ -21,6 +22,27 @@ void print_control_regs(void) {
     lprintf("cr3 0x%x", (unsigned int) get_cr3());
     lprintf("cr4 0x%x", (unsigned int) get_cr4());
 
+}
+
+void print_context(unsigned int *stack) {
+    lprintf("Stack: %p", stack);
+    lprintf("------- Context --------");
+    lprintf("ss: 0x%x", stack[SS_IDX]);
+    lprintf("esp: 0x%x", stack[ESP_IDX]);
+    lprintf("eflags: 0x%x", stack[EFLAGS_IDX]);
+    lprintf("cs: 0x%x", stack[CS_IDX]);
+    lprintf("eip: 0x%x", stack[EIP_IDX]);
+    lprintf("ecx: 0x%x", stack[ECX_IDX]);
+    lprintf("edx: 0x%x", stack[EDX_IDX]);
+    lprintf("ebx: 0x%x", stack[EBX_IDX]);
+    lprintf("ebp: 0x%x", stack[EBP_IDX]);
+    lprintf("esi: 0x%x", stack[ESI_IDX]);
+    lprintf("edi: 0x%x", stack[EDI_IDX]);
+    lprintf("ds: 0x%x", stack[DS_IDX]);
+    lprintf("es: 0x%x", stack[ES_IDX]);
+    lprintf("fs: 0x%x", stack[FS_IDX]);
+    lprintf("gs: 0x%x", stack[GS_IDX]);
+    lprintf("------ End Context -------");
 }
 
 void print_page_directory(page_directory_t *pd, int start, int len, int verbose){

@@ -22,7 +22,7 @@
 
 
 void print_page_directory(page_directory_t *pd, int s, int l, int v);
-
+void print_context(unsigned int *stack);
 void print_control_regs(void);
 void translate_addr(page_directory_t *pd, uint32_t addr);
 void print_elf(simple_elf_t *elf);
