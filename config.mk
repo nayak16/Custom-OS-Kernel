@@ -81,7 +81,7 @@ STUDENTTESTS = test_deschedule test_readline test_sleep test_thr_create test_cyc
 # A list of the data files you want built in from the user/files
 # directory.
 #
-STUDENTFILES = dog.txt shrek.txt
+STUDENTFILES = dog.txt shrek.txt donkey.txt
 
 ###########################################################################
 # Object files for your thread library
