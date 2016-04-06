@@ -220,21 +220,19 @@ int vmm_remove_user_page(page_directory_t *pd, uint32_t base){
 }
 
 int vmm_clear_user_space(page_directory_t *pd){
-    uint32_t v_addr, pte, i;
-    /* deallocate all frames from page directory; use the resulting list
-     * to update the frame manager */
+    uint32_t i;
+
     int num_frames = pd_num_frames(pd);
     uint32_t frames[num_frames];
+
     pd_dealloc_all_frames(pd, frames);
     for (i = 0; i < num_frames; i++){
         fm_dealloc(&fm, frames[i]);
     }
-    /* go until we overflow */
-    for (v_addr = USER_MEM_START; v_addr != 0; v_addr+=PAGE_SIZE){
-        pd_get_mapping(pd, v_addr, &pte);
-        /* remove mapping */
-        pd_remove_mapping(pd, v_addr);
-    }
+
+    /* deallocate all frames from page directory; use the resulting list
+     * to update the frame manager */
+    if (pd_clear_user_space(pd) < 0) return -2;
     /* flush all mapping in tlb */
     flush_all_tlb();
 

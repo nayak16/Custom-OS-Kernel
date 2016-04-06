@@ -38,9 +38,9 @@ int scheduler_init(scheduler_t *sched){
     sched->cur_tcb = NULL;
 
     /* Malloc a cleanup_stack */
-    sched->reaper_stack_bot = malloc(sizeof(void) * (PAGE_SIZE));
+    sched->reaper_stack_bot = malloc(4*PAGE_SIZE);
     sched->reaper_stack_top = (void*)((uint32_t)sched->reaper_stack_bot
-                                        + (uint32_t) PAGE_SIZE);
+                                        + (uint32_t) 4*PAGE_SIZE);
 
     sched->init_pcb = NULL;
     sched->reaper_tcb = NULL;

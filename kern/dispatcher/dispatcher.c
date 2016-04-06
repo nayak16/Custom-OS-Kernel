@@ -81,7 +81,6 @@ uint32_t context_switch(uint32_t old_esp, int target_tid) {
         // TODO: PANIC
         MAGIC_BREAK;
     }
-
     return new_esp;
 
 }

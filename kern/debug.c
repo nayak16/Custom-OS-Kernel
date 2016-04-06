@@ -25,6 +25,7 @@ void print_control_regs(void) {
 }
 
 void print_context(unsigned int *stack) {
+    print_control_regs();
     lprintf("Stack: %p", stack);
     lprintf("------- Context --------");
     lprintf("ss: 0x%x", stack[SS_IDX]);

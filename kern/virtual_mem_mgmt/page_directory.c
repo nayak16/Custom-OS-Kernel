@@ -450,6 +450,20 @@ int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list){
     return 0;
 }
 
+int pd_clear_user_space(page_directory_t *pd){
+    int i;
+    for (i = NUM_KERNEL_PDE; i < PD_NUM_ENTRIES; i++) {
+        uint32_t entry = pd->directory[i];
+        if (entry_present(entry) == ENTRY_PRESENT){
+            pd->directory[i] = 0;
+            /* Free each page table */
+            uint32_t pt = REMOVE_FLAGS(entry);
+            free((void*) pt);
+        }
+    }
+    return 0;
+}
+
 void pd_destroy(page_directory_t *pd) {
     int i;
     /* At this point we should have already deallocated addresses stored

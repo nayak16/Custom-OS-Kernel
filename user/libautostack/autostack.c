@@ -51,6 +51,7 @@ void *exception_stack;
  */
 void page_fault_handler(void* args, ureg_t *ureg) {
     if (ureg->cause == SWEXN_CAUSE_PAGEFAULT && (void *)ureg->cr2 != NULL) {
+        lprintf("Autostack grown encountered!");
         /* ensure that args.stack_high is never lower than args.stack_low */
         ASSERT((uint32_t)STACK_TOP >= (uint32_t)STACK_BOTTOM);
 
@@ -90,7 +91,7 @@ void install_autostack(void *stack_high, void *stack_low) {
     STACK_TOP = stack_high;
     STACK_BOTTOM = stack_low;
     /* allocate a exception stack in the heap */
-    exception_stack = _malloc(sizeof(void*) * PAGE_SIZE);
+    exception_stack = _malloc(PAGE_SIZE);
     /* install custom exception handler */
     if (swexn(exception_stack, page_fault_handler, NULL, NULL) < 0)
         panic("Couldn't register autostack handler");
