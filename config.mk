@@ -57,7 +57,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS = getpid_test1 ck1 loader_test1 knife remove_pages_test1 remove_pages_test2 exec_basic exec_basic_helper exec_nonexist readline_basic sleep_test1 fork_wait fork_wait_bomb fork_exit_bomb actual_wait mem_permissions make_crash make_crash_helper wait_getpid wild_test1 print_basic cho cho2 yield_desc_mkrun swexn_basic_test swexn_cookie_monster swexn_dispatch swexn_regs stack_test1 swexn_uninstall_test swexn_stands_for_swextensible
+410TESTS = getpid_test1 ck1 loader_test1 knife new_pages remove_pages_test1 remove_pages_test2 exec_basic exec_basic_helper exec_nonexist readline_basic sleep_test1 fork_wait fork_wait_bomb fork_exit_bomb actual_wait mem_permissions make_crash make_crash_helper wait_getpid wild_test1 print_basic cho cho2 yield_desc_mkrun swexn_basic_test swexn_cookie_monster swexn_dispatch swexn_regs stack_test1 swexn_uninstall_test swexn_stands_for_swextensible cat
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -65,7 +65,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = test_yield test_fork1 test_cs test_foo test_new_pages test_mem_mgmt test_exec1 test_deschedule test_readline test_sleep test_thr_create test_cyclone test_agility_drill test_paraguay test_startle
+STUDENTTESTS = test_deschedule test_readline test_sleep test_thr_create test_cyclone test_agility_drill test_paraguay test_startle
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk
@@ -81,7 +81,7 @@ STUDENTTESTS = test_yield test_fork1 test_cs test_foo test_new_pages test_mem_mg
 # A list of the data files you want built in from the user/files
 # directory.
 #
-STUDENTFILES =
+STUDENTFILES = cattest.txt shrek.txt
 
 ###########################################################################
 # Object files for your thread library

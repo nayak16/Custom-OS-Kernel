@@ -45,15 +45,13 @@ int getbytes( const char *filename, int offset, int size, char *buf )
     int i;
     for (i = 0; i < exec2obj_userapp_count; i++){
         exec2obj_userapp_TOC_entry entry = exec2obj_userapp_TOC[i];
-
         if (strcmp(entry.execname, filename) == 0){
-            int execlen = entry.execlen;
-            /* check if we have enough bytes  */
-            if (size + offset > execlen){
-                return -2;
-            }
-            memcpy(buf, entry.execbytes+offset, size);
-            return size;
+
+            /* Copy all size bytes if possible, otherwise copy from offset to end */
+            int num_bytes = size + offset > entry.execlen ? entry.execlen - offset : size;
+
+            memcpy(buf, entry.execbytes+offset, num_bytes);
+            return num_bytes;
         }
     }
     return -1;
@@ -68,7 +66,7 @@ int get_all_files(char *buf, int buf_len) {
         const char *filename = entry.execname;
 
         int filename_len = strlen(filename);
-
+        lprintf("Filename: %s with len %d. count_bytes = %d", filename, filename_len, count_bytes);
         /* Check if buffer has anymore room */
         if (filename_len + count_bytes > buf_len) {
             return -2;
