@@ -28,6 +28,7 @@ typedef struct pcb{
     uint32_t num_child_proc;
     sem_t wait_sem;
     queue_t status_queue;
+    mutex_t m;
 } pcb_t;
 
 int pcb_init(pcb_t *pcb);

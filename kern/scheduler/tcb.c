@@ -45,10 +45,10 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     tcb->status = RUNNABLE;
 
     /* Init a k_stack which will also be used for scheduling */
-    tcb->k_stack_bot = malloc(4*PAGE_SIZE);
+    tcb->k_stack_bot = malloc(8*PAGE_SIZE);
     if (tcb->k_stack_bot == NULL) return -1;
 
-    uint32_t* k_stack_top = (uint32_t*)(((uint32_t) tcb->k_stack_bot) + 4*PAGE_SIZE);
+    uint32_t* k_stack_top = (uint32_t*)(((uint32_t) tcb->k_stack_bot) + 8*PAGE_SIZE);
 
     /* Push meta data to stack */
     /* ------------- IRET section --------------- */
