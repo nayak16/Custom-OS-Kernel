@@ -35,6 +35,8 @@
 #include <simics.h>
 #include "contracts.h"
 
+#define STACK_GROWTH_THRESHOLD (PAGE_SIZE * 32)
+
 /** @brief External address to the top of the user space stack */
 extern void *STACK_TOP;
 /** @brief External address to the bottom of the user space stack */
@@ -51,19 +53,27 @@ void *exception_stack;
  */
 void page_fault_handler(void* args, ureg_t *ureg) {
     if (ureg->cause == SWEXN_CAUSE_PAGEFAULT && (void *)ureg->cr2 != NULL) {
-        lprintf("Autostack grown encountered!");
+
         /* ensure that args.stack_high is never lower than args.stack_low */
         ASSERT((uint32_t)STACK_TOP >= (uint32_t)STACK_BOTTOM);
 
-        int curr_stack_size =
-            ((uint32_t)STACK_TOP - (uint32_t)STACK_BOTTOM);
-        uint32_t aligned_stack_size =
-            (uint32_t)((((curr_stack_size-1) / PAGE_SIZE) + 1) * PAGE_SIZE);
-        void *new_stack_low =
-            (void *)((uint32_t)STACK_BOTTOM - aligned_stack_size);
+        /* Check to see if we can resolve address access by extending stack
+         * by one page */
+        if ((uint32_t)STACK_BOTTOM - STACK_GROWTH_THRESHOLD >= ureg->cr2
+                || ureg->cr2 < 0x1000000){
+            /* probably not a stack address, then */
+            swexn(NULL,NULL, args, ureg);
+        }
 
-        if (new_pages(new_stack_low, aligned_stack_size) < 0)
-            panic("Could not extend stack!");
+        lprintf("Autostack grown encountered!");
+
+        void *new_stack_low =
+            (void *)((uint32_t)STACK_BOTTOM - PAGE_SIZE);
+
+        /* if unable to allocate more pages restore context without
+         * reregistering */
+        if (new_pages(new_stack_low, PAGE_SIZE) < 0)
+            swexn(NULL,NULL, args, ureg);
 
         STACK_BOTTOM = new_stack_low;
 
@@ -71,7 +81,6 @@ void page_fault_handler(void* args, ureg_t *ureg) {
          * after registering handler, restore context */
         if (swexn((void*) exception_stack, page_fault_handler,
                   (void*) args, ureg) < 0){
-            MAGIC_BREAK;
             panic("Couldn't register autostack handler after page fault");
         }
         /* SHOULD NEVER GET HERE */
