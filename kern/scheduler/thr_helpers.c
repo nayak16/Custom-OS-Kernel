@@ -65,7 +65,6 @@ void thr_vanish(void) {
     /* Get the original tid of the original thread of current pcb */
     pcb_get_original_tid(cur_pcb, &original_tid);
 
-
     /* from cur_pcb, get parent_pcb */
     if (scheduler_get_pcb_by_pid(&sched, pcb_get_ppid(cur_pcb), &parent_pcb) < 0){
 
@@ -85,14 +84,17 @@ void thr_vanish(void) {
         }
 
     } else {
+        /* Ensure parent_pcb isn't destroyed while signaling */
+        mutex_lock(&(parent_pcb->m));
+
         /* Decrement thread count */
         pcb_dec_threads(cur_pcb);
 
         if (cur_pcb->num_threads == 0) {
-        /* signal the status to parent_pcb */
+            /* signal the status to parent_pcb */
             pcb_signal_status(parent_pcb, exit_status, original_tid);
         }
-
+        mutex_unlock(&(parent_pcb->m));
     }
     /* Make current tcb a zombie */
     scheduler_make_current_zombie_safe(&sched);

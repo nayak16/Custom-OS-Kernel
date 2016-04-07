@@ -238,7 +238,7 @@ int tcb_pool_reap(tcb_pool_t *tp){
     while(circ_buf_read(&zombie_tcbs, (void**) &tcb) >= 0) {
         /* Check if pcb has no more threads running */
         if (tcb->pcb->num_threads == 0) {
-            pcb_destroy(tcb->pcb);
+            pcb_destroy_safe(tcb->pcb);
             free(tcb->pcb);
         }
         /* Destroy tcb itself */

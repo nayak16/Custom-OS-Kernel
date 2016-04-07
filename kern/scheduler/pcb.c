@@ -46,7 +46,7 @@ int pcb_init(pcb_t *pcb){
     return 0;
 }
 
-int pcb_destroy(pcb_t *pcb){
+int pcb_destroy_safe(pcb_t *pcb){
     if (pcb == NULL) return -1;
 
     mutex_lock(&(pcb->m));
@@ -101,7 +101,6 @@ typedef struct pcb_metadata{
 
 int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
     if (pcb == NULL) return -1;
-    mutex_lock(&(pcb->m));
     /* Create struct to hold meta data */
     pcb_metadata_t *metadata = malloc(sizeof(pcb_metadata_t));
     if (metadata == NULL) {
@@ -120,7 +119,6 @@ int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
 
     /* Signal that a status is available */
     sem_signal(&(pcb->wait_sem));
-    mutex_unlock(&(pcb->m));
     return 0;
 }
 

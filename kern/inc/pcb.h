@@ -35,7 +35,7 @@ int pcb_init(pcb_t *pcb);
 int pcb_set_running(pcb_t *pcb);
 int pcb_set_original_tid(pcb_t *pcb, int tid);
 int pcb_get_original_tid(pcb_t *pcb, int *tid);
-int pcb_destroy(pcb_t *pcb);
+int pcb_destroy_safe(pcb_t *pcb);
 int pcb_load_prog(pcb_t *pcb, const char *filename, int argc, char** argv);
 int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb);
 int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_tid);
