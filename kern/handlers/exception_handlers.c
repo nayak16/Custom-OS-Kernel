@@ -67,7 +67,6 @@ int swexn_execute(uint32_t cause, uint32_t *stack){
 }
 
 void page_fault_c_handler(uint32_t *stack){
-    print_context((unsigned int*)stack);
     /* attempt to execute swexn */
     if (swexn_execute(SWEXN_CAUSE_PAGEFAULT, stack) == 0)
         return;
@@ -77,7 +76,6 @@ void page_fault_c_handler(uint32_t *stack){
 }
 
 void double_fault_c_handler(void){
-    print_control_regs();
     lprintf("Double fault occured!");
     MAGIC_BREAK;
 }
