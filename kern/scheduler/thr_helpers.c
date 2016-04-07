@@ -94,7 +94,6 @@ void thr_vanish(void) {
         }
 
     }
-    lprintf("Thread %d exited with status: %d", cur_tcb->tid, exit_status);
     /* Make current tcb a zombie */
     scheduler_make_current_zombie_safe(&sched);
 

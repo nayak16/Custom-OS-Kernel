@@ -458,6 +458,7 @@ int pd_clear_user_space(page_directory_t *pd){
             pd->directory[i] = 0;
             /* Free each page table */
             uint32_t pt = REMOVE_FLAGS(entry);
+            if (pt == 0) MAGIC_BREAK;
             free((void*) pt);
         }
     }
