@@ -175,6 +175,7 @@ int syscall_wait_c_handler(int *status_ptr){
         return -2;
 
     /* Decrement pcb child count */
+
     pcb_dec_children(cur_pcb);
 
     return original_pid;

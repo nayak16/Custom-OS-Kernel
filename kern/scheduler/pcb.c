@@ -172,26 +172,39 @@ int pcb_get_original_tid(pcb_t *pcb, int *tid){
 }
 
 int pcb_inc_children(pcb_t *pcb) {
+    if (pcb == NULL) return -1;
+    mutex_lock(&(pcb->m));
     pcb->num_child_proc++;
+    mutex_unlock(&(pcb->m));
     return 0;
 }
 
 int pcb_dec_children(pcb_t *pcb) {
+    if (pcb == NULL) return -1;
+    mutex_lock(&(pcb->m));
     pcb->num_child_proc--;
+    mutex_unlock(&(pcb->m));
     return 0;
 }
 
 int pcb_inc_threads(pcb_t *pcb) {
+    if (pcb == NULL) return -1;
+    mutex_lock(&(pcb->m));
     pcb->num_threads++;
+    mutex_unlock(&(pcb->m));
     return 0;
 }
 
 int pcb_dec_threads(pcb_t *pcb) {
+    if (pcb == NULL) return -1;
+    mutex_lock(&(pcb->m));
     pcb->num_threads--;
+    mutex_unlock(&(pcb->m));
     return 0;
 }
 
 int pcb_get_child_count(pcb_t *pcb) {
+    if (pcb == NULL) return -1;
     return pcb->num_child_proc;
 }
 
