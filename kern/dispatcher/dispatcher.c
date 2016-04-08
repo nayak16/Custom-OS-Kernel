@@ -54,32 +54,30 @@ uint32_t context_switch(uint32_t old_esp, int target_tid) {
     }
 
     tcb_t *next_tcb;
-
+    uint32_t new_esp;
     /* Switch to scheduler selected tid */
     if (target_tid < 0) {
-
         /* Get next available TCB */
         if (scheduler_get_next_tcb(&sched, &next_tcb) < 0) {
-            // TODO: PANIC
-            lprintf("You just got shrekt");
-            MAGIC_BREAK;
+            panic("Scheduler is corrupted and cannot context switch!");
         }
 
     } else {
         /* Get desired tcb */
         if (scheduler_get_tcb_by_tid(&sched,
                                         target_tid, &next_tcb)) {
-            lprintf("Target tcb not found");
-            MAGIC_BREAK;
+            lprintf("Thread %d does not exist! Running the idle thread...,", target_tid);
+            if (scheduler_get_idle_tcb(&sched, &next_tcb) < 0) {
+                panic("Scheduler is corruped, cannot get idle thread!");
+            }
         }
     }
 
-    uint32_t new_esp;
     /* Set current running tcb and get new esp */
     if (scheduler_set_running_tcb(&sched, next_tcb, &new_esp) < 0) {
         lprintf("Couldnt set running tcb!!");
-        // TODO: PANIC
-        MAGIC_BREAK;
+        panic("Error trying to run Thread %d. \
+                Cannot context switch...", next_tcb->tid);
     }
     return new_esp;
 

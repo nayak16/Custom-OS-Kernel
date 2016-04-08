@@ -7,6 +7,7 @@
 #include <page_directory.h>
 /* frame manager include */
 #include <frame_manager.h>
+#include <kern_internals.h>
 #include <tcb.h>
 #include <malloc.h>
 #include <special_reg_cntrl.h>
@@ -109,8 +110,8 @@ int tcb_gettid(tcb_t *tcb, int *tid){
 
 int tcb_get_status(tcb_t *tcb, int *statusp){
     if (tcb == NULL || statusp == NULL) return -1;
-    // TODO: Make atomic??
-    *statusp = tcb->status;
+    /* Ensure atomicity of grabbing tcb status */
+    xchng(statusp, tcb->status);
     return 0;
 }
 

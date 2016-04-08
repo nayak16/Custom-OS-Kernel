@@ -50,7 +50,8 @@ int scheduler_get_tcb_by_tid(scheduler_t *sched,
 int scheduler_get_pcb_by_pid(scheduler_t *sched,
                              int target_pid, pcb_t **pcbp);
 
-int scheduler_get_init_pcb(scheduler_t *pcb, pcb_t **init_pcbp);
+int scheduler_get_init_pcb(scheduler_t *sched, pcb_t **init_pcbp);
+int scheduler_get_idle_tcb(scheduler_t *sched, tcb_t **idle_tcbp);
 
 int scheduler_check_is_runnable(scheduler_t *sched, int target_tid);
 
