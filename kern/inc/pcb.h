@@ -35,15 +35,18 @@ int pcb_init(pcb_t *pcb);
 int pcb_set_running(pcb_t *pcb);
 int pcb_set_original_tid(pcb_t *pcb, int tid);
 int pcb_get_original_tid(pcb_t *pcb, int *tid);
-int pcb_destroy_safe(pcb_t *pcb);
+int pcb_destroy_s(pcb_t *pcb);
 int pcb_load_prog(pcb_t *pcb, const char *filename, int argc, char** argv);
 int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb);
 int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_tid);
 int pcb_signal_status(pcb_t *pcb, int status, int original_tid);
 int pcb_get_ppid(pcb_t *pcb);
 
-int pcb_inc_children(pcb_t *pcb);
-int pcb_dec_children(pcb_t *pcb);
+int pcb_inc_children_s(pcb_t *pcb);
+int pcb_dec_children_s(pcb_t *pcb);
+
+int pcb_inc_threads_s(pcb_t *pcb);
+int pcb_dec_threads_s(pcb_t *pcb);
 
 int pcb_inc_threads(pcb_t *pcb);
 int pcb_dec_threads(pcb_t *pcb);

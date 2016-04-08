@@ -19,12 +19,12 @@ int thr_deschedule(uint32_t old_esp, int *reject) {
     // TODO: Check if reject is valid pointer
     if (reject == NULL) return -1;
 
-    /* Atomically check integer pointed to be reject */
-    if (xchng(reject, 0) != 0) return 0;
-
     tcb_t *my_tcb;
     /* Get current tcb */
     if(scheduler_get_current_tcb(&sched, &my_tcb) < 0) return -2;
+
+    /* Atomically check integer pointed to be reject */
+    if (xchng(reject, 0) != 0) return 0;
 
     if (scheduler_deschedule_current_safe(&sched) < 0) return -3;
 
@@ -73,7 +73,10 @@ void thr_vanish(void) {
         scheduler_get_init_pcb(&sched, &init_pcb);
         /* Let init know that it has an orphan grandchild, so
          * it can adopt it momentarily */
-        pcb_inc_children(init_pcb);
+        pcb_inc_children_s(init_pcb);
+
+        /* Ensure values don't change while writing and reading */
+        mutex_lock(&(cur_pcb->m));
 
         /* Decrement thread count */
         pcb_dec_threads(cur_pcb);
@@ -82,10 +85,14 @@ void thr_vanish(void) {
             /* Now signal init to collect grandchild's status */
             pcb_signal_status(init_pcb, exit_status, original_tid);
         }
+        /* Release lock */
+        mutex_unlock(&(cur_pcb->m));
 
     } else {
         /* Ensure parent_pcb isn't destroyed while signaling */
         mutex_lock(&(parent_pcb->m));
+        /* Ensure num_threads don't change while writing and reading */
+        mutex_lock(&(cur_pcb->m));
 
         /* Decrement thread count */
         pcb_dec_threads(cur_pcb);
@@ -94,6 +101,9 @@ void thr_vanish(void) {
             /* signal the status to parent_pcb */
             pcb_signal_status(parent_pcb, exit_status, original_tid);
         }
+
+        /* Release locks */
+        mutex_unlock(&(cur_pcb->m));
         mutex_unlock(&(parent_pcb->m));
     }
     /* Make current tcb a zombie */

@@ -20,8 +20,10 @@ int main(int argc, char** argv)
 
     int tid = fork();
     if (tid == 0) {
-        char *args[] = {"", "RECURSIVE", 0};
-        exec("actual_wait",args);
+        char *args[] = {(char*) 0xdeadd00d, (char*)0xdeadbeef, 0};
+        int ret = exec("actual_wait", args);
+        lprintf("Exec returned: %d", ret);
+        exit(ret);
     }
     int status;
     wait(&status);

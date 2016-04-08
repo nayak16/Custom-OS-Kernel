@@ -168,10 +168,10 @@ int scheduler_get_init_pcb(scheduler_t *sched, pcb_t **pcbp) {
  * @return 0 on success, negative error code otherwise
  *
  */
-int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcb) {
+int scheduler_get_current_pcb(scheduler_t *sched, pcb_t **pcbp) {
 
     if (sched == NULL) return -1;
-    *pcb = sched->cur_tcb->pcb;
+    *pcbp = sched->cur_tcb->pcb;
     return 0;
 }
 

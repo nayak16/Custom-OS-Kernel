@@ -46,7 +46,7 @@ int pcb_init(pcb_t *pcb){
     return 0;
 }
 
-int pcb_destroy_safe(pcb_t *pcb){
+int pcb_destroy_s(pcb_t *pcb){
     if (pcb == NULL) return -1;
 
     mutex_lock(&(pcb->m));
@@ -104,7 +104,6 @@ int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
     /* Create struct to hold meta data */
     pcb_metadata_t *metadata = malloc(sizeof(pcb_metadata_t));
     if (metadata == NULL) {
-        mutex_unlock(&(pcb->m));
         return -2;
     }
     metadata->status = status;
@@ -171,7 +170,7 @@ int pcb_get_original_tid(pcb_t *pcb, int *tid){
     return 0;
 }
 
-int pcb_inc_children(pcb_t *pcb) {
+int pcb_inc_children_s(pcb_t *pcb) {
     if (pcb == NULL) return -1;
     mutex_lock(&(pcb->m));
     pcb->num_child_proc++;
@@ -179,7 +178,7 @@ int pcb_inc_children(pcb_t *pcb) {
     return 0;
 }
 
-int pcb_dec_children(pcb_t *pcb) {
+int pcb_dec_children_s(pcb_t *pcb) {
     if (pcb == NULL) return -1;
     mutex_lock(&(pcb->m));
     pcb->num_child_proc--;
@@ -187,19 +186,29 @@ int pcb_dec_children(pcb_t *pcb) {
     return 0;
 }
 
+int pcb_inc_threads_s(pcb_t *pcb) {
+    mutex_lock(&(pcb->m));
+    int ret = pcb_inc_threads(pcb);
+    mutex_unlock(&(pcb->m));
+    return ret;
+}
+
+int pcb_dec_threads_s(pcb_t *pcb) {
+    mutex_lock(&(pcb->m));
+    int ret = pcb_inc_threads(pcb);
+    mutex_unlock(&(pcb->m));
+    return ret;
+}
+
 int pcb_inc_threads(pcb_t *pcb) {
     if (pcb == NULL) return -1;
-    mutex_lock(&(pcb->m));
     pcb->num_threads++;
-    mutex_unlock(&(pcb->m));
     return 0;
 }
 
 int pcb_dec_threads(pcb_t *pcb) {
     if (pcb == NULL) return -1;
-    mutex_lock(&(pcb->m));
     pcb->num_threads--;
-    mutex_unlock(&(pcb->m));
     return 0;
 }
 

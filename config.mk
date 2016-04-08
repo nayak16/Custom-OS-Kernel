@@ -65,7 +65,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = test_deschedule test_readline test_sleep test_thr_create test_cyclone test_agility_drill test_paraguay test_startle
+STUDENTTESTS = test_exec1 test_readline test_sleep test_thr_create test_cyclone test_agility_drill test_paraguay test_startle
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk
