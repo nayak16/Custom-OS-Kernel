@@ -110,25 +110,39 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
     /* Get current tcb */
     tcb_t *cur_tcb;
     if (scheduler_get_current_tcb(&sched, &cur_tcb) < 0) {
-        // TODO: Fatal Error
-        panic("Can't obtain current pcb");
+        panic("Can't obtain current tcb. Scheduler is corrupted...");
         return -4;
     }
+
     /* Get current pcb */
     pcb_t *cur_pcb;
     if (tcb_get_pcb(cur_tcb, &cur_pcb) < 0) return -5;
 
+    /* Lock pcb while reading value */
+    mutex_lock(&(cur_pcb->m));
+
     /* If the current pcb has > 1 threads reject exec */
     if (cur_pcb->num_threads > 1) return -3;
 
-    // TODO: Check validity and mapping of each string and arg
+    /* Release lock */
+    mutex_unlock(&(cur_pcb->m));
+
     /* Parse args and get argc*/
     char **argp = argvec;
     int argc = 0;
-    while(/*pd_get_mapping(argvec) &&*/ *argp != NULL) {
+    /* Check validity in argp */
+    while((pd_get_mapping(&(cur_pcb->pd), (uint32_t) argp, NULL) == 0)
+            && *argp != NULL) {
+        /* Check if each string is a valid pointer */
+        if (pd_get_mapping(&(cur_pcb->pd), (uint32_t) *argp, NULL) < 0) {
+            return -7;
+        }
         argc++;
-        lprintf("argvec: %p, arg: %s", argp, *argp);
         argp += 1;
+    }
+    /* Check if failed due to bad mapping */
+    if (pd_get_mapping(&(cur_pcb->pd), (uint32_t) argp, NULL) < 0) {
+        return -8;
     }
 
     /* Make local copy of execname */
@@ -147,6 +161,7 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
         memcpy(local_argv[i], argvec[i], len);
     }
 
+    lprintf("Starting program %s ...", execname);
     /* Clear old pcb user space mappings */
     if (vmm_clear_user_space(&(cur_pcb->pd)) < 0) return -6;
 
