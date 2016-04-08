@@ -138,6 +138,7 @@ void page_fault_c_handler(uint32_t *stack){
 void double_fault_c_handler(uint32_t *stack){
     exception_dump(IDT_DF);
     register_dump(stack);
+    MAGIC_BREAK;
 }
 
 
