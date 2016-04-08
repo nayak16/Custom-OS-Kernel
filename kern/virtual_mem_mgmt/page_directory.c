@@ -1,6 +1,13 @@
 /** @file page_directory.c
  *  @brief Implements page directory
  *
+ *  Our page directory implements an interface to update and modify mappings.
+ *  In addition to storing the actual page tables, we also keep track of the
+ *  physical addresses of the frames that have been allocated to a particular
+ *  page directory as well as the number of pages that are mapped. These must be
+ *  updated along side the page directory whenever a frame is allocated on
+ *  behalf of the page directory.
+ *
  *  @author Aatish Nayak (aatishn)
  *  @author Christopher Wei (cjwei)
  *  @bug No known bugs.
@@ -43,21 +50,13 @@
 #define FALSE 0
 #define TRUE 1
 
+/* @brief Global variable that stores the kernel page directory entries. We can
+ * use the same page tables for the kernel in all page directories that are
+ * ever created */
 uint32_t kernel_pde[NUM_KERNEL_PDE];
-int is_kernel_initialized = FALSE;
 
-/* Predeclaration */
-int pd_init_kernel();
-int pd_init(page_directory_t *pd);
-int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t *pte);
-int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
-        uint32_t pte_flags, uint32_t pde_flags);
-int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr);
-int pd_entry_present(uint32_t v);
-int pd_shallow_copy(page_directory_t *pd_dest, page_directory_t *pd_src);
-int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
-        uint32_t num_secs);
-void *pd_get_base_addr(page_directory_t *pd);
+/* @brief Whether or not the kernel has been initialized or not */
+int is_kernel_initialized = FALSE;
 
 /* Helper functions */
 
@@ -69,12 +68,24 @@ int entry_present(uint32_t v){
     return ENTRY_PRESENT;
 }
 
+/** @brief Gets the privilege and access of a virtual address mapping
+ *  @param v The virtual address
+ *  @param priv Where to store the privilege level (optional)
+ *  @param access Where to store the access level (optional)
+ *  @return 0
+ */
 int entry_permissions(uint32_t v, uint32_t *priv, uint32_t *access){
     if (priv != NULL) *priv = NTH_BIT(v,MODE_FLAG_BIT);
     if (access != NULL) *access = NTH_BIT(v,RW_FLAG_BIT);
     return 0;
 }
 
+/** @brief Initializes the kernel space directory mappings
+ *
+ *  Should only be called once
+ *
+ *  @return 0 on success, negative integer code on failure
+ */
 int pd_init_kernel(){
     if (is_kernel_initialized){
         panic("pd_init_kernel called twice!");
@@ -99,9 +110,10 @@ int pd_init_kernel(){
             return -1;
         }
     }
-    is_kernel_initialized = 1;
+    is_kernel_initialized = TRUE;
     return 0;
 }
+
 /** @brief Initializes the kernel mappings of a page directory
  *  @param pd The page directory
  *  @return 0 on success -1 on failure
@@ -126,6 +138,80 @@ void *get_page_address(uint32_t pd_i, uint32_t pt_i){
     return (void *)(pd_i << 22 | pt_i << 12);
 }
 
+/** @brief Copies contents stored in a page referenced by a virtual address
+ *  in the current page directory into the physical address
+ *
+ *  Slightly hacky. We use the current page directory to copy the contents
+ *  stored at virtual address v_addr into a local buffer. Then we update the
+ *  mapping so that it points at the new physical address we want to copy into.
+ *  Then we memcpy the local buffer into the new physical address, restore the
+ *  old mapping and flush tlb.
+ *
+ *  @param target_pte Pointer to the page table entry that hold the physical
+ *  address to copy from
+ *  @param v_addr The virtual address represented by target_pte
+ *  @param p_addr The new physical address to copy to
+ *  @return 0 on success or negative integer code on failure
+ */
+int p_copy(void **target_pte, void *v_addr, void *p_addr){
+    if (target_pte == NULL || v_addr == NULL)
+        return -1;
+    /* allocate a new buffer to hold our page contents locally */
+    void *buffer = malloc(PAGE_SIZE);
+    if (buffer == NULL) return -2;
+    /* original page table entry */
+    void *original_pte = *target_pte;
+    uint32_t flags = EXTRACT_FLAGS(original_pte);
+    /* target virtual address */
+    memcpy(buffer, v_addr, PAGE_SIZE);
+    /* remap our virtual address to new physical address */
+    *target_pte = (void *)(ADD_FLAGS(p_addr,flags));
+    /* flush cached mappings for our virtual address */
+    flush_tlb((uint32_t)v_addr);
+    /* copy contents into new phys page */
+    memcpy(v_addr, buffer, PAGE_SIZE);
+    /* restore mapping */
+    *target_pte = original_pte;
+    /* flush out any false mappings */
+    flush_tlb((uint32_t)v_addr);
+    free(buffer);
+    return 0;
+}
+
+/** @brief Copies a page table from pt_src to pt_dest
+ *
+ *  @param pt_dest The page table to copy into
+ *  @param pt_src The page table to copy from
+ *  @param pd_i The page directory index (used to find the virtual address)
+ *  @param p_addr_p Pointer to the physical address which we should update as
+ *                  we consume physical pages.
+ *  @return 0 on success, negative integer code on failure
+ */
+int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i,
+        uint32_t *p_addr_p){
+    uint32_t i;
+    /* copy each page table entry */
+    for (i = 0; i < PT_NUM_ENTRIES; i++){
+        uint32_t entry = pt_src[i];
+        uint32_t flags = entry & 0xFFF;
+        /* copy over present mappings */
+        if (entry_present(entry) == ENTRY_PRESENT){
+            void *p_addr = (void *)(*p_addr_p);
+            *p_addr_p += PAGE_SIZE;
+            /* calculate the virtual address of current page being copied so
+             * that p_copy can *v_addr to write to the new physical address
+             * after remapping*/
+            void *v_addr = get_page_address(pd_i, i);
+            /* pass in address to the current page table entry so that p_copy
+             * can use it to copy into the new physical address */
+            if (p_copy((void **)&(pt_src[i]), v_addr, p_addr) < 0)
+                return -1;
+            /* assign pte to new physical address with flags */
+            pt_dest[i] = ADD_FLAGS(p_addr, flags);
+        }
+    }
+    return 0;
+}
 /* Implementation */
 
 /** @brief Finds the mapping of a virtual address if it exists in a page
@@ -255,6 +341,14 @@ int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
     return 0;
 }
 
+/** @brief Removes mapping from page directory
+ *
+ *  Requires that both v_addr and p_addr are page aligned
+ *
+ *  @param pd The page directory
+ *  @param v_addr The virtual address to remove
+ *  @return 0 on success, negative integer code on failure
+ */
 int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr){
     if (!IS_PAGE_ALIGNED(v_addr) || pd == NULL) return -1;
     uint32_t pde_i, pte_i;
@@ -273,6 +367,8 @@ int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr){
     page_table[pte_i] = 0;
     return 0;
 }
+
+
 /** @brief Returns the directory in a page directory struct
  *  @param pd The page directory
  *  @return The directory
@@ -304,59 +400,6 @@ int pd_init(page_directory_t *pd){
 
     return 0;
 }
-
-int p_copy(void **target_pte, void *v_addr, void *p_addr){
-    if (target_pte == NULL || v_addr == NULL)
-        return -1;
-    /* allocate a new buffer to hold our page contents locally */
-    void *buffer = malloc(PAGE_SIZE);
-    if (buffer == NULL) return -2;
-    /* original page table entry */
-    void *original_pte = *target_pte;
-    uint32_t flags = EXTRACT_FLAGS(original_pte);
-    /* target virtual address */
-    memcpy(buffer, v_addr, PAGE_SIZE);
-    /* remap our virtual address to new physical address */
-    *target_pte = (void *)(ADD_FLAGS(p_addr,flags));
-    /* flush cached mappings for our virtual address */
-    flush_tlb((uint32_t)v_addr);
-    /* copy contents into new phys page */
-    memcpy(v_addr, buffer, PAGE_SIZE);
-    /* restore mapping */
-    *target_pte = original_pte;
-    /* flush out any false mappings */
-    flush_tlb((uint32_t)v_addr);
-    free(buffer);
-    return 0;
-}
-
-
-int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i,
-        uint32_t *p_addr_p){
-    uint32_t i;
-    /* copy each page table entry */
-    for (i = 0; i < PT_NUM_ENTRIES; i++){
-        uint32_t entry = pt_src[i];
-        uint32_t flags = entry & 0xFFF;
-        /* copy over present mappings */
-        if (entry_present(entry) == ENTRY_PRESENT){
-            void *p_addr = (void *)(*p_addr_p);
-            *p_addr_p += PAGE_SIZE;
-            /* calculate the virtual address of current page being copied so
-             * that p_copy can *v_addr to write to the new physical address
-             * after remapping*/
-            void *v_addr = get_page_address(pd_i, i);
-            /* pass in address to the current page table entry so that p_copy
-             * can use it to copy into the new physical address */
-            if (p_copy((void **)&(pt_src[i]), v_addr, p_addr) < 0)
-                return -1;
-            /* assign pte to new physical address with flags */
-            pt_dest[i] = ADD_FLAGS(p_addr, flags);
-        }
-    }
-    return 0;
-}
-
 
 
 /** @brief Shallow copies a page directory
@@ -401,16 +444,26 @@ int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
     return 0;
 }
 
-
+/** @brief Defines metadata for a frame that should be remembered in a page
+ * directory */
 typedef struct pd_frame_metadata{
+    /** @brief The base address */
     uint32_t p_addr;
+    /** @breif Size of frame */
     uint32_t num_pages;
 } pd_frame_metadata_t;
 
+/** @brief Returns the frame base address of a metadata */
 void *pd_frame_metadata_addr(void *metadata){
     return (void *)((pd_frame_metadata_t *)metadata)->p_addr;
 }
 
+/** @brief Gives a page directory a frame to remember
+ *  @param pd The page directory
+ *  @param p_addr The physical address
+ *  @param num_pages The number of pages of the frame
+ *  @return 0 On success -1 on failure
+ */
 int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages){
     if (pd == NULL) return -1;
     pd->num_pages += num_pages;
@@ -422,6 +475,11 @@ int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages){
     return 0;
 }
 
+/** @brief Removes frame metadata from a page directory with a given address
+ *  @param pd The page directory
+ *  @param p_addr Base address of the physical frame to be removed
+ *  @return 0 On success -1 on failure
+ */
 int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr){
     if (pd == NULL) return -1;
     pd_frame_metadata_t *metadata;
@@ -433,11 +491,22 @@ int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr){
     return 0;
 }
 
+/** @brief Returns number of frames allocated to a page directory
+ *  @param pd The page directory
+ *  @return Number of frames in the page directory, or -1 on failure
+ */
 int pd_num_frames(page_directory_t *pd){
     if (pd == NULL) return -1;
     return ll_size(pd->p_addr_list);
 }
 
+
+/** @brief Removes all frame metadata from a page directory and stores the
+ *         starting addresses of each frame in an array
+ *  @param pd The page directory
+ *  @param addr_list The array to store to
+ *  @return 0 on success, negative integer code on failure
+ */
 int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list){
     if (pd == NULL || addr_list == NULL) return -1;
     int arr_i = 0;
@@ -450,6 +519,11 @@ int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list){
     return 0;
 }
 
+
+/** @brief Removes all mappings from the user space
+ *  @param pd The page directory
+ *  @return 0 on success, negative integer code on failure
+ */
 int pd_clear_user_space(page_directory_t *pd){
     int i;
     for (i = NUM_KERNEL_PDE; i < PD_NUM_ENTRIES; i++) {
@@ -465,6 +539,14 @@ int pd_clear_user_space(page_directory_t *pd){
     return 0;
 }
 
+
+/** @brief Destroys a page directory
+ *
+ *  Requires that the list of metadata is zero
+ *
+ *  @param pd The page directory to destroy
+ *  @return Void
+ */
 void pd_destroy(page_directory_t *pd) {
     int i;
     /* At this point we should have already deallocated addresses stored

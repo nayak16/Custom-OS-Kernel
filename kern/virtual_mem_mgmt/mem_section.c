@@ -1,6 +1,10 @@
 /** @file mem_section.c
  *  @brief Implementation of memory section functions
  *
+ *  Memory sections provide us an easy way to define a section of memory that we
+ *  can perscribe particular permissions as well as keep track of start and stop
+ *  addresses.
+ *
  *  @author Aatish Nayak (aatishn)
  *  @author Christopher Wei (cjwei)
  *  @bug No known bugs.
@@ -31,7 +35,8 @@ int ms_init(mem_section_t *ms, uint32_t addr, uint32_t len,
  *  @param secs The array of sections
  *  @param num_secs The number of sections in the array
  *  @param addr_low Where the lower bound address is stored
- *  @param addr_high Where the upper bound address is stored */
+ *  @param addr_high Where the upper bound address is stored
+ *  @return 0 on success, -1 on failure */
 int ms_get_bounding_addr(mem_section_t *secs, uint32_t num_secs,
         uint32_t *addr_low, uint32_t *addr_high){
     if (secs == NULL || num_secs == 0 || addr_low == NULL ||
