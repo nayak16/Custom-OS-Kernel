@@ -31,40 +31,61 @@
  */
 int syscall_fork_c_handler(uint32_t *saved_regs){
 
-    /* Grab scheduler lock */
     /* Get current running pcb */
     pcb_t *cur_pcb;
     if(scheduler_get_current_pcb(&sched, &cur_pcb) < 0) {
         return -2;
     }
+
+    /* Lock while reading number of threads */
+    mutex_lock(&(cur_pcb->m));
     /* If the current pcb has > 1 threads reject fork */
-    if (cur_pcb->num_threads > 1) return -3;
+    if (cur_pcb->num_threads > 1) {
+        mutex_unlock(&(cur_pcb->m));
+        return -3;
+    }
+    mutex_unlock(&(cur_pcb->m));
 
     /* Allocate space for a duplicate pcb */
     pcb_t *duplicate_pcb = malloc(sizeof(pcb_t));
     if(duplicate_pcb == NULL) return -4;
-    if (pcb_init(duplicate_pcb) < 0) return -5;
+
+    if (pcb_init(duplicate_pcb) < 0) {
+        /* Cleanup on failure */
+        free(duplicate_pcb);
+        return -5;
+    }
 
     /* Create copy of current pcb with duplicate address space */
-    if (pcb_copy(duplicate_pcb, cur_pcb) < 0) return -6;
+    if (pcb_copy(duplicate_pcb, cur_pcb) < 0) {
+        /* Cleanup on failure */
+        pcb_destroy_s(duplicate_pcb);
+        free(duplicate_pcb);
+        return -6;
+    }
 
     int tid;
     /* Add duplicate to scheduler runnable queue */
     if((tid = scheduler_add_process_safe(&sched,
                 duplicate_pcb, saved_regs)) < 0) {
+        /* Cleanup on failure */
+        pcb_destroy_s(duplicate_pcb);
+        free(duplicate_pcb);
         return -7;
     }
 
-    /* Inc children count in current process */
-    pcb_inc_children(cur_pcb);
+    /* Inc children count safely in current process */
+    pcb_inc_children_s(cur_pcb);
 
     return tid;
 }
 
 int syscall_thread_fork_c_handler(uint32_t *saved_regs) {
 
+    /* Add a new thread to the scheduler using same registers */
     return scheduler_add_new_thread(&sched, saved_regs);
 }
+
 
 /**
  * @brief Handles the exec syscall. Loads a new pcb and immediately starts
@@ -77,6 +98,7 @@ int syscall_thread_fork_c_handler(uint32_t *saved_regs) {
  *
  * @return 0 on success, negative error code otherwise
  */
+
 int syscall_exec_c_handler(char *execname, char **argvec) {
     if (execname == NULL || argvec == NULL) return -1;
 
@@ -129,7 +151,6 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
     if (vmm_clear_user_space(&(cur_pcb->pd)) < 0) return -6;
 
     /* Load in new program */
-    lprintf("Loading new program...");
     if (pcb_load_prog(cur_pcb, name_copy, argc, local_argv) < 0) {
         // TODO: Figure out failure
         lprintf("Failed to load program: %s", name_copy);
@@ -176,7 +197,7 @@ int syscall_wait_c_handler(int *status_ptr){
 
     /* Decrement pcb child count */
 
-    pcb_dec_children(cur_pcb);
+    pcb_dec_children_s(cur_pcb);
 
     return original_pid;
 }
