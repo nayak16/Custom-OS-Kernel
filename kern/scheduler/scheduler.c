@@ -66,6 +66,16 @@ int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
     return 0;
 }
 
+
+int scheduler_get_idle_tcb(scheduler_t *sched, tcb_t **idle_tcbp) {
+    if (sched == NULL || idle_tcbp == NULL) return -1;
+
+    *idle_tcbp = sched->idle_tcb;
+
+    if (*idle_tcbp == NULL) return -2;
+    return 0;
+}
+
 /**
  * @brief Gets the tcb with the specified tid
  *
@@ -638,21 +648,18 @@ int scheduler_set_running_tcb(scheduler_t *sched, tcb_t *tcb, uint32_t *new_esp)
  * @param sched Scheduler to get next tcb from
  * @param tcbp Address to store pointer to next tcb
  *
- * @return 0 on success, negative error code otherwise
+ * @return 0 on success, negative code otherwise
  */
 int scheduler_get_next_tcb(scheduler_t *sched, tcb_t **tcbp) {
     if (sched == NULL || tcbp == NULL) return -1;
 
-    int ret;
     /* Cycle runnable pool and get next tcb to run */
-    if ((ret = tcb_pool_get_next_tcb(&(sched->thr_pool), tcbp)) == -2) {
-        /* Runnable Pool is empty, run the idle tcb */
+    if (tcb_pool_get_next_tcb(&(sched->thr_pool), tcbp) < 0) {
+        /* Runnable Pool is empty, or some other error occured
+         * run the idle tcb */
         *tcbp = sched->idle_tcb;
-
-    } else if (ret < 0) {
-        /* Some other error */
-        return -2;
     }
+
     return 0;
 }
 
