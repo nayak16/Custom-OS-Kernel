@@ -13,43 +13,8 @@
 #include <special_reg_cntrl.h>
 #include <x86/asm.h>
 
-#include <simics.h>
-/*
-typedef struct tcb{
-    uint32_t eax;
-    uint32_t ebx;
-    uint32_t ecx;
-    uint32_t edx;
-
-    uint32_t esi;
-    uint32_t edi;
-
-    uint32_t ebp;
-    uint32_t esp;
-    uint32_t eip;
-    uint32_t e_flags;
-
-    int pid;
-    int tid;
-    void *k_stack;
-
-} tcb_t;
-*/
-
-int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
-
-    /* Set appropriate tid and pcb */
-    tcb->tid = tid;
-    tcb->pcb = pcb;
-
-    /* Set tcb to runnable */
-    tcb->status = RUNNABLE;
-
-    /* Init a k_stack which will also be used for scheduling */
-    tcb->k_stack_bot = malloc(8*PAGE_SIZE);
-    if (tcb->k_stack_bot == NULL) return -1;
-
-    uint32_t* k_stack_top = (uint32_t*)(((uint32_t) tcb->k_stack_bot) + 8*PAGE_SIZE);
+int load_kstack(tcb_t *tcb, pcb_t *pcb,
+                uint32_t *k_stack_top, uint32_t *regs) {
 
     /* Push meta data to stack */
     /* ------------- IRET section --------------- */
@@ -74,10 +39,32 @@ int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
     k_stack_top[-17] = regs == NULL ? SEGSEL_USER_DS : regs[FS_IDX];
     k_stack_top[-18] = regs == NULL ? SEGSEL_USER_DS : regs[GS_IDX];
 
+    tcb->k_stack_top = k_stack_top;
     tcb->orig_k_stack = (void *)(&(k_stack_top[-18]));
     tcb->tmp_k_stack = tcb->orig_k_stack;
 
-    /* initialize swexn handler and arg to NULL */
+    return 0;
+}
+
+int tcb_init(tcb_t *tcb, int tid, pcb_t *pcb, uint32_t *regs) {
+
+    /* Set appropriate tid and pcb */
+    tcb->tid = tid;
+    tcb->pcb = pcb;
+
+    /* Set tcb to runnable */
+    tcb->status = RUNNABLE;
+
+    /* Init a k_stack which will also be used for scheduling */
+    tcb->k_stack_bot = malloc(8*PAGE_SIZE);
+    if (tcb->k_stack_bot == NULL) return -1;
+
+    /* Calculate stack_top */
+    uint32_t* k_stack_top = (uint32_t*)(((uint32_t) tcb->k_stack_bot) + 8*PAGE_SIZE);
+
+    /* Load kstack with appropriate values */
+    load_kstack(tcb, pcb, k_stack_top, regs);
+
     tcb->swexn_handler = NULL;
     tcb->swexn_handler_arg = NULL;
     tcb->swexn_handler_esp = NULL;
@@ -116,8 +103,13 @@ int tcb_get_status(tcb_t *tcb, int *statusp){
 }
 
 int tcb_reload(tcb_t *tcb, pcb_t *pcb) {
-    tcb_destroy(tcb);
-    tcb_init(tcb, tcb->tid, pcb, NULL);
+
+    /* Load k_stack with new values */
+    load_kstack(tcb, pcb, tcb->k_stack_top, NULL);
+
+    /* Deregister swexn handler */
+    tcb_deregister_swexn_handler(tcb, NULL, NULL, NULL);
+
     return 0;
 }
 
