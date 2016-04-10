@@ -70,7 +70,7 @@ int tcb_get_pcb(tcb_t *tcb, pcb_t **pcb);
 int tcb_get_init_stack(tcb_t *tcb, void **stack);
 int tcb_t_wakeup_cmp(void *a, void *b);
 
-int tcb_reload_safe(tcb_t *tcb, pcb_t *pcb);
+int tcb_reload(tcb_t *tcb, pcb_t *pcb);
 int tcb_get_status(tcb_t *tcb, int *statusp);
 
 int tcb_destroy(tcb_t *tcb);

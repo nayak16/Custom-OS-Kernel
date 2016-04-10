@@ -14,6 +14,7 @@
 #include <special_reg_cntrl.h>
 #include <common_kern.h>
 #include <x86/asm.h>
+#include <x86/cr.h>
 #include <loader.h>
 #include <thr_helpers.h>
 
@@ -178,11 +179,14 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
     }
 
     /* Reload a tcb with new contents */
-    tcb_reload_safe(cur_tcb, cur_pcb);
+    tcb_reload(cur_tcb, cur_pcb);
 
     /* Get stack to start at */
     void *init_stack;
     tcb_get_init_stack(cur_tcb, &init_stack);
+
+    /* Set esp0 to newly malloced kstack */
+    set_esp0((uint32_t)init_stack);
 
     /* Restore context with new program */
     restore_context((uint32_t)init_stack);
