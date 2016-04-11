@@ -7,13 +7,22 @@
     push %es
     push %ds
 .endm
-.macro restore_context
+.macro restore_context_error_code
     pop %ds
     pop %es
     pop %fs
     pop %gs
     popa
     addl $4, %esp /* skip error_code */
+    iret
+.endm
+
+.macro restore_context
+    pop %ds
+    pop %es
+    pop %fs
+    pop %gs
+    popa
     iret
 .endm
 
@@ -25,13 +34,21 @@
     restore_context
 .endm
 
+.macro wrapper_error_code func
+    save_context
+    pushl %esp
+    call \func
+    addl $4, %esp
+    restore_context_error_code
+.endm
+
 .globl page_fault_handler
 page_fault_handler:
-    wrapper page_fault_c_handler
+    wrapper_error_code page_fault_c_handler
 
 .globl double_fault_handler
 double_fault_handler:
-    wrapper double_fault_c_handler
+    wrapper_error_code double_fault_c_handler
 
 .globl division_error_handler
 division_error_handler:
@@ -67,15 +84,19 @@ coprocessor_segment_overrun_handler:
 
 .globl invalid_tss_handler
 invalid_tss_handler:
-    wrapper invalid_tss_c_handler
+    wrapper_error_code invalid_tss_c_handler
 
 .globl segment_not_present_handler
 segment_not_present_handler:
-    wrapper segment_not_present_c_handler
+    wrapper_error_code segment_not_present_c_handler
+
+.globl ss_fault_handler
+ss_fault_handler:
+    wrapper_error_code ss_fault_c_handler
 
 .globl gp_fault_handler
 gp_fault_handler:
-    wrapper gp_fault_c_handler
+    wrapper_error_code gp_fault_c_handler
 
 .globl math_fault_handler
 math_fault_handler:
@@ -83,7 +104,7 @@ math_fault_handler:
 
 .globl align_fault_handler
 align_fault_handler:
-    wrapper align_fault_c_handler
+    wrapper_error_code align_fault_c_handler
 
 .globl machine_check_fault_handler
 machine_check_fault_handler:

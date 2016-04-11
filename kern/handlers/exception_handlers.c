@@ -64,11 +64,20 @@ int swexn_execute(uint32_t cause, uint32_t *stack, bool generates_error_code){
         *arg_ptr = (uint32_t)(ureg_ptr);
         *(arg_ptr-1) = (uint32_t)arg;
         *(arg_ptr-2) = (uint32_t)(NULL);
-        stack[ESP_IDX] = (uint32_t)(arg_ptr-2);
-        stack[SS_IDX] = (uint32_t)SEGSEL_USER_DS;
-        stack[EFLAGS_IDX] = (uint32_t)get_user_eflags();
-        stack[CS_IDX] = (uint32_t)SEGSEL_USER_CS;
-        stack[EIP_IDX] = (uint32_t)eip;
+
+        int offset;
+
+        if (generates_error_code){
+            offset = 0;
+        } else {
+            offset = -1;
+        }
+
+        stack[ESP_IDX+offset] = (uint32_t)(arg_ptr-2);
+        stack[SS_IDX+offset] = (uint32_t)SEGSEL_USER_DS;
+        stack[EFLAGS_IDX+offset] = (uint32_t)get_user_eflags();
+        stack[CS_IDX+offset] = (uint32_t)SEGSEL_USER_CS;
+        stack[EIP_IDX+offset] = (uint32_t)eip;
         return 0;
     }
 

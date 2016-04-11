@@ -68,7 +68,7 @@ int syscall_remove_pages_handler(void *base);
 
 void syscall_halt_handler(void);
 int syscall_readfile_handler(char *filename, char *buf, int count, int offset);
-int syscall_misbehave_handler(int mode);
+void syscall_misbehave_handler(int mode);
 
 /* Hardware handlers */
 

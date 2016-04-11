@@ -28,6 +28,6 @@ int syscall_readfile_c_handler(char* filename, char *buf, int count, int offset)
     return getbytes(filename, offset, count, buf);
 }
 
-int syscall_misbehave_c_handler(int mode){
-    return 0;
+void syscall_misbehave_c_handler(int mode){
+    return;
 }
