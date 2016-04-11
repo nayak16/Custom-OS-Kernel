@@ -109,7 +109,6 @@ int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
     metadata->status = status;
     metadata->original_tid = original_tid;
 
-    lprintf("TCB %d signaling parent_pcb %d", sched.cur_tcb->tid, pcb->pid);
     /* Put status to collect into queue */
     if (queue_enq(&(pcb->status_queue), (void *) metadata) < 0) {
         mutex_unlock(&(pcb->m));
