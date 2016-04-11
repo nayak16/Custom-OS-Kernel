@@ -13,10 +13,23 @@
 /* Exception Handlers */
 
 void page_fault_handler(void);
-
 void double_fault_handler(void);
+void division_error_handler(void);
+void debug_exception_handler(void);
+void breakpoint_handler(void);
+void overflow_handler(void);
+void bound_range_handler(void);
+void undef_op_handler(void);
+void no_math_handler(void);
+void coprocessor_segment_overrun_handler(void);
+void invalid_tss_handler(void);
+void segment_not_present_handler(void);
+void gp_fault_handler(void);
+void math_fault_handler(void);
+void align_fault_handler(void);
+void machine_check_fault_handler(void);
+void simd_fault_handler(void);
 
-// TODO: Add more
 
 /* Syscall thread management handlers */
 
@@ -55,6 +68,7 @@ int syscall_remove_pages_handler(void *base);
 
 void syscall_halt_handler(void);
 int syscall_readfile_handler(char *filename, char *buf, int count, int offset);
+int syscall_misbehave_handler(int mode);
 
 /* Hardware handlers */
 

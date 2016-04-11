@@ -149,6 +149,7 @@ int install_syscall_handlers(){
     INSTALL_SYSCALL(syscall_readfile_handler, READFILE_INT);
     INSTALL_SYSCALL(syscall_halt_handler, HALT_INT);
 
+    INSTALL_SYSCALL(syscall_misbehave_handler, MISBEHAVE_INT);
     return 0;
 }
 
@@ -161,6 +162,70 @@ int install_exception_handlers() {
     /* Double Fault */
     idt_install_entry((uint32_t) double_fault_handler, SEGSEL_KERNEL_CS,
         FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_DF, FLAG_INTERRUPT_GATE);
+
+    /* Division error */
+    idt_install_entry((uint32_t) division_error_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_DE, FLAG_INTERRUPT_GATE);
+
+    /* Debug exception */
+    idt_install_entry((uint32_t) debug_exception_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_DB, FLAG_INTERRUPT_GATE);
+
+    /* Breakpoint */
+    idt_install_entry((uint32_t) breakpoint_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_BP, FLAG_TRAP_GATE);
+
+    /* Overflow */
+    idt_install_entry((uint32_t) overflow_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_OF, FLAG_TRAP_GATE);
+
+    /* bound range */
+    idt_install_entry((uint32_t) bound_range_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_BR, FLAG_INTERRUPT_GATE);
+
+    /* undef op */
+    idt_install_entry((uint32_t) undef_op_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_UD, FLAG_TRAP_GATE);
+
+    /* no math */
+    idt_install_entry((uint32_t) no_math_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_NM, FLAG_INTERRUPT_GATE);
+
+    /* coprocessor segment overrun */
+    idt_install_entry((uint32_t) coprocessor_segment_overrun_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_CSO, FLAG_INTERRUPT_GATE);
+
+    /* invalid tss */
+    idt_install_entry((uint32_t) invalid_tss_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_TS, FLAG_INTERRUPT_GATE);
+
+    /* segment not present */
+    idt_install_entry((uint32_t) segment_not_present_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_NP, FLAG_INTERRUPT_GATE);
+
+    /* ss fault */
+    idt_install_entry((uint32_t) page_fault_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_SS, FLAG_INTERRUPT_GATE);
+
+    /* gp fault */
+    idt_install_entry((uint32_t) gp_fault_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_GP, FLAG_INTERRUPT_GATE);
+
+    /* math fault */
+    idt_install_entry((uint32_t) math_fault_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_MF, FLAG_INTERRUPT_GATE);
+
+    /* align fault */
+    idt_install_entry((uint32_t) align_fault_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_AC, FLAG_INTERRUPT_GATE);
+
+    /* machine check fault */
+    idt_install_entry((uint32_t) machine_check_fault_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_MC, FLAG_INTERRUPT_GATE);
+
+    /* simd fault */
+    idt_install_entry((uint32_t) simd_fault_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_XF, FLAG_INTERRUPT_GATE);
 
     return 0;
 }

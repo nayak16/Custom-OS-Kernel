@@ -191,5 +191,7 @@ syscall_readfile_handler:
     addl $16, %esp /* skip 4 arguments */
     restore_context
 
-
+.globl syscall_misbehave_handler
+syscall_misbehave_handler:
+    one_arg_syscall_wrapper syscall_misbehave_c_handler
 
