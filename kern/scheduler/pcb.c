@@ -1,5 +1,11 @@
 /** @file pcb_t.h
  *
+ *  @brief Implementation of process control block functions
+ *
+ *  Mutex is needed because other threads (not the current one) are accessing
+ *  and changing a pcb possibly simultaneously. For example, in the case
+ *  of a child modifying the parent.
+ *
  */
 
 #include <stdlib.h>
@@ -28,8 +34,18 @@
 
 #include <virtual_mem_mgmt.h>
 
+
+/**
+ * @brief Initializes a process control block
+ *
+ * @param pcb pcb to initialize
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int pcb_init(pcb_t *pcb){
     if (pcb == NULL) return -1;
+
     /* Temp value before being added to scheduler */
     pcb->pid = -1;
     pcb->ppid = -1;
@@ -37,36 +53,71 @@ int pcb_init(pcb_t *pcb){
     pcb->num_child_proc = 0;
     pcb->num_threads = 0;
 
+    /* Initialize a pcb's page directory */
+    pd_init(&(pcb->pd));
+
+    /* Init the mutex that protects pcb access */
+    mutex_init(&(pcb->m));
     /* Initialize an empty queue; use semaphore to allocate resources
      * when they become avaliable */
-    mutex_init(&(pcb->m));
     queue_init(&(pcb->status_queue));
     sem_init(&(pcb->wait_sem), 0);
-    pd_init(&(pcb->pd));
     return 0;
 }
 
+/**
+ * @brief Destroys a pcb and its data structures
+ *
+ * @param pcb pcb to destroy
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int pcb_destroy_s(pcb_t *pcb){
     if (pcb == NULL) return -1;
 
+    /* Grab pcb lock */
     mutex_lock(&(pcb->m));
-    sem_destroy(&(pcb->wait_sem));
-    queue_destroy(&(pcb->status_queue));
-    vmm_clear_user_space(&(pcb->pd));
-    pd_destroy(&(pcb->pd));
-    mutex_unlock(&(pcb->m));
 
+    /* Destroy the wait semaphore */
+    sem_destroy(&(pcb->wait_sem));
+
+    /* Destroy the status queue */
+    queue_destroy(&(pcb->status_queue));
+
+    /* Clears user space mappings in the page directory
+     * This will also deallocate physical frames */
+    vmm_clear_user_space(&(pcb->pd));
+
+    /* Destroy page directory */
+    pd_destroy(&(pcb->pd));
+
+    mutex_unlock(&(pcb->m));
     mutex_destroy(&(pcb->m));
+
     return 0;
 }
 
+/**
+ * @brief Creates a copy of a given pcb
+ *
+ * This is used in the fork() system call to duplicate
+ * the address space for a process
+ *
+ * @param dest_pcb pcb to copy into
+ * @param source_pcb pcb to copy from
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb) {
     if(source_pcb == NULL || dest_pcb == NULL) return -1;
 
-    /* Set ppid of dest_pcb to pid of source_pcb */
+    /* Set parent pid of dest_pcb to pid of source_pcb
+     * since source_pcb is the parent */
     dest_pcb->ppid = source_pcb->pid;
 
-    /* Copy address space */
+    /* Copy current user address space */
     if(vmm_deep_copy(&(dest_pcb->pd)) < 0) {
         return -2;
     }
@@ -144,11 +195,6 @@ int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_pid){
     /* Free metadata struct */
     free(metadata);
     return 0;
-}
-
-int pcb_get_pid(pcb_t *pcb){
-    if (pcb == NULL) return -1;
-    return pcb->pid;
 }
 
 int pcb_get_ppid(pcb_t *pcb){
