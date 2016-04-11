@@ -154,7 +154,7 @@ void register_dump(uint32_t *stack){
     es:     0x%x\n\
     fs:     0x%x\n\
     gs:     0x%x\n\
-    ------ End Context -------\n",
+------ End Context -------\n",
     (unsigned int)stack[SS_IDX],
     (unsigned int)stack[EFLAGS_IDX],
     (unsigned int)stack[CS_IDX],
@@ -174,14 +174,18 @@ void register_dump(uint32_t *stack){
 
 }
 
+void print_cr2(){
+    printf("cr2: %p\n", (void *)get_cr2());
+}
+
 void page_fault_c_handler(uint32_t *stack){
     /* attempt to execute swexn */
     if (swexn_execute(SWEXN_CAUSE_PAGEFAULT, stack, true) == 0)
         return;
 
     thr_set_status(-2);
-
     exception_dump(IDT_PF);
+    print_cr2();
     register_dump(stack);
     thr_vanish();
 }
