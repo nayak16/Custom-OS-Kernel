@@ -3,6 +3,7 @@
  */
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <x86/asm.h>
 #include <x86/seg.h>
@@ -33,6 +34,8 @@ uint32_t scheduler_num_ticks = 0;
  */
 int scheduler_init(scheduler_t *sched){
     if (sched == NULL) return -1;
+    sched->started = false;
+
     sched->next_tid = 0;
     sched->next_pid = 0;
     sched->cur_tcb = NULL;
@@ -61,7 +64,7 @@ int scheduler_init(scheduler_t *sched){
  *
  */
 int scheduler_get_current_tid(scheduler_t *sched, int *tidp) {
-    if (sched == NULL) return -1;
+    if (sched == NULL || sched->cur_tcb == NULL) return -1;
     *tidp = sched->cur_tcb->tid;
     return 0;
 }
@@ -562,7 +565,7 @@ int scheduler_add_process_safe(scheduler_t *sched,
  *
  */
 int scheduler_start(scheduler_t *sched){
-
+    sched->started = true;
     enable_interrupts();
 
     return 0;

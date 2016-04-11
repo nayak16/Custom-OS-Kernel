@@ -47,8 +47,10 @@ int getbytes( const char *filename, int offset, int size, char *buf )
         exec2obj_userapp_TOC_entry entry = exec2obj_userapp_TOC[i];
         if (strcmp(entry.execname, filename) == 0){
 
-            /* Copy all size bytes if possible, otherwise copy from offset to end */
-            int num_bytes = size + offset > entry.execlen ? entry.execlen - offset : size;
+            /* Copy all size bytes if possible */
+            int num_bytes = size + offset > entry.execlen
+                ? entry.execlen - offset
+                : size;
 
             memcpy(buf, entry.execbytes+offset, num_bytes);
             return num_bytes;
@@ -66,7 +68,8 @@ int get_all_files(char *buf, int buf_len) {
         const char *filename = entry.execname;
 
         int filename_len = strlen(filename);
-        lprintf("Filename: %s with len %d. count_bytes = %d", filename, filename_len, count_bytes);
+        lprintf("Filename: %s with len %d. count_bytes = %d",
+                filename, filename_len, count_bytes);
         /* Check if buffer has anymore room */
         if (filename_len + count_bytes > buf_len) {
             return -2;
@@ -83,7 +86,8 @@ int get_all_files(char *buf, int buf_len) {
 
 int load_elf_exists(const char *filename){
     simple_elf_t elf;
-    return (elf_check_header(filename) == ELF_SUCCESS && elf_load_helper(&elf, filename) == ELF_SUCCESS);
+    return (elf_check_header(filename) == ELF_SUCCESS &&
+            elf_load_helper(&elf, filename) == ELF_SUCCESS);
 }
 
 int load_elf_sections(simple_elf_t *elf, pcb_t *pcb){

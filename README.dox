@@ -20,13 +20,13 @@ check for valid pointers in exec
 Use reject pointer to control reaper main descheduling
 Move all init/reaper init functions into scheduler_init (out of kernel)
 <DONE> Implement thread_fork
-Implement swexn
+<DONE> Implement swexn
 <DONE> Implement readfile: test "ls"
 <DONE> Only signal to parent pcb if last thread in task
 give back resources upon exception
 Look through all TODO comments
-Yield in mutex lock
-Implement misbehave
+<DONE> Yield to specific thread in mutex lock
+<DONE> Implement misbehave
 <DONE> Implement all exception handlers
 
 BUG LIST FUCK:

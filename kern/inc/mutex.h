@@ -11,6 +11,8 @@
 typedef struct mutex {
 	/** @brief Represents whether or not mutex is free or taken */
     int lock;
+    /** @brief Tid of whoever currently holds the mutex */
+    int owner;
 } mutex_t;
 
 int mutex_init( mutex_t *mp );

@@ -6,11 +6,14 @@
 #include <tcb.h>
 #include <queue.h>
 #include <tcb_pool.h>
+#include <stdbool.h>
 
 #ifndef _SCHEDULER_H_
 #define _SCHEDULER_H_
 
 typedef struct scheduler{
+    bool started;
+
     int next_tid;
     int next_pid;
     void *reaper_stack_bot;

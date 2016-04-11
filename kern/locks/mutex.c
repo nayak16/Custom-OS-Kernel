@@ -30,6 +30,7 @@
 int mutex_init( mutex_t *mp ){
     if (mp == NULL) return -1;
     mp->lock = 1;
+    mp->owner = -1;
     return 0;
 }
 
@@ -47,11 +48,23 @@ void mutex_destroy( mutex_t *mp ){
  *  @return Void
  */
 void mutex_lock( mutex_t *mp ){
+    if (!sched.started) return;
+
+    /* Get the current tid */
+    int cur_tid;
+    if (scheduler_get_current_tid(&sched, &cur_tid) < 0){
+        /* somethings wrong with the scheduler? */
+        cur_tid = -1;
+    }
     /* Keep trying to until lock is free and key is accepted */
     while (!xchng(&mp->lock, 0)) {
-        thr_kern_yield(-1);
+        thr_kern_yield(mp->owner);
     }
-    mp->lock = 0;
+    /* after securing the lock, set the owner to yourself so
+     * threads that are waiting on this mutex will yield to this
+     * thread - in a sense, the thread holding this mutex has
+     * gained a higher priority */
+    mp->owner = cur_tid;
     return;
 }
 
@@ -60,6 +73,14 @@ void mutex_lock( mutex_t *mp ){
  *  @return Void
  */
 void mutex_unlock( mutex_t *mp ){
+    if (!sched.started) return;
+    /* update the owner to -1 so we don't prioritize this thread anymore. There
+     * is a slight race condition (which doesn't affect correctness just
+     * efficiency when we mutex unlock and then another thread mutex locks but
+     * is context switched out before it can set the mutex's owner. In this case
+     * it is better to let the scheduler pick a thread to run instead of
+     * forcing other threads to yield back to here */
+    mp->owner = -1;
     xchng(&mp->lock, 1);
     return;
 }
