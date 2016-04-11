@@ -30,7 +30,7 @@ typedef struct scheduler{
 extern uint32_t scheduler_num_ticks;
 
 
-int scheduler_init(scheduler_t *sched);
+int scheduler_init(scheduler_t *sched, void (*reap_func)(void));
 
 int scheduler_add_init_process(scheduler_t *sched, pcb_t *init_pcb);
 int scheduler_add_idle_process(scheduler_t *sched, pcb_t *idle_pcb);

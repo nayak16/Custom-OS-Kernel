@@ -142,7 +142,7 @@ int thr_yield(uint32_t old_esp, int tid) {
             /* Not found */
             return -2;
         } else if (ret == 0) {
-            /* tcb is not runnable */
+            /* tcb is not runnable, yield to -1 */
             return -3;
         }
         /* Success, tcb is runnable */
