@@ -27,6 +27,9 @@ typedef struct tcb_pool {
     ll_t runnable_pool;
     ll_t waiting_pool;
     ll_t sleeping_pool;
+
+    sem_t zombies_sem;
+
     ll_t zombie_pool;
 } tcb_pool_t;
 

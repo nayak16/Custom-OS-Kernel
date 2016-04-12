@@ -23,6 +23,7 @@
 
 uint32_t scheduler_num_ticks = 0;
 
+
 /**
  * @brief Initialize a scheduler's internal data structures and values
  * including internal thread and process pools
@@ -32,7 +33,7 @@ uint32_t scheduler_num_ticks = 0;
  * @return 0 on success, negative error code otherwise
  *
  */
-int scheduler_init(scheduler_t *sched){
+int scheduler_init(scheduler_t *sched, void (*reap_func)(void)){
     if (sched == NULL) return -1;
     sched->started = false;
 
@@ -45,12 +46,41 @@ int scheduler_init(scheduler_t *sched){
     sched->reaper_stack_top = (void*)((uint32_t)sched->reaper_stack_bot
                                         + (uint32_t) 4*PAGE_SIZE);
 
-    sched->init_pcb = NULL;
-    sched->reaper_tcb = NULL;
 
     /* Init tcb pool */
     if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
 
+    pcb_t *idle_pcb = malloc(sizeof(pcb_t));
+    pcb_init(idle_pcb);
+
+    /* Create, init, and add reaper process */
+    pcb_t *reaper_pcb = malloc(sizeof(pcb_t));
+    pcb_init(reaper_pcb);
+
+    /* Create init program */
+    pcb_t *init_pcb = malloc(sizeof(pcb_t));
+    pcb_init(init_pcb);
+
+    /* Set pdbr to idle pd so pcb load prog loads to correct pd */
+    set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb->pd));
+
+    enable_pge();
+    enable_paging();
+
+    /* Load idle program */
+    pcb_load_prog(idle_pcb, "idle", 0, NULL);
+    /* Add idle program to scheduler */
+    scheduler_add_idle_process(sched, idle_pcb);
+
+    /* Add reaper process to scheduler */
+    scheduler_add_reaper_proc(sched, reaper_pcb, reap_func);
+
+    /* Set pdbr to init pd so pcb load prog loads into correct pd */
+    set_pdbr((uint32_t) pd_get_base_addr(&init_pcb->pd));
+    /* Load the init program into an init pcb */
+    pcb_load_prog(init_pcb, "init", 0, NULL);
+    /* Add init process to scheduler */
+    scheduler_add_init_process(sched, init_pcb);
     return 0;
 }
 
@@ -337,11 +367,6 @@ int scheduler_make_current_zombie(scheduler_t *sched) {
     }
     /* Make current tcb NULL */
     sched->cur_tcb = NULL;
-
-    /* Wake up reaper thread if there exists one */
-    if (sched->reaper_tcb != NULL &&
-            scheduler_make_runnable(sched, sched->reaper_tcb->tid) < 0)
-        return -3;
 
     return 0;
 }

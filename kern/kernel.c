@@ -60,10 +60,8 @@ keyboard_t keyboard;
  */
 #include <thr_helpers.h>
 void reaper_main(){
-    int reject = 0;
     while(1){
         scheduler_reap(&sched);
-        thr_kern_deschedule(&reject);
     }
 }
 
@@ -101,45 +99,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* initialize pd kernel pages */
     pd_init_kernel();
 
-    /* initialize idle_pcb */
-    pcb_t *idle_pcb = malloc(sizeof(pcb_t));
-    pcb_init(idle_pcb);
-
-    /* initialize reaper_pcb */
-    pcb_t *reaper_pcb = malloc(sizeof(pcb_t));
-    pcb_init(reaper_pcb);
-
-    pcb_t *init_pcb = malloc(sizeof(pcb_t));
-    pcb_init(init_pcb);
-
     /* initialize a scheduler */
-    scheduler_init(&sched);
+    scheduler_init(&sched, reaper_main);
 
-    /* setup first page table so paging works in pcb_load */
-    set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb->pd));
-    /* Enable Page Global Flag */
-    enable_pge();
-    /* Enable Paging */
-    enable_paging();
-
-    /* Load idle program */
-    pcb_load_prog(idle_pcb, "idle", 0, NULL);
-
-    /* add idle process to scheduler */
-    scheduler_add_idle_process(&sched, idle_pcb);
-
-    /* add reaper process to scheduler */
-    scheduler_add_reaper_proc(&sched, reaper_pcb, reaper_main);
-
-    /* Load init pcb */
-    set_pdbr((uint32_t) pd_get_base_addr(&init_pcb->pd));
-    pcb_load_prog(init_pcb, "init", 0, NULL);
-
-    /* Save init pcb into scheduler */
-    scheduler_add_init_process(&sched, init_pcb);
-
-    /* Add init pcb into scheduler */
-    //scheduler_add_process(&sched, init_pcb, NULL);
     scheduler_start(&sched); // enable intterupts
 
     while (1) {

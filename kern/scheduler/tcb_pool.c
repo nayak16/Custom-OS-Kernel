@@ -38,6 +38,8 @@ int tcb_pool_init(tcb_pool_t *tp) {
         || ll_init(&(tp->sleeping_pool)) < 0
         || ll_init(&(tp->zombie_pool))< 0) return -3;
 
+    if (sem_init(&(tp->zombies_sem), 0) < 0) return -4;
+
     return 0;
 }
 
@@ -200,61 +202,58 @@ int tcb_pool_wakeup(tcb_pool_t *tp, uint32_t curr_time){
 
 int tcb_pool_reap(tcb_pool_t *tp){
     if (tp == NULL) return -1;
-    int num_zombies = ll_size(&(tp->zombie_pool));
-    if (num_zombies == 0) return -1;
 
     tcb_t *tcb;
     circ_buf_t addrs_to_free;
-    circ_buf_t zombie_tcbs;
 
-    // TODO: Document (~ 5 addrs to free per zombie)
-    if (circ_buf_init(&addrs_to_free, 5*(num_zombies+1)) < 0) return -2;
-    if (circ_buf_init(&zombie_tcbs, num_zombies+1) < 0) return -2;
+    if (circ_buf_init(&addrs_to_free, 32) < 0) return -2;
 
-    /* Disable interrupts before modifying scheduler data structures */
-    disable_interrupts();
-    while (ll_size(&(tp->zombie_pool)) > 0){
+    while(1) {
+        /* Wait on zombies to be available */
+        sem_wait(&(tp->zombies_sem));
 
         /* Get first zombie */
-        ll_peek(&(tp->zombie_pool), (void **)&tcb);
+        if (ll_peek(&(tp->zombie_pool), (void **)&tcb) < 0) {
+            /* No zombies to reap, wait again */
+            continue;
+        }
+
+        /* Disable Interrupts while modifying tcb pool */
+        disable_interrupts();
 
         /* Remove from tcb hash table and zombie pool */
         if (tcb_pool_remove_tcb(tp, tcb->tid, &addrs_to_free) < 0) {
-            break;
+            return -3;
         }
 
         /* Remove if last thread in pcb */
         if (tcb->pcb->num_threads == 0) {
             tcb_pool_remove_pcb(tp, tcb->pcb->pid, &addrs_to_free);
         }
-        /* Add tcb to zombie tcbs circ buf */
-        circ_buf_write(&zombie_tcbs, (void*) tcb);
 
-    }
-    /* Enable interrupts before freeing and attempting to acquire heap lock */
-    enable_interrupts();
+        /* Enable interrupts before freeing and attempting to acquire heap lock */
+        enable_interrupts();
 
-    /* Cleanup all the zombies */
-    while(circ_buf_read(&zombie_tcbs, (void**) &tcb) >= 0) {
         /* Check if pcb has no more threads running */
         if (tcb->pcb->num_threads == 0) {
             pcb_destroy_s(tcb->pcb);
             free(tcb->pcb);
         }
         /* Destroy tcb itself */
+        lprintf("------ Reaped Thread %d ------", tcb->tid);
         tcb_destroy(tcb);
         free(tcb);
+
+        void *addr;
+        /* Free rest of the addresses */
+        while(circ_buf_read(&addrs_to_free, (void**) &addr) >= 0) {
+            free(addr);
+        }
+
     }
 
-    void *addr;
-    /* Free rest of the addresses */
-    while(circ_buf_read(&addrs_to_free, (void**) &addr) >= 0) {
-        free(addr);
-    }
-
-    /* Destroy circ bufs containing addresses to free */
+    /* Destroy circ buf containing addresses to free */
     circ_buf_destroy(&addrs_to_free);
-    circ_buf_destroy(&zombie_tcbs);
 
     return 0;
 }
@@ -367,6 +366,9 @@ int tcb_pool_make_zombie(tcb_pool_t *tp, int tid){
     }
     tcb->status = ZOMBIE;
     if (ll_link_node_last(&(tp->zombie_pool), node) < 0) return -7;
+
+    /* Signal to reaper to reap zombie */
+    sem_signal(&(tp->zombies_sem));
     return 0;
 }
 
