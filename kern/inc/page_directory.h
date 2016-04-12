@@ -16,7 +16,7 @@
 #include <stdint.h>
 #include <mem_section.h>
 #include <frame_manager.h>
-
+#include <stdbool.h>
 #include <queue.h>
 
 #define PRESENT_FLAG_BIT 0
@@ -75,11 +75,18 @@ typedef struct page_directory {
     uint32_t num_pages;
     ll_t *p_addr_list;
     ll_t *mapping_tasks;
+    bool batch_enabled;
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
 int pd_init_kernel(void);
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t *pte);
+
+int pd_begin_mapping(page_directory_t *pd);
+void pd_abort_mapping(page_directory_t *pd);
+void pd_commit_mapping(page_directory_t *pd);
+
+
 int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr, uint32_t pte_flags, uint32_t pde_flags);
 int pd_get_permissions(page_directory_t *pd, uint32_t v_addr,
         uint32_t *priv, uint32_t *access);

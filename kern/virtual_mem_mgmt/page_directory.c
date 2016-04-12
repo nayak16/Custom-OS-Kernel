@@ -50,6 +50,12 @@
 #define FALSE 0
 #define TRUE 1
 
+typedef struct mapping_task{
+    uint32_t v_addr;
+    uint32_t pte;
+    void *resource;
+} mapping_task_t;
+
 /* @brief Global variable that stores the kernel page directory entries. We can
  * use the same page tables for the kernel in all page directories that are
  * ever created */
@@ -95,7 +101,7 @@ int pd_init_kernel(){
      * to the global variable kernel_pde */
     page_directory_t pd_temp;
     pd_temp.directory = kernel_pde;
-    pd_temp.mapping_tasks = NULL;
+    pd_temp.batch_enabled = false;
 
     /* present, rw enabled, supervisor mode, dont flush */
     uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET);
@@ -300,6 +306,38 @@ int pd_is_user_readable(page_directory_t *pd, uint32_t v_addr){
     return (priv == 1);
 }
 
+int pd_begin_mapping(page_directory_t *pd){
+    if (pd == NULL || pd->mapping_tasks == NULL) return -1;
+    if (pd->batch_enabled) return -2;
+    pd->batch_enabled = true;
+    return 0;
+}
+
+void pd_abort_mapping(page_directory_t *pd){
+    mapping_task_t *task;
+    while (ll_size(pd->mapping_tasks) > 0){
+        ll_remove_first(pd->mapping_tasks, (void **)&task);
+        if (task->resource != NULL) free(task->resource);
+        free(task);
+    }
+    pd->batch_enabled = false;
+}
+
+void pd_commit_mapping(page_directory_t *pd){
+    mapping_task_t *task;
+    while (ll_size(pd->mapping_tasks) > 0){
+        ll_remove_first(pd->mapping_tasks, (void **)&task);
+        uint32_t pde_i = (task->v_addr >> (OFF_SHIFT + PTE_SHIFT)) & 0x3FF;
+        uint32_t pte_i = (task->v_addr >> OFF_SHIFT) & 0x3FF;
+        uint32_t pde_value = pd->directory[pde_i];
+        uint32_t *page_table = (uint32_t *)REMOVE_FLAGS(pde_value);
+        page_table[pte_i] = task->pte;
+        free(task);
+    }
+    pd->batch_enabled = false;
+}
+
+
 /** @brief Creates a mapping in a page directory with given flags
  *
  *  Requires that both v_addr and p_addr are page aligned
@@ -325,19 +363,37 @@ int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
     pte_value = ADD_FLAGS(p_addr, pte_flags);
 
     /* create a table if needed */
+
+    void *resource = NULL;
+
     if (entry_present(pd->directory[pde_i]) != ENTRY_PRESENT){
         if ((pde_value = (uint32_t)memalign(PAGE_SIZE, PT_SIZE)) == 0)
             return -2;
+        resource = (void *)(pde_value);
         memset((void *)pde_value, 0, PAGE_SIZE);
         pde_value = ADD_FLAGS(pde_value, pde_flags);
         pd->directory[pde_i] = pde_value;
     } else {
         pde_value = pd->directory[pde_i];
     }
-
     /* get address of page table and save mapping */
     uint32_t *page_table = (uint32_t *)REMOVE_FLAGS(pde_value);
-    page_table[pte_i] = pte_value;
+
+    /* check if we should create mapping right away or add to mapping tasks */
+    if (pd->batch_enabled){
+        mapping_task_t *task = malloc(sizeof(mapping_task_t));
+        if (task == NULL) return -3;
+        task->v_addr = v_addr;
+        task->pte = pte_value;
+        task->resource = resource;
+        if (ll_add_last(pd->mapping_tasks, task) < 0){
+            free(task);
+            free(resource);
+            return -4;
+        }
+    } else {
+        page_table[pte_i] = pte_value;
+    }
 
     return 0;
 }
@@ -365,7 +421,19 @@ int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr){
     if (entry_present(page_table[pte_i]) != ENTRY_PRESENT)
         return -3;
     /* clear the mapping */
-    page_table[pte_i] = 0;
+    if (pd->batch_enabled){
+        mapping_task_t *task = malloc(sizeof(mapping_task_t));
+        if (task == NULL) return -3;
+        task->v_addr = v_addr;
+        task->pte = 0;
+        task->resource = NULL;
+        if (ll_add_last(pd->mapping_tasks, task) < 0){
+            free(task);
+            return -4;
+        }
+    } else {
+        page_table[pte_i] = 0;
+    }
     return 0;
 }
 
@@ -393,11 +461,28 @@ int pd_init(page_directory_t *pd){
     if (initialize_kernel(pd) < 0){
         free(pd->directory);
         pd->directory = NULL;
-        return -1;
+        return -2;
     }
     pd->num_pages = 0;
+    pd->batch_enabled = false;
+    pd->mapping_tasks = malloc(sizeof(ll_t));
+    if (pd->mapping_tasks == NULL) return -3;
     pd->p_addr_list = malloc(sizeof(ll_t));
-    ll_init(pd->p_addr_list);
+    if (pd->p_addr_list == NULL){
+        free(pd->mapping_tasks);
+        return -4;
+    }
+    if (ll_init(pd->p_addr_list) < 0){
+        free(pd->mapping_tasks);
+        free(pd->p_addr_list);
+        return -5;
+    }
+    if (ll_init(pd->mapping_tasks) < 0){
+        ll_destroy(pd->p_addr_list);
+        free(pd->mapping_tasks);
+        free(pd->p_addr_list);
+        return -6;
+    }
 
     return 0;
 }
@@ -470,9 +555,13 @@ int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages){
     pd->num_pages += num_pages;
     /* add first for better locality */
     pd_frame_metadata_t *metadata = malloc(sizeof(pd_frame_metadata_t));
+    if (metadata == NULL) return -2;
     metadata->p_addr = p_addr;
     metadata->num_pages = num_pages;
-    ll_add_first(pd->p_addr_list, (void *)metadata);
+    if (ll_add_first(pd->p_addr_list, (void *)metadata) < 0){
+        free(metadata);
+        return -3;
+    }
     return 0;
 }
 
