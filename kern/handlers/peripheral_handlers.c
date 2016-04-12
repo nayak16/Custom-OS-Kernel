@@ -14,7 +14,7 @@
 
 
 uint32_t c_timer_handler(uint32_t old_esp) {
-    scheduler_num_ticks++;
+    sched.num_ticks++;
 
     /* Wake up any sleeping threads */
     if (scheduler_wakeup(&sched) < 0){

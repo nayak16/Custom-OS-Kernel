@@ -35,7 +35,7 @@ int syscall_make_runnable_c_handler(int tid){
 }
 
 unsigned int syscall_get_ticks_c_handler(){
-    return scheduler_num_ticks;
+    return sched.num_ticks;
 }
 
 int syscall_sleep_c_handler(uint32_t old_esp, int ticks){

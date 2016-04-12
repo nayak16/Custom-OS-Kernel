@@ -67,7 +67,7 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
 
     int tid;
     /* Add duplicate to scheduler runnable queue */
-    if((tid = scheduler_add_process_safe(&sched,
+    if((tid = scheduler_add_process(&sched,
                 duplicate_pcb, saved_regs)) < 0) {
         /* Cleanup on failure */
         pcb_destroy_s(duplicate_pcb);

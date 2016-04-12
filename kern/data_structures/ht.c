@@ -143,6 +143,23 @@ int ht_put(ht_t *t, key_t key, void *val) {
     return 0;
 }
 
+int ht_put_entry(ht_t *t, ht_entry_t *entry, ll_node_t *entry_node) {
+    if (t == NULL || entry == NULL) return -1;
+
+    void *dummy;
+    /* Check if specified key value pair is already in the ht */
+    if (ht_get(t, entry->key, &dummy) != -2) return -4;
+
+    /* Index into correct bucket */
+    int idx = t->hash(entry->key) % t->max_size;
+
+    if(ll_link_node_last(&(t->arr[idx]), entry_node) < 0) return -3;
+    t->size++;
+    return 0;
+}
+
+
+
 /**
  * @brief Destroys the specified hash table and frees it's data structures
  *

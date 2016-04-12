@@ -18,7 +18,7 @@
 #include <tcb_pool.h>
 #include <tcb.h>
 #include <x86/asm.h>
-
+#include <kern_internals.h>
 #include <simics.h>
 
 int tid_hash(key_t tid) {
@@ -45,7 +45,11 @@ int tcb_pool_init(tcb_pool_t *tp) {
 
 
 /**
- * @brief Adds the specified tcb to the runnable pool for the first time
+ * @brief Adds the specified tcb to the runnable pool for the first time.
+ * Utilizes the scheduler lock to ensure no other thread is touching the
+ * data structures while they are being modified. To ensure, that the
+ * scheduler isn't locked during malloc, since it is a blackbox and may
+ * take a long time, all mallocing is done before hand.
  *
  * @param tp Thread pool to add to
  * @param tcb Pointer to tcb to add
@@ -53,31 +57,81 @@ int tcb_pool_init(tcb_pool_t *tp) {
  * @return 0 on success, negative error code otherwise
  *
  */
-int tcb_pool_add_runnable_tcb(tcb_pool_t *tp, tcb_t *tcb) {
+int tcb_pool_add_runnable_tcb_safe(tcb_pool_t *tp, tcb_t *tcb) {
     if (tp == NULL || tcb == NULL) return -1;
+
+    /* Malloc all necessary structures before locking the scheduler */
 
     /* Create new node to insert into hashtable */
     ll_node_t *node = malloc(sizeof(ll_node_t));
     if (ll_node_init(node, (void *) tcb) < 0) return -2;
 
-    /* Insert node into hashtable */
-    if (ht_put(&(tp->threads), (key_t) tcb->tid, (void*) node) < 0) return -3;
+    /* Create new hash table entry for new tcb node */
+    ht_entry_t *new_e = malloc(sizeof(ht_entry_t));
+    if (new_e == NULL) return -3;
+    new_e->val = (void*)node;
+    new_e->key = (key_t) tcb->tid;
+
+    /* Create node to insert entry into hashtable bucket */
+    ll_node_t *entry_node = malloc(sizeof(ll_node_t));
+    if (ll_node_init(entry_node, (void*) new_e) < 0) return -4;
+
+    /* Lock the scheduler while inserting */
+    sched_mutex_lock(&sched_lock);
+
+    /* Insert entry and node into hashtable */
+    if (ht_put_entry(&(tp->threads), new_e, entry_node) < 0) return -3;
 
     /* Put same node into runnable pool */
     if (ll_link_node_last(&(tp->runnable_pool), node) < 0) return -4;
 
+    /* Unlock the scheduler and proceed */
+    sched_mutex_unlock(&sched_lock);
+
     return 0;
 }
 
-int tcb_pool_add_pcb(tcb_pool_t *tp, pcb_t *pcb) {
+/**
+ * @brief Adds the specified pcb to the processes hash table.
+ * Utilizes the scheduler lock to ensure no other thread is touching the
+ * data structures while they are being modified. To ensure, that the
+ * scheduler isn't locked during malloc, since it is a blackbox and may
+ * take a long time, all mallocing is done before hand.
+ *
+ * @param tp Thread pool to add to
+ * @param tcb Pointer to tcb to add
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
+
+int tcb_pool_add_pcb_safe(tcb_pool_t *tp, pcb_t *pcb) {
     if (tp == NULL || pcb == NULL) return -1;
+
+    /* Malloc all necessary structures before locking the scheduler */
 
     /* Create new node to insert into hashtable */
     ll_node_t *node = malloc(sizeof(ll_node_t));
     if (ll_node_init(node, (void *) pcb) < 0) return -2;
 
-    /* Insert node into hashtable */
-    if (ht_put(&(tp->processes), (key_t) pcb->pid, (void*) node) < 0) return -3;
+    /* Create new hash table entry for new pcb node */
+    ht_entry_t *new_e = malloc(sizeof(ht_entry_t));
+    if (new_e == NULL) return -3;
+    new_e->val = (void*)node;
+    new_e->key = (key_t) pcb->pid;
+
+    /* Create node to insert entry into hashtable bucket */
+    ll_node_t *entry_node = malloc(sizeof(ll_node_t));
+    if (ll_node_init(entry_node, (void*) new_e) < 0) return -4;
+
+    /* Lock the scheduler while inserting */
+    sched_mutex_lock(&sched_lock);
+
+    /* Insert entry and node into hashtable safely */
+    if (ht_put_entry(&(tp->processes), new_e, entry_node) < 0) return -3;
+
+    /* Unlock the scheduler and proceed */
+    sched_mutex_unlock(&sched_lock);
 
     return 0;
 }
@@ -219,7 +273,7 @@ int tcb_pool_reap(tcb_pool_t *tp){
         }
 
         /* Disable Interrupts while modifying tcb pool */
-        disable_interrupts();
+        sched_mutex_lock(&sched_lock);
 
         /* Remove from tcb hash table and zombie pool */
         if (tcb_pool_remove_tcb(tp, tcb->tid, &addrs_to_free) < 0) {
@@ -232,7 +286,7 @@ int tcb_pool_reap(tcb_pool_t *tp){
         }
 
         /* Enable interrupts before freeing and attempting to acquire heap lock */
-        enable_interrupts();
+        sched_mutex_unlock(&sched_lock);
 
         /* Check if pcb has no more threads running */
         if (tcb->pcb->num_threads == 0) {

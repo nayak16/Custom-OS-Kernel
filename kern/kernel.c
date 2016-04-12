@@ -53,6 +53,7 @@ mutex_t heap_lock;
 frame_manager_t fm;
 mutex_t console_lock;
 keyboard_t keyboard;
+sched_mutex_t sched_lock;
 
 /** @brief Reaper entrypoint
  *
@@ -98,6 +99,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     fm_init(&fm, 15);
     /* initialize pd kernel pages */
     pd_init_kernel();
+
+    /* Init the scheduler lock */
+    sched_mutex_init(&sched_lock, &sched);
 
     /* initialize a scheduler */
     scheduler_init(&sched, reaper_main);

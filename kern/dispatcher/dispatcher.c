@@ -28,9 +28,9 @@ void initial_mode_switch(tcb_t *tcb) {
  *
  */
 uint32_t context_switch_safe(uint32_t old_esp, int target_tid) {
-    disable_interrupts();
+    sched_mutex_lock(&sched_lock);
     uint32_t new_esp = context_switch(old_esp, target_tid);
-    enable_interrupts();
+    sched_mutex_unlock(&sched_lock);
     return new_esp;
 }
 

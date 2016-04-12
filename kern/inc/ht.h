@@ -37,6 +37,8 @@ int ht_init(ht_t *t, uint32_t max_size, int (*hash)(key_t key));
 int ht_get(ht_t *t, key_t key, void **valp);
 int ht_remove(ht_t *t, key_t key, void **valp, circ_buf_t *addrs_to_free);
 int ht_put(ht_t *t, key_t key, void *val);
+int ht_put_entry(ht_t *t, ht_entry_t *entry, ll_node_t *entry_node);
+
 void ht_destroy(ht_t *t);
 
 #endif /* _HT_H_ */
