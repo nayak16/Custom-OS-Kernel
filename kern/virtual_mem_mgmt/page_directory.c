@@ -95,6 +95,7 @@ int pd_init_kernel(){
      * to the global variable kernel_pde */
     page_directory_t pd_temp;
     pd_temp.directory = kernel_pde;
+    pd_temp.mapping_tasks = NULL;
 
     /* present, rw enabled, supervisor mode, dont flush */
     uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET);
@@ -478,15 +479,19 @@ int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages){
 /** @brief Removes frame metadata from a page directory with a given address
  *  @param pd The page directory
  *  @param p_addr Base address of the physical frame to be removed
+ *  @param frame_size Optional address to store the frame size that was
+ *  dealloacated
  *  @return 0 On success -1 on failure
  */
-int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr){
+int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr,
+        uint32_t *frame_size){
     if (pd == NULL) return -1;
     pd_frame_metadata_t *metadata;
     if (ll_remove(pd->p_addr_list, &pd_frame_metadata_addr,
             (void *)p_addr, (void **)&metadata, NULL) < 0)
         return -2;
     pd->num_pages -= metadata->num_pages;
+    if (frame_size != NULL) *frame_size = metadata->num_pages;
     free(metadata);
     return 0;
 }
@@ -507,15 +512,18 @@ int pd_num_frames(page_directory_t *pd){
  *  @param addr_list The array to store to
  *  @return 0 on success, negative integer code on failure
  */
-int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list){
+int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list, uint32_t *size_list){
     if (pd == NULL || addr_list == NULL) return -1;
     int arr_i = 0;
     while (pd_num_frames(pd) > 0){
         pd_frame_metadata_t *metadata;
         ll_remove_first(pd->p_addr_list, (void **)&metadata);
         addr_list[arr_i] = metadata->p_addr;
+        if (size_list != NULL)
+            size_list[arr_i] = metadata->num_pages;
         arr_i++;
     }
+    pd->num_pages = 0;
     return 0;
 }
 

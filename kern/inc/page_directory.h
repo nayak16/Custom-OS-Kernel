@@ -74,6 +74,7 @@ typedef struct page_directory {
     uint32_t *directory;
     uint32_t num_pages;
     ll_t *p_addr_list;
+    ll_t *mapping_tasks;
 } page_directory_t;
 
 int pd_init(page_directory_t *pd);
@@ -92,8 +93,10 @@ int pd_map_sections(page_directory_t *pd, mem_section_t *secs,
 void *pd_get_base_addr(page_directory_t *pd);
 
 int pd_alloc_frame(page_directory_t *pd, uint32_t p_addr, uint32_t num_pages);
-int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr);
-int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list);
+int pd_dealloc_frame(page_directory_t *pd, uint32_t p_addr,
+        uint32_t *frame_size);
+int pd_dealloc_all_frames(page_directory_t *pd, uint32_t *addr_list,
+        uint32_t *size_list);
 int pd_num_frames(page_directory_t *pd);
 int pd_clear_user_space(page_directory_t *pd);
 void pd_destroy(page_directory_t *pd);
