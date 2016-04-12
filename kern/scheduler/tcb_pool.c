@@ -21,6 +21,18 @@
 #include <kern_internals.h>
 #include <simics.h>
 
+
+/**
+ * @brief Approximate number of addresses tcb_pool data structures have
+ * allocated per tcb. Obtained by looking through tcb_pool code and
+ * seeing max number of frees required to remove a tcb and pcb from the
+ * thr_pool data structures
+ *
+ * Used to determine size of circ_buf to store allocated addresses
+ * in tcb_pool_reap
+ */
+#define NUM_ADDRS 32
+
 int tid_hash(key_t tid) {
     return (int) tid;
 }
@@ -260,7 +272,7 @@ int tcb_pool_reap(tcb_pool_t *tp){
     tcb_t *tcb;
     circ_buf_t addrs_to_free;
 
-    if (circ_buf_init(&addrs_to_free, 32) < 0) return -2;
+    if (circ_buf_init(&addrs_to_free, NUM_ADDRS) < 0) return -2;
 
     while(1) {
         /* Wait on zombies to be available */
