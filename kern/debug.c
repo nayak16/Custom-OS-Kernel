@@ -1,4 +1,4 @@
-/** @file debug.h
+/** @file debug.c
  *  @brief Implementation of debugging functions
  *
  *  @author Christopher Wei (cjwei)

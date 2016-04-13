@@ -70,6 +70,11 @@
 #define REMOVE_FLAGS(v) ((uint32_t)v & ~0xFFF)
 #define EXTRACT_FLAGS(v) ((uint32_t)v & 0xFFF)
 
+#define PRIV_USER 1
+#define PRIV_KERNEL 0
+#define ACC_RO 0
+#define ACC_RW 1
+
 typedef struct page_directory {
     uint32_t *directory;
     uint32_t num_pages;

@@ -28,6 +28,15 @@
 
 #include <stdio.h>
 
+/** @brief Given a stack pointer to the esp directly after the context has been
+ *         saved, converts it into a ureg
+ *  @param ureg The ureg to store to
+ *  @param cause The cause of the exception
+ *  @param stack The esp right after saving context
+ *  @param generates_error_code Whether or not the particular exception
+ *         generates an error code
+ *  @return 0 on success, negative integer code on failure
+ */
 int ureg_from_stack(ureg_t *ureg, uint32_t cause, uint32_t *stack,
         bool generates_error_code){
     if (stack == NULL) return -1;
@@ -40,6 +49,13 @@ int ureg_from_stack(ureg_t *ureg, uint32_t cause, uint32_t *stack,
     return 0;
 }
 
+/** @brief Executes a swexn if any exists for the current thread
+ *  @param cause The cause of the exception
+ *  @param stack The stack address directly after context has been saved
+ *  @param generates_error_code Whether or not the particular exception
+ *         generates an error code
+ *  @return 0 on successful swexn execution, otherwise negative integer code
+ */
 int swexn_execute(uint32_t cause, uint32_t *stack, bool generates_error_code){
     /* get the current context */
     ureg_t ureg;
@@ -66,13 +82,13 @@ int swexn_execute(uint32_t cause, uint32_t *stack, bool generates_error_code){
         *(arg_ptr-2) = (uint32_t)(NULL);
 
         int offset;
-
+        /* account for error code if it is not generated */
         if (generates_error_code){
             offset = 0;
         } else {
             offset = -1;
         }
-
+        /* update the iret stack */
         stack[ESP_IDX+offset] = (uint32_t)(arg_ptr-2);
         stack[SS_IDX+offset] = (uint32_t)SEGSEL_USER_DS;
         stack[EFLAGS_IDX+offset] = (uint32_t)get_user_eflags();
@@ -84,6 +100,10 @@ int swexn_execute(uint32_t cause, uint32_t *stack, bool generates_error_code){
     return -4;
 }
 
+/** @brief Given a cause, print to the console the reason for the exception
+ *  @param cause The exception cause coe
+ *  @return Void
+ */
 void exception_dump(int cause){
     tcb_t *cur_tcb;
     scheduler_get_current_tcb(&sched, &cur_tcb);
@@ -145,6 +165,10 @@ void exception_dump(int cause){
             cur_tcb->tid, reason, cur_tcb->exit_status);
 }
 
+/** @brief Prints all the registers to the console
+ *  @param stack Pointer to the bottom of the saved context
+ *  @return Void\
+ */
 void register_dump(uint32_t *stack){
     printf("------ Context ------\n\
     ss:     0x%x\n\
@@ -183,10 +207,18 @@ void register_dump(uint32_t *stack){
 
 }
 
+/** @brief Prints cr2 to the console
+ *  @return Void
+ */
 void print_cr2(){
     printf("cr2: %p\n", (void *)get_cr2());
 }
 
+
+/** @brief Implements the page fault handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void page_fault_c_handler(uint32_t *stack){
     /* attempt to execute swexn */
     if (swexn_execute(SWEXN_CAUSE_PAGEFAULT, stack, true) == 0)
@@ -198,12 +230,18 @@ void page_fault_c_handler(uint32_t *stack){
     register_dump(stack);
     thr_vanish();
 }
-
+/** @brief Implements the double fault handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void double_fault_c_handler(uint32_t *stack){
     exception_dump(IDT_DF);
     register_dump(stack);
 }
-
+/** @brief Implements the division error handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void division_error_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_DIVIDE, stack, false) == 0)
         return;
@@ -215,7 +253,10 @@ void division_error_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the debug exception handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void debug_exception_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_DEBUG, stack, false) == 0)
         return;
@@ -227,7 +268,10 @@ void debug_exception_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the breakpoint handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void breakpoint_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_BREAKPOINT, stack, false) == 0)
         return;
@@ -239,7 +283,10 @@ void breakpoint_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the overflow handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void overflow_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_OVERFLOW, stack, false) == 0)
         return;
@@ -251,7 +298,10 @@ void overflow_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the bound range handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void bound_range_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_BOUNDCHECK, stack, false) == 0)
         return;
@@ -263,7 +313,10 @@ void bound_range_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the undefined op handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void undef_op_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_OPCODE, stack, false) == 0)
         return;
@@ -275,7 +328,10 @@ void undef_op_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the no math handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void no_math_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_NOFPU, stack, false) == 0)
         return;
@@ -287,7 +343,10 @@ void no_math_c_handler(uint32_t *stack){
 
 }
 
-
+/** @brief Implements the cso handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void coprocessor_segment_overrun_c_handler(uint32_t *stack){
     thr_set_status(-2);
 
@@ -296,7 +355,10 @@ void coprocessor_segment_overrun_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the invalid tss handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void invalid_tss_c_handler(uint32_t *stack){
     thr_set_status(-2);
 
@@ -305,7 +367,10 @@ void invalid_tss_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the segment not present handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void segment_not_present_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_SEGFAULT, stack, true) == 0)
         return;
@@ -317,7 +382,10 @@ void segment_not_present_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the ss fault handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void ss_fault_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_STACKFAULT, stack, true) == 0)
         return;
@@ -329,7 +397,10 @@ void ss_fault_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the gp fault handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void gp_fault_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_PROTFAULT, stack, true) == 0)
         return;
@@ -341,7 +412,10 @@ void gp_fault_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the math fault handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void math_fault_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_FPUFAULT, stack, false) == 0)
         return;
@@ -353,7 +427,10 @@ void math_fault_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the align fault handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void align_fault_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_ALIGNFAULT, stack, true) == 0)
         return;
@@ -365,13 +442,19 @@ void align_fault_c_handler(uint32_t *stack){
     thr_vanish();
 
 }
-
+/** @brief Implements the machine check handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void machine_check_fault_c_handler(uint32_t *stack){
     exception_dump(IDT_MC);
     register_dump(stack);
     thr_vanish();
 }
-
+/** @brief Implements the simd handler
+ *  @param stack The bottom address of the saved context
+ *  @return Void
+ */
 void simd_fault_c_handler(uint32_t *stack){
     if (swexn_execute(SWEXN_CAUSE_SIMDFAULT, stack, false) == 0)
         return;

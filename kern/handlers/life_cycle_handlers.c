@@ -195,14 +195,27 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
     return 0;
 }
 
+
+/** @brief Implements the set_status system call
+ *  @param status The status to set the current tcb's exit status to
+ *  @return Void
+ */
 void syscall_set_status_c_handler(int status){
     thr_set_status(status);
 }
 
+/** @brief Implements the vanish system call
+ *  @return Does not return
+ */
 void syscall_vanish_c_handler(){
     thr_vanish();
 }
 
+
+/** @brief Implements the wait system call
+ *  @param status_ptr Where to store the status of the collected child
+ *  @return 0 on success, negative integer code on failure
+ */
 int syscall_wait_c_handler(int *status_ptr){
     pcb_t *cur_pcb;
     int original_pid;
