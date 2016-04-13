@@ -57,6 +57,7 @@
 
 /** @brief denotes 0 privilege level */
 #define FLAG_DPL_0 0
+/** @brief denotes 3 privilege level */
 #define FLAG_DPL_3 3
 /** @brief (bit) offset of privilege flag */
 #define FLAG_DPL_OFFSET 5
@@ -110,11 +111,14 @@ void idt_install_entry(uint32_t offset, uint16_t seg_sel, uint8_t p,
 
 /* Implementation */
 
+/** @brief A wrapper around idt_install_entry that installs a syscall handler */
 #define INSTALL_SYSCALL(handler, int_num)\
     (idt_install_entry((uint32_t)handler, SEGSEL_KERNEL_CS,\
         FLAG_PRESENT_TRUE, FLAG_DPL_3, FLAG_D_32, int_num, FLAG_TRAP_GATE))
 
-
+/** @brief Installs all syscalls
+ *  @return 0
+ */
 int install_syscall_handlers(){
     /* Life cycle */
     INSTALL_SYSCALL(syscall_fork_handler, FORK_INT);
@@ -153,6 +157,10 @@ int install_syscall_handlers(){
     return 0;
 }
 
+
+/** @brief Installs all exception handlers
+ *  @return 0
+ */
 int install_exception_handlers() {
 
     /* Page Fault */
@@ -230,12 +238,11 @@ int install_exception_handlers() {
     return 0;
 }
 
-
+/** @brief installs timer and keyboard
+ *  @return 0
+ */
 int install_peripheral_handlers(){
     char lsb, msb;
-
-    /* set tickback */
-    //timer_callback = tickback;
 
     /* install IDT entry for timer*/
 
