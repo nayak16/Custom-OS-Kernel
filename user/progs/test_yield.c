@@ -1,6 +1,6 @@
-/** @file 410user/progs/idle.c
- *  @author ?
- *  @brief Idle program.
+/** @file test_yield.c
+ *  @author Christopher Wei
+ *  @brief tests yielding to specific thread
  *  @public yes
  *  @for p2 p3
  *  @covers

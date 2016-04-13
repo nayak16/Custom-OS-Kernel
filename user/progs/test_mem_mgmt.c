@@ -1,6 +1,6 @@
-/** @file test_cs.c
- *  @author Aatish
- *  @brief Tests to see if context switch works
+/** @file test_mem_mgmt.c
+ *  @author Christopher Wei
+ *  @brief Tests various cases for new_pages and remove_pages
  *  @public yes
  *  @for p3
  *  @status done

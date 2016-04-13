@@ -1,3 +1,12 @@
+/** @file test_hello.c
+ *  @author Aatish Nayak (aatishn)
+ *  @brief forks and execs into "test_foo" and context switches between the
+ *  parent and child process.
+ *  @public yes
+ *  @for p3
+ *  @status done
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <syscall.h>

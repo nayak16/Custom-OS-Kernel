@@ -2,6 +2,9 @@
  * @author Christopher Wei (cjwei)
  * @brief Tests divide by zero handler and swexn (div by 0 doesnt generate
  * an error code is this is really testing that logic)
+ * @public yes
+ * @for p3
+ * @status done
  */
 
 #include <simics.h>
@@ -23,6 +26,7 @@ void success(){
 
 
 void handler(void *arg, ureg_t *uregs){
+    /* catch div by 0 error */
     REPORT_MISC("Hello from a handler");
     if (uregs->cause != SWEXN_CAUSE_DIVIDE){
         REPORT_MISC("not a divide by zero error!");
@@ -30,6 +34,7 @@ void handler(void *arg, ureg_t *uregs){
     if (uregs == NULL){
         REPORT_MISC("bad uregs");
     }
+    /* jump to "success" upon return */
     uregs->eip = (int)success;
     swexn(EXN_STAQ_TOP, handler, NULL, uregs);
 }
@@ -39,10 +44,12 @@ int main(){
     int x = 1;
     int y = 0;
 
+    /* install handler */
     int ret = swexn(EXN_STAQ_TOP, handler, NULL, NULL);
     if (ret < 0){
         REPORT_MISC("Uh oh! Swexn failed!");
     }
+    /* generate div by 0 error */
     int z = x/y;
     REPORT_MISC("Oops! Should not have gotten here");
     return z;

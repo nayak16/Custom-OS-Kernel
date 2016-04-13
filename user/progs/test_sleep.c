@@ -1,3 +1,11 @@
+/** @file test_sleep.c
+ *  @author Chris
+ *  @brief Tests sleep
+ *  @public yes
+ *  @for p3
+ *  @status done
+ */
+
 
 #include <syscall.h>
 #include <simics.h>

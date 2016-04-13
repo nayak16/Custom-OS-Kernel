@@ -1,5 +1,10 @@
-/** @file test_new_pages_rollback.c
- *  @brief attempts to allocate more frames than avaliable
+/** @file test_console_io.c
+ *  @author Christopher Wei (cjwei)
+ *  @covers set_term_color get_cursor_pos set_cursor_pos print
+ *  @brief prints "Ho Ho Ho" in various colors at various positions
+ *  @public yes
+ *  @for p3
+ *  @status done
  */
 
 #include <stdlib.h>

@@ -1,3 +1,13 @@
+/** @file test_deschedule.c
+ *  @author Christopher Wei (cjwei)
+ *  @covers gettid fork deschedule make_runnable
+ *  @brief forks a new process and deschedules until the new process wakes the
+ *  parent up
+ *  @public yes
+ *  @for p3
+ *  @status done
+ */
+
 #include <simics.h>
 #include <syscall.h>
 

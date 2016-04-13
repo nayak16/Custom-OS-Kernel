@@ -1,5 +1,5 @@
 /** @file test_cs.c
- *  @author Aatish
+ *  @author Aatish Nayak (aatishn)
  *  @brief Tests to see if context switch works
  *  @public yes
  *  @for p3
