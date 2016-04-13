@@ -23,7 +23,6 @@
 /* --- Prototypes --- */
 
 int getbytes( const char *filename, int offset, int size, char *buf );
-int get_all_files(char *buf, int buf_len);
 
 int load_elf_sections(simple_elf_t *elf, pcb_t *pcb);
 int load_elf_exists(const char *filename);

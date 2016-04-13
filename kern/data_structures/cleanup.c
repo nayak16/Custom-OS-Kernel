@@ -3,7 +3,7 @@
  *  @author Christopher Wei (cjwei)
  *  @author Aatish Nayak (aatishn)
 
- *  @bug No known bugs
+ *  @bug Never tested and never used
  */
 
 #include <cleanup.h>
