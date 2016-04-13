@@ -1,6 +1,4 @@
 
-
-
 .macro build_iret_stack
     movl %esp, %eax /* Save current esp in eax */
     push %ss        /* Save ss */

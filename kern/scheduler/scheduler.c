@@ -23,6 +23,119 @@
 #include <simics.h>
 
 
+/**
+ * @brief Adds the OS/shell init process to the scheduler
+ *
+ * Saves the pcb so future vanished threads can report to this process
+ *
+ * @param sched Scheduler to add to
+ * @param init_pcb Pcb containing the init program
+ *
+ * @return 0 on success, -1 on error
+ */
+int scheduler_add_init_process(scheduler_t *sched, pcb_t *init_pcb) {
+    if (sched == NULL || init_pcb == NULL) return -1;
+
+    sched->init_pcb = init_pcb;
+
+    if (scheduler_add_process(sched, init_pcb, NULL) < 0) return -2;
+
+    return 0;
+}
+
+/**
+ * @brief Creates a tcb for the idle pcb specified and saves it in the
+ * scheduler.
+ *
+ * The idle tcb will run when no other tcb exists in the
+ * runnable pool.
+ *
+ * @param sched Scheduler to add to
+ * @param idle_pcb Pointer to idle pcb with add
+ *
+ * @return tid of idle tcb on success, negative error code otherwise
+ *
+ */
+int scheduler_add_idle_process(scheduler_t *sched, pcb_t *idle_pcb) {
+    if (sched == NULL) return -1;
+
+    /* Set pid of idle_pcb */
+    idle_pcb->pid = sched->next_pid++;
+
+    /* Create idle tcb */
+    tcb_t *idle_tcb = malloc(sizeof(tcb_t));
+    if (idle_tcb == NULL) return -2;
+    int tid = sched->next_tid++;
+    tcb_init(idle_tcb, tid, idle_pcb, NULL);
+
+    /* Save into scheduler */
+    sched->idle_tcb = idle_tcb;
+
+    return tid;
+}
+
+
+/**
+ * @brief Initializes a reaper process and adds it to the runnable pool.
+ *
+ * Since the reaper will exclusively be running in kernel mode, it needs
+ * different initial register values than a normal thread that runs in user
+ * and kernel mode. A scheduler malloced reaper stack is used by the reaper
+ * thread while running.
+ *
+ * @param sched scheduler_t to add reaper process to
+ * @param reaper_pcb pcb that has the reaper program
+ * @param reap_func function that the reaper will infinitely loop in
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
+int scheduler_add_reaper_proc(scheduler_t *sched,
+                              pcb_t *reaper_pcb, void (*reap_func)(void)) {
+    if (sched == NULL || reaper_pcb == NULL) return -1;
+
+    uint32_t regs[REGS_SIZE];
+
+    /* Construct reg values */
+    regs[SS_IDX] = SEGSEL_KERNEL_DS;
+    regs[ESP_IDX] = (uint32_t) sched->reaper_stack_top;
+    regs[EFLAGS_IDX] = get_user_eflags();
+    regs[CS_IDX] = SEGSEL_KERNEL_CS;
+    regs[EIP_IDX] = (uint32_t) reap_func;
+    regs[ECX_IDX] = 0;
+    regs[EDX_IDX] = 0;
+    regs[EBX_IDX] = 0;
+    regs[EBP_IDX] = (uint32_t) sched->reaper_stack_top;
+    regs[ESI_IDX] = 0;
+    regs[EDI_IDX] = 0;
+    regs[DS_IDX] = SEGSEL_KERNEL_DS;
+    regs[ES_IDX] = SEGSEL_KERNEL_DS;
+    regs[FS_IDX] = SEGSEL_KERNEL_DS;
+    regs[GS_IDX] = SEGSEL_KERNEL_DS;
+
+    /* Create reaper tcb */
+    tcb_t *reaper_tcb = malloc(sizeof(tcb_t));
+    if (reaper_tcb == NULL) return -2;
+    int tid = sched->next_tid++;
+
+    /* Init new tcb */
+    if (tcb_init(reaper_tcb, tid, reaper_pcb, regs) < 0) {
+        free(reaper_tcb);
+        return -3;
+    }
+
+    /* Save reaper tcb */
+    sched->reaper_tcb = reaper_tcb;
+
+    /* Add the pcb to the pool */
+    if (tcb_pool_add_pcb_safe(&(sched->thr_pool), reaper_pcb) < 0) return -4;
+    /* Add a runnable tcb to pool */
+    if (tcb_pool_add_runnable_tcb_safe(&(sched->thr_pool),
+                                        reaper_tcb) < 0) return -3;
+
+    return 0;
+}
+
 
 /**
  * @brief Initialize a scheduler's internal data structures and values
@@ -125,23 +238,6 @@ int scheduler_get_tcb_by_tid(scheduler_t *sched,
 
     /* Find the correct tcb from the pool */
     if (tcb_pool_find_tcb(&(sched->thr_pool), target_tid, tcbp) < 0) return -2;
-
-    return 0;
-}
-
-/**
- * @brief Removes current tcb from thr_pool and cleans up its resources
- * appropriately
- *
- * Called in vanish and exception handlers
- *
- * @param sched Scheduler to clean up from
- *
- * @return 0 on success, negative error code otherwise
- *
- */
-int scheduler_cleanup_current_safe(scheduler_t *sched) {
-
 
     return 0;
 }
@@ -403,106 +499,6 @@ int scheduler_get_current_tcb(scheduler_t *sched, tcb_t **tcbp) {
     if (sched == NULL) return -1;
     *tcbp = sched->cur_tcb;
     return 0;
-}
-
-
-/**
- * @brief Adds the OS/shell init process to the scheduler
- *
- * Saves the pcb so future vanished threads can report to this process
- *
- * @param sched Scheduler to add to
- * @param init_pcb Pcb containing the init program
- *
- * @return 0 on success, -1 on error
- */
-int scheduler_add_init_process(scheduler_t *sched, pcb_t *init_pcb) {
-    if (sched == NULL || init_pcb == NULL) return -1;
-
-    sched->init_pcb = init_pcb;
-
-    if (scheduler_add_process(sched, init_pcb, NULL) < 0) return -2;
-
-    return 0;
-}
-
-/**
- * @brief Creates a tcb for the idle pcb specified and saves it in the
- * scheduler.
- *
- * The idle tcb will run when no other tcb exists in the
- * runnable pool.
- *
- * @param sched Scheduler to add to
- * @param idle_pcb Pointer to idle pcb with add
- *
- * @return tid of idle tcb on success, negative error code otherwise
- *
- */
-int scheduler_add_idle_process(scheduler_t *sched, pcb_t *idle_pcb) {
-    if (sched == NULL) return -1;
-
-    /* Set pid of idle_pcb */
-    idle_pcb->pid = sched->next_pid++;
-
-    /* Create idle tcb */
-    tcb_t *idle_tcb = malloc(sizeof(tcb_t));
-    if (idle_tcb == NULL) return -2;
-    int tid = sched->next_tid++;
-    tcb_init(idle_tcb, tid, idle_pcb, NULL);
-
-    /* Save into scheduler */
-    sched->idle_tcb = idle_tcb;
-
-    return tid;
-}
-
-int scheduler_add_reaper_proc(scheduler_t *sched,
-                              pcb_t *reaper_pcb, void (*reap_func)(void)) {
-    if (sched == NULL) return -1;
-
-    uint32_t regs[REGS_SIZE];
-
-    /* Construct reg values */
-    regs[SS_IDX] = SEGSEL_KERNEL_DS;
-    regs[ESP_IDX] = (uint32_t) sched->reaper_stack_top;
-    regs[EFLAGS_IDX] = get_user_eflags();
-    regs[CS_IDX] = SEGSEL_KERNEL_CS;
-    regs[EIP_IDX] = (uint32_t) reap_func;
-    regs[ECX_IDX] = 0;
-    regs[EDX_IDX] = 0;
-    regs[EBX_IDX] = 0;
-    regs[EBP_IDX] = (uint32_t) sched->reaper_stack_top;
-    regs[ESI_IDX] = 0;
-    regs[EDI_IDX] = 0;
-    regs[DS_IDX] = SEGSEL_KERNEL_DS;
-    regs[ES_IDX] = SEGSEL_KERNEL_DS;
-    regs[FS_IDX] = SEGSEL_KERNEL_DS;
-    regs[GS_IDX] = SEGSEL_KERNEL_DS;
-
-    /* Create reaper tcb */
-    tcb_t *reaper_tcb = malloc(sizeof(tcb_t));
-    if (reaper_tcb == NULL) return -2;
-    int tid = sched->next_tid++;
-
-    /* Init new tcb */
-    if (tcb_init(reaper_tcb, tid, reaper_pcb, regs) < 0) {
-        free(reaper_tcb);
-        return -3;
-    }
-
-    /* Save reaper tcb */
-    sched->reaper_tcb = reaper_tcb;
-
-    /* Add the pcb to the pool */
-    if (tcb_pool_add_pcb_safe(&(sched->thr_pool), reaper_pcb) < 0) return -4;
-    /* Add a runnable tcb to pool */
-    if (tcb_pool_add_runnable_tcb_safe(&(sched->thr_pool),
-                                        reaper_tcb) < 0) return -3;
-
-
-    return 0;
-
 }
 
 /**

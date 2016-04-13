@@ -1,12 +1,7 @@
-/** @file pcb_t.h
+/** @file pcb.h
  *
  *  @brief Implementation of process control block functions
  *
- *  Mutex is needed because other threads (not the current one) are accessing
- *  and changing a pcb possibly simultaneously. For example, in the case
- *  of a child modifying the parent. In some functions, like pcb_load_prog, a
- *  lock is not necessary because only the current running pcb should be
- *  loading a program into the itself.
  *
  */
 
