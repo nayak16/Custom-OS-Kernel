@@ -11,6 +11,11 @@
 #include <common_kern.h>
 #include <virtual_mem_mgmt.h>
 
+/** @brief Implements the new_pages system call
+ *  @param base The virtual address of the base for the new page
+ *  @param len The length of the requested pages
+ *  @return 0 on success, negative integer code on failure
+ */
 int syscall_new_pages_c_handler(void *base, int len){
     /* check for invalid base address */
     if ((uint32_t)base < USER_MEM_START) return -1;
@@ -31,6 +36,10 @@ int syscall_new_pages_c_handler(void *base, int len){
     return 0;
 }
 
+/** @brief Implements the remove_pages system call
+ *  @param base The virtual address of the base for the page to remove
+ *  @return 0 on success, negative integer code on failure
+ *  */
 int syscall_remove_pages_c_handler(void *base){
     /* Get current running pcb */
     pcb_t *cur_pcb;

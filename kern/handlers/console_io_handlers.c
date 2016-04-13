@@ -79,7 +79,7 @@ int syscall_set_cursor_pos_c_handler(int row, int col){
     return set_cursor(row, col);
 }
 
-/** @brief Implements the sget_cursor_pos system call
+/** @brief Implements the get_cursor_pos system call
  *  @param row The row pointer to store to
  *  @param col The column pointer to store to
  *  @return 0 on success, negative integer code on failure
