@@ -14,6 +14,7 @@
 #include <queue.h>
 #include <circ_buffer.h>
 #include <tcb_pool.h>
+#include <kern_internals.h>
 /* pdbr */
 #include <special_reg_cntrl.h>
 /* set_esp0 */
@@ -21,7 +22,6 @@
 
 #include <simics.h>
 
-uint32_t scheduler_num_ticks = 0;
 
 
 /**
@@ -37,6 +37,7 @@ int scheduler_init(scheduler_t *sched, void (*reap_func)(void)){
     if (sched == NULL) return -1;
     sched->started = false;
 
+    sched->num_ticks = 0;
     sched->next_tid = 0;
     sched->next_pid = 0;
     sched->cur_tcb = NULL;
@@ -240,9 +241,9 @@ int scheduler_deschedule_current(scheduler_t *sched) {
  * @return 0 on success, negative error code otherwise
  */
 int scheduler_deschedule_current_safe(scheduler_t *sched) {
-    disable_interrupts();
+    sched_mutex_lock(&sched_lock);
     int status = scheduler_deschedule_current(sched);
-    enable_interrupts();
+    sched_mutex_unlock(&sched_lock);
     return status;
 }
 
@@ -286,9 +287,9 @@ int scheduler_make_runnable(scheduler_t *sched, int tid) {
  * @return 0 on success, negative error code otherwise
  */
 int scheduler_make_runnable_safe(scheduler_t *sched, int tid) {
-    disable_interrupts();
+    sched_mutex_lock(&sched_lock);
     int status = scheduler_make_runnable(sched, tid);
-    enable_interrupts();
+    sched_mutex_unlock(&sched_lock);
     return status;
 }
 
@@ -310,11 +311,11 @@ int scheduler_make_current_sleeping(scheduler_t *sched, int ticks) {
     if (sched->cur_tcb->status == SLEEPING) return -4;
     /* Set current tcb to RUNNABLE */
     sched->cur_tcb->status = SLEEPING;
-    if (scheduler_num_ticks + ticks < scheduler_num_ticks){
+    if (sched->num_ticks + ticks < sched->num_ticks){
         //TODO: handle this...
         MAGIC_BREAK;
     }
-    sched->cur_tcb->t_wakeup = scheduler_num_ticks+ticks;
+    sched->cur_tcb->t_wakeup = sched->num_ticks+ticks;
 
     /* Manipulate tcb_pool*/
     if (tcb_pool_make_sleeping(&(sched->thr_pool), sched->cur_tcb->tid) < 0) {
@@ -337,9 +338,9 @@ int scheduler_make_current_sleeping(scheduler_t *sched, int ticks) {
  * @return 0 on success, negative error code otherwise
  */
 int scheduler_make_current_sleeping_safe(scheduler_t *sched, int ticks) {
-    disable_interrupts();
+    sched_mutex_lock(&sched_lock);
     int status = scheduler_make_current_sleeping(sched, ticks);
-    enable_interrupts();
+    sched_mutex_unlock(&sched_lock);
     return status;
 }
 /**
@@ -384,9 +385,9 @@ int scheduler_make_current_zombie(scheduler_t *sched) {
  * @return 0 on success, negative error code otherwise
  */
 int scheduler_make_current_zombie_safe(scheduler_t *sched) {
-    disable_interrupts();
+    sched_mutex_lock(&sched_lock);
     int status = scheduler_make_current_zombie(sched);
-    enable_interrupts();
+    sched_mutex_unlock(&sched_lock);
     return status;
 }
 
@@ -494,9 +495,10 @@ int scheduler_add_reaper_proc(scheduler_t *sched,
     sched->reaper_tcb = reaper_tcb;
 
     /* Add the pcb to the pool */
-    if (tcb_pool_add_pcb(&(sched->thr_pool), reaper_pcb) < 0) return -4;
+    if (tcb_pool_add_pcb_safe(&(sched->thr_pool), reaper_pcb) < 0) return -4;
     /* Add a runnable tcb to pool */
-    if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), reaper_tcb) < 0) return -3;
+    if (tcb_pool_add_runnable_tcb_safe(&(sched->thr_pool),
+                                        reaper_tcb) < 0) return -3;
 
 
     return 0;
@@ -536,12 +538,12 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     /* Set the original tid of the pcb */
     pcb_set_original_tid(pcb, tid);
     /* Inc num threads in pcb */
-    pcb_inc_threads(pcb);
+    pcb_inc_threads_s(pcb);
 
     /* Add the pcb to the pool */
-    if (tcb_pool_add_pcb(&(sched->thr_pool), pcb) < 0) return -4;
+    if (tcb_pool_add_pcb_safe(&(sched->thr_pool), pcb) < 0) return -4;
     /* Add a runnable tcb to pool */
-    if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), new_tcb) < 0) return -3;
+    if (tcb_pool_add_runnable_tcb_safe(&(sched->thr_pool), new_tcb) < 0) return -3;
 
     /* Return tid of tcb added */
     return tid;
@@ -561,22 +563,12 @@ int scheduler_add_new_thread(scheduler_t *sched, uint32_t *regs) {
     if (tcb_init(new_tcb, tid, sched->cur_tcb->pcb, regs) < 0) return -3;
 
     /* Inc num threads in pcb */
-    pcb_inc_threads(sched->cur_tcb->pcb);
-    disable_interrupts();
-    /* Add a runnable tcb to pool */
-    if (tcb_pool_add_runnable_tcb(&(sched->thr_pool), new_tcb) < 0) return -3;
-    enable_interrupts();
+    pcb_inc_threads_s(sched->cur_tcb->pcb);
+    /* Safely add a runnable tcb to pool */
+    if (tcb_pool_add_runnable_tcb_safe(&(sched->thr_pool), new_tcb) < 0) return -3;
+
     /* Return tid of tcb added */
     return tid;
-}
-
-int scheduler_add_process_safe(scheduler_t *sched,
-                                pcb_t *pcb, uint32_t *regs){
-
-    disable_interrupts();
-    int status = scheduler_add_process(sched, pcb, regs);
-    enable_interrupts();
-    return status;
 }
 
 /**
@@ -624,7 +616,7 @@ int scheduler_defer_current_tcb(scheduler_t *sched, uint32_t old_esp) {
 }
 
 int scheduler_wakeup(scheduler_t *sched){
-    return tcb_pool_wakeup(&(sched->thr_pool), scheduler_num_ticks);
+    return tcb_pool_wakeup(&(sched->thr_pool), sched->num_ticks);
 }
 
 int scheduler_reap(scheduler_t *sched){

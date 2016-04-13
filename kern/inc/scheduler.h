@@ -14,6 +14,7 @@
 typedef struct scheduler{
     bool started;
 
+    int num_ticks;
     int next_tid;
     int next_pid;
     void *reaper_stack_bot;

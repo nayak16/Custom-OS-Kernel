@@ -58,7 +58,10 @@ void mutex_lock( mutex_t *mp ){
     }
     /* Keep trying to until lock is free and key is accepted */
     while (!xchng(&mp->lock, 0)) {
-        thr_kern_yield(mp->owner);
+        if (thr_kern_yield(mp->owner) < 0) {
+            /* Owner is not runnable, yield to scheduler picked thread */
+            thr_kern_yield(-1);
+        }
     }
     /* after securing the lock, set the owner to yourself so
      * threads that are waiting on this mutex will yield to this

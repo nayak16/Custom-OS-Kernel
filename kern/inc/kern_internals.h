@@ -12,6 +12,7 @@
 #include <scheduler.h>
 #include <frame_manager.h>
 #include <mutex.h>
+#include <sched_mutex.h>
 #include <keyboard.h>
 
 /**
@@ -43,6 +44,12 @@ int xchng(int* lock, int val);
  *
  */
 extern mutex_t heap_lock;
+
+/**
+ * @brief Lock to protect scheduler data structures
+ *
+ */
+extern sched_mutex_t sched_lock;
 
 #endif /* _KERN_INTERNALS_H_ */
 

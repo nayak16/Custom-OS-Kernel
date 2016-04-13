@@ -71,39 +71,28 @@ void thr_vanish(void) {
         pcb_t *init_pcb;
         /* Orphan child, so get init pcb from scheduler */
         scheduler_get_init_pcb(&sched, &init_pcb);
+
         /* Let init know that it has an orphan grandchild, so
          * it can adopt it momentarily */
         pcb_inc_children_s(init_pcb);
 
-        /* Ensure values don't change while writing and reading */
-        mutex_lock(&(cur_pcb->m));
-
-        /* Decrement thread count */
-        pcb_dec_threads(cur_pcb);
-
-        if (cur_pcb->num_threads == 0) {
+        /* Decrement and check num threads value */
+        if (pcb_dec_threads_s(cur_pcb) == 0) {
             /* Now signal init to collect grandchild's status */
             pcb_signal_status(init_pcb, exit_status, original_tid);
         }
-        /* Release lock */
-        mutex_unlock(&(cur_pcb->m));
 
     } else {
         /* Ensure parent_pcb isn't destroyed while signaling */
         mutex_lock(&(parent_pcb->m));
-        /* Ensure num_threads don't change while writing and reading */
-        mutex_lock(&(cur_pcb->m));
 
-        /* Decrement thread count */
-        pcb_dec_threads(cur_pcb);
-
-        if (cur_pcb->num_threads == 0) {
+        /* Decrement and check num threads value */
+        if (pcb_dec_threads_s(cur_pcb) == 0) {
             /* signal the status to parent_pcb */
             pcb_signal_status(parent_pcb, exit_status, original_tid);
         }
 
-        /* Release locks */
-        mutex_unlock(&(cur_pcb->m));
+        /* Release lock */
         mutex_unlock(&(parent_pcb->m));
     }
     /* Make current tcb a zombie */

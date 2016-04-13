@@ -63,7 +63,7 @@ thr_kern_deschedule:
     /* Restore GP registers */
     restore_regs
     /* Skip eax restore and iret stack arguments */
-    addl $24, %esp
+    addl $20, %esp
     ret
 
 .globl thr_kern_yield
@@ -84,7 +84,7 @@ thr_kern_yield:
     /* Restore GP registers */
     restore_regs
     /* Skip eax restore and iret stack arguments */
-    addl $24, %esp
+    addl $20, %esp
     ret
 
 

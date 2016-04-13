@@ -202,13 +202,13 @@ int ll_peek(ll_t *ll, void **val){
  * @return 0 on success, negative error code otherwise
  *
  */
-int ll_cycle(ll_t *ll) {
+int ll_rotate(ll_t *ll) {
     if (ll == NULL) return -1;
 
     /* Check if linked list is empty */
     if (ll->size == 0) return -2;
 
-    /* No need to cycle if only one in ll */
+    /* No need to rotate if only one in ll */
     if (ll->size == 1) return 0;
     /* Save original head */
     ll_node_t *orig_head = ll->head;

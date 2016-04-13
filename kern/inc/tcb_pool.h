@@ -34,8 +34,8 @@ typedef struct tcb_pool {
 } tcb_pool_t;
 
 int tcb_pool_init(tcb_pool_t *tp);
-int tcb_pool_add_runnable_tcb(tcb_pool_t *tp, tcb_t *tcb);
-int tcb_pool_add_pcb(tcb_pool_t *tp, pcb_t *pcb);
+int tcb_pool_add_runnable_tcb_safe(tcb_pool_t *tp, tcb_t *tcb);
+int tcb_pool_add_pcb_safe(tcb_pool_t *tp, pcb_t *pcb);
 int tcb_pool_remove_pcb(tcb_pool_t *tp, int pid, circ_buf_t *addr_to_free);
 
 int tcb_pool_make_runnable(tcb_pool_t *tp, int tid);
