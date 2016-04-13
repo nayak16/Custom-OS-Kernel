@@ -105,4 +105,25 @@ status that indicates which pool it belongs to. Although writing this
 data structure was arduous, it proved to be a really good solution to
 minimize access time and number of malloc/free pairs.
 
+Reaper Thread Rationale - while writing wait/vanish we were contemplating how a
+thread would clean up after itself. When a thread is destroyed, its kstack must
+be freed. Additionally, in the case the pcb is also destroyed, we must free the
+pcb's data structures including most importantly the page directory. This
+presents a problem because we cannot free the kstack while we are currently
+using it. It's a similar situation with the page directory. Thus, the three
+options to free a thread's resources are by the thread itself, by some
+interrupt handler possibly the timer, or by another thread. We ruled out the
+first option. The second option, although viable, would significantly delay
+servicing a timer interrupt and thus the context switch. The only other option
+is by another thread. A reaper thread was the best option since its seperate
+from any other process and thus does not take up cycles of another process.
+When vanish places a zombie into the zombie pool, it also signals a zombie
+semaphore that the reaper is waiting on. This ensures that the reaper thread
+is only run when there are zombies to reap.
+Additionally, after doing some research, a reaper thread has precedent. Java
+uses a reaper thread that wakes up at predetermined intervals to collect dead
+processes.
+
+Scheduler lock rationale - TODO
+
 */

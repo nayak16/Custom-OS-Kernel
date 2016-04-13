@@ -33,17 +33,9 @@ extern uint32_t scheduler_num_ticks;
 
 int scheduler_init(scheduler_t *sched, void (*reap_func)(void));
 
-int scheduler_add_init_process(scheduler_t *sched, pcb_t *init_pcb);
-int scheduler_add_idle_process(scheduler_t *sched, pcb_t *idle_pcb);
-
-int scheduler_add_reaper_proc(scheduler_t *sched,
-                              pcb_t *reaper_pcb, void (*reap_func)(void));
-
 int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs);
 int scheduler_add_new_thread(scheduler_t *sched, uint32_t *regs);
 
-int scheduler_add_process_safe(scheduler_t *sched,
-                               pcb_t *pcb, uint32_t *regs);
 
 int scheduler_start(scheduler_t *sched);
 
@@ -57,7 +49,6 @@ int scheduler_get_pcb_by_pid(scheduler_t *sched,
 int scheduler_get_init_pcb(scheduler_t *sched, pcb_t **init_pcbp);
 int scheduler_get_idle_tcb(scheduler_t *sched, tcb_t **idle_tcbp);
 
-int scheduler_check_is_runnable(scheduler_t *sched, int target_tid);
 
 int scheduler_check_is_runnable(scheduler_t *sched, int target_tid);
 
