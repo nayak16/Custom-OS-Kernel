@@ -258,6 +258,14 @@ int ll_link_node_last(ll_t *ll, ll_node_t *new_node) {
     return 0;
 }
 
+/**
+ * @brief Links the specified ll_node_t to the head of ll specified
+ *
+ * @param ll Linked list to link to
+ * @param node Node to link
+ *
+ * @return 0 on success, negative erorr code otherwise
+ */
 int ll_link_node_first(ll_t *ll, ll_node_t *new_node){
     if (ll == NULL || new_node == NULL) return -1;
 
@@ -482,18 +490,42 @@ void ll_destroy(ll_t *ll){
     }
 }
 
-
+/**
+ * @brief Retrieves the head of a linked list
+ *
+ * @param ll The linked list
+ * @param node The pointer to store the ll_node to
+ *
+ * @return 0 on success, negative erorr code otherwise
+ */
 int ll_head(ll_t *ll, ll_node_t **node){
     if (ll == NULL || node == NULL) return -1;
     *node = ll->head;
     return 0;
 }
+
+/**
+ * @brief Retrieves the tail of a linked list
+ *
+ * @param ll The linked list
+ * @param node The pointer to store the ll_node to
+ *
+ * @return 0 on success, negative erorr code otherwise
+ */
 int ll_tail(ll_t *ll, ll_node_t **node){
     if (ll == NULL || node == NULL) return -1;
     *node = ll->tail;
     return 0;
 }
 
+/**
+ * @brief Applys a function for each element in a linked list
+ *
+ * @param ll The linked list
+ * @param f The function to be applied
+ *
+ * @return 0 on success, negative erorr code otherwise
+ */
 void ll_foreach(ll_t *ll, void (*f)(void *)){
     if (ll == NULL) return;
     ll_node_t *ptr = ll->head;

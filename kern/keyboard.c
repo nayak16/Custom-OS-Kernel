@@ -1,5 +1,5 @@
-/** @file keyboard.h
- *  @brief Defines interface for a keyboard manager
+/** @file keyboard.c
+ *  @brief Implements a keyboard
  *  @author Christopher Wei (cjwei)
  *  @bug No known bugs
  */
@@ -39,6 +39,11 @@ void print_to_console(keyboard_t *k, char c){
     }
 }
 
+/** @brief Writes a character to a keyboard buffer
+ *  @param k The keyboard
+ *  @param c The character to write
+ *  @return 0 on success, negative integer code on failure
+ */
 int write_to_buffer(keyboard_t *k, char c){
     uint32_t count;
     /* write to the keyboard's buffer */
@@ -62,6 +67,11 @@ int write_to_buffer(keyboard_t *k, char c){
     return 0;
 }
 
+/** @brief Initializes a keyboard
+ *  @param k The keyboard
+ *  @param len The size of the keyboard buffer
+ *  @return 0 on success, negative integer code on failure
+ */
 int keyboard_init(keyboard_t *k, uint32_t len){
     if (k == NULL || len == 0) return -1;
     circ_buf_t *cbuf = malloc(sizeof(circ_buf_t));
@@ -72,6 +82,10 @@ int keyboard_init(keyboard_t *k, uint32_t len){
     return 0;
 }
 
+/** @brief Destroys a keyboard
+ *  @param k The keyboard
+ *  @return Void
+ */
 void keyboard_destroy(keyboard_t *k){
     circ_buf_destroy(k->buf);
     mutex_destroy(&(k->m));
@@ -79,6 +93,11 @@ void keyboard_destroy(keyboard_t *k){
     free(k->buf);
 }
 
+/** @brief Writes a value to the keyboard
+ *  @param k The keyboard
+ *  @param len The value
+ *  @return 0 on success, negative integer code on failure
+ */
 int keyboard_write(keyboard_t *k, uint32_t val){
     if (k == NULL) return -1;
     mutex_lock(&(k->m));
@@ -107,6 +126,12 @@ int keyboard_write(keyboard_t *k, uint32_t val){
     return 0;
 }
 
+/** @brief Destructively reads a value from the keyboard
+ *  @param k The keyboard
+ *  @param len The number of characters to read
+ *  @param buf The character buffer to read into
+ *  @return 0 on success, negative integer code on failure
+ */
 int keyboard_read(keyboard_t *k, int len, char *buf){
     if (k == NULL || len <= 0 || buf == NULL) return -1;
     sem_wait(&k->sem);
@@ -134,6 +159,11 @@ int keyboard_read(keyboard_t *k, int len, char *buf){
     return i;
 }
 
+/** @brief Gets the size of the keyboard buffer
+ *  @param k The keyboard
+ *  @param len The pointer to store the size of the keyboard buffer
+ *  @return 0 on success, negative integer code on failure
+ */
 int keyboard_buffer_size(keyboard_t *k, uint32_t *len){
     if (k == NULL || len == NULL) return -1;
     return circ_buf_size(k->buf, len);

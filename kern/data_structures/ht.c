@@ -15,7 +15,7 @@
 /**
  * @brief Initializes a hash table with provided parameters
  *
- * @param t ht to init
+ * @param ht ht to init
  * @param max_size max size to make the table
  * @param hash provided hash function
  *
@@ -52,7 +52,7 @@ void *extract_key(void *entry) {
 /**
  * @brief Gets the value with the key provided
  *
- * @param t Hashtable to access
+ * @param ht Hashtable to access
  * @param key Key used to find the data desired
  * @param valp Address to store value
  *
@@ -78,7 +78,7 @@ int ht_get(ht_t *t, key_t key, void **valp) {
 /**
  * @brief Removes and reports the value with the key provided
  *
- * @param t Hashtable to access
+ * @param ht Hashtable to access
  * @param key Key used to find the data desired
  * @param valp Address to store value
  *
@@ -115,7 +115,7 @@ int ht_remove(ht_t *t, key_t key, void **valp, circ_buf_t *addrs_to_free) {
  *
  * Uses provided hash function to calculate a bucket index
  *
- * @param t Hash table to insert pair into
+ * @param ht Hash table to insert pair into
  * @param key key in key-value pair
  * @param val value in key-value pair
  *
@@ -142,7 +142,18 @@ int ht_put(ht_t *t, key_t key, void *val) {
     t->size++;
     return 0;
 }
-
+/**
+ * @brief Inserts a pre-initialized hash table entry into the hash table
+ *
+ * Uses provided hash function to calculate a bucket index
+ *
+ * @param ht Hash table to insert pair into
+ * @param entry The entry to insert
+ * @param entry_node The linked list node to use
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int ht_put_entry(ht_t *t, ht_entry_t *entry, ll_node_t *entry_node) {
     if (t == NULL || entry == NULL) return -1;
 
@@ -163,7 +174,7 @@ int ht_put_entry(ht_t *t, ht_entry_t *entry, ll_node_t *entry_node) {
 /**
  * @brief Destroys the specified hash table and frees it's data structures
  *
- * @param t Hash table to destroy
+ * @param ht Hash table to destroy
  *
  * @return 0 on success, negative error code otherwise
  *
