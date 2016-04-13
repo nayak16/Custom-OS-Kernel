@@ -53,7 +53,7 @@ int ll_remove_last(ll_t *ll, void **value_ptr);
 int ll_remove_first(ll_t *ll, void **value_ptr);
 
 int ll_peek(ll_t *ll, void **value_ptr);
-int ll_cycle(ll_t *ll);
+int ll_rotate(ll_t *ll);
 
 int ll_link_node_first(ll_t *ll, ll_node_t *node);
 int ll_link_node_last(ll_t *ll, ll_node_t *node);

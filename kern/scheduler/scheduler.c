@@ -538,7 +538,7 @@ int scheduler_add_process(scheduler_t *sched, pcb_t *pcb, uint32_t *regs){
     /* Set the original tid of the pcb */
     pcb_set_original_tid(pcb, tid);
     /* Inc num threads in pcb */
-    pcb_inc_threads(pcb);
+    pcb_inc_threads_s(pcb);
 
     /* Add the pcb to the pool */
     if (tcb_pool_add_pcb_safe(&(sched->thr_pool), pcb) < 0) return -4;
@@ -563,7 +563,7 @@ int scheduler_add_new_thread(scheduler_t *sched, uint32_t *regs) {
     if (tcb_init(new_tcb, tid, sched->cur_tcb->pcb, regs) < 0) return -3;
 
     /* Inc num threads in pcb */
-    pcb_inc_threads(sched->cur_tcb->pcb);
+    pcb_inc_threads_s(sched->cur_tcb->pcb);
     /* Safely add a runnable tcb to pool */
     if (tcb_pool_add_runnable_tcb_safe(&(sched->thr_pool), new_tcb) < 0) return -3;
 

@@ -4,7 +4,9 @@
  *
  *  Mutex is needed because other threads (not the current one) are accessing
  *  and changing a pcb possibly simultaneously. For example, in the case
- *  of a child modifying the parent.
+ *  of a child modifying the parent. In some functions, like pcb_load_prog, a
+ *  lock is not necessary because only the current running pcb should be
+ *  loading a program into the itself.
  *
  */
 
@@ -125,10 +127,25 @@ int pcb_copy(pcb_t *dest_pcb, pcb_t *source_pcb) {
     return 0;
 }
 
-
+/**
+ * @brief Loads the specified program with the specified args into the
+ * specified pcb. Also, loads the user level stack into the pcb's address
+ * space.
+ *
+ * @param pcb pcb to load into
+ * @param filename filename of elf executable. Returns error if filename is not
+ * a valid elf file
+ * @param argc number of arguments to _main of new program
+ * @param argv array of string args to _main of new program
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int pcb_load_prog(pcb_t *pcb, const char *filename, int argc, char** argv){
     if (pcb == NULL || filename == NULL) return -1;
     simple_elf_t elf;
+
+    /* Check if the filename is a valid ELF */
     if (elf_check_header(filename) != ELF_SUCCESS) return -2;
     if (elf_load_helper(&elf, filename) != ELF_SUCCESS) return -3;
 
@@ -145,13 +162,33 @@ int pcb_load_prog(pcb_t *pcb, const char *filename, int argc, char** argv){
     return 0;
 }
 
+/**
+ * @brief Struct to hold metadata about a tcbs's exit status and original tid.
+ * This struct is placed in a parent pcb's status queue and is dequeued when a
+ * parent pcb calls wait().
+ *
+ */
 typedef struct pcb_metadata{
     int status;
     int original_tid;
 } pcb_metadata_t;
 
+/**
+ * @brief Enqueues a pcb_metadata struct to the specified pcb's status queue.
+ * Then signals the pcb's wait semaphore to indicate there is new data in the
+ * status queue available.
+ *
+ * @param pcb pcb to signal
+ * @param status exit status of the vanishing thread
+ * @param original_tid original tid of the original thread of the child pcb
+ * signaling the parent
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
     if (pcb == NULL) return -1;
+
     /* Create struct to hold meta data */
     pcb_metadata_t *metadata = malloc(sizeof(pcb_metadata_t));
     if (metadata == NULL) {
@@ -168,10 +205,22 @@ int pcb_signal_status(pcb_t *pcb, int status, int original_tid){
 
     /* Signal that a status is available */
     sem_signal(&(pcb->wait_sem));
+
     return 0;
 }
 
-int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_pid){
+/**
+ * @brief Waits on the wait sem of the specified pcb and collects the status
+ * and original tid of the vanished child in the status queue.
+ *
+ * @param pcb pcb that will wait on its children. If this is the init pcb, it
+ * will wait on any descendant children.
+ * @param status_ptr address to put the collected status
+ * @param original_tidp address to put the collected original tid
+ *
+ * @return 0 on success, negative error code otherwise
+ */
+int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_tidp){
     if (pcb == NULL) return -1;
     /* Check if there's any child processes left to wait on */
     if (pcb->num_child_proc == 0) {
@@ -189,7 +238,7 @@ int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_pid){
 
     /* Extract status ptr and orig pid */
     if (status_ptr != NULL) *status_ptr = metadata->status;
-    if (original_pid != NULL) *original_pid = metadata->original_tid;
+    if (original_tidp != NULL) *original_tidp = metadata->original_tid;
 
     mutex_unlock(&(pcb->m));
     /* Free metadata struct */
@@ -197,24 +246,57 @@ int pcb_wait_on_status(pcb_t *pcb, int *status_ptr, int *original_pid){
     return 0;
 }
 
+/**
+ * @brief Gets the pid of the parent pcb
+ *
+ * @param pcb pcb to access
+ *
+ * @return pid of parent pcb, negative error code otherwise
+ *
+ */
 int pcb_get_ppid(pcb_t *pcb){
     if (pcb == NULL) return -1;
     return pcb->ppid;
 }
 
-
+/**
+ * @brief Sets the original tid of the specified pcb
+ *
+ * @param pcb pcb to set original tid of
+ * @param tid original tid to set the property to
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int pcb_set_original_tid(pcb_t *pcb, int tid){
     if (pcb == NULL) return -1;
     pcb->original_tid = tid;
     return 0;
 }
 
-int pcb_get_original_tid(pcb_t *pcb, int *tid){
-    if (pcb == NULL || tid == NULL) return -1;
-    *tid = pcb->original_tid;
+/**
+ * @brief Gets the original tid of the specified pcb
+ *
+ * @param pcb pcb to get original tid of
+ * @param tidp address to put the original tid
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
+int pcb_get_original_tid(pcb_t *pcb, int *tidp){
+    if (pcb == NULL || tidp == NULL) return -1;
+    *tidp = pcb->original_tid;
     return 0;
 }
 
+/**
+ * @brief Safely increments the children of the specified pcb
+ *
+ * @param pcb pcb to increment count
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int pcb_inc_children_s(pcb_t *pcb) {
     if (pcb == NULL) return -1;
     mutex_lock(&(pcb->m));
@@ -223,6 +305,14 @@ int pcb_inc_children_s(pcb_t *pcb) {
     return 0;
 }
 
+/**
+ * @brief Safely decrements the children of the specified pcb
+ *
+ * @param pcb pcb to decrement count
+ *
+ * @return 0 on success, negative error code otherwise
+ *
+ */
 int pcb_dec_children_s(pcb_t *pcb) {
     if (pcb == NULL) return -1;
     mutex_lock(&(pcb->m));
@@ -231,35 +321,38 @@ int pcb_dec_children_s(pcb_t *pcb) {
     return 0;
 }
 
+/**
+ * @brief Safely increments the number of threads of the specified pcb
+ *
+ * @param pcb pcb to increment number of threads
+ *
+ * @return number of threads on success, negative error code otherwise
+ *
+ */
 int pcb_inc_threads_s(pcb_t *pcb) {
-    mutex_lock(&(pcb->m));
-    int ret = pcb_inc_threads(pcb);
-    mutex_unlock(&(pcb->m));
-    return ret;
-}
-
-int pcb_dec_threads_s(pcb_t *pcb) {
-    mutex_lock(&(pcb->m));
-    int ret = pcb_inc_threads(pcb);
-    mutex_unlock(&(pcb->m));
-    return ret;
-}
-
-int pcb_inc_threads(pcb_t *pcb) {
     if (pcb == NULL) return -1;
+    mutex_lock(&(pcb->m));
     pcb->num_threads++;
-    return 0;
+    int c = pcb->num_threads;
+    mutex_unlock(&(pcb->m));
+    return c;
 }
 
-int pcb_dec_threads(pcb_t *pcb) {
+/**
+ * @brief Safely decrements the number of threads of the specified pcb
+ *
+ * @param pcb pcb to increment number of threads
+ *
+ * @return number of threads on success, negative error code otherwise
+ *
+ */
+int pcb_dec_threads_s(pcb_t *pcb) {
     if (pcb == NULL) return -1;
+    mutex_lock(&(pcb->m));
     pcb->num_threads--;
-    return 0;
-}
-
-int pcb_get_child_count(pcb_t *pcb) {
-    if (pcb == NULL) return -1;
-    return pcb->num_child_proc;
+    int c = pcb->num_threads;
+    mutex_unlock(&(pcb->m));
+    return c;
 }
 
 
