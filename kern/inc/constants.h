@@ -23,8 +23,11 @@
 #define C_2BYTE_WIDTH 16
 
 /* Flag Designations */
+/** @brief denotes a set flag */
 #define SET 1
+/** @brief denotes an unset flag */
 #define UNSET 0
+/** @brief denotes a arbitrary flag */
 #define DONT_CARE 0
 
 #endif /* _CONSTANTS_H_ */

@@ -1,5 +1,8 @@
-/** @file
+/** @file scheduler.h
+ *  @brief defines the interface for a scheduler
  *
+ *  @author Christopher Wei (cjwei)
+ *  @author Aatish Nayak (aatishn)
  */
 
 #include <pcb.h>
@@ -12,19 +15,30 @@
 #define _SCHEDULER_H_
 
 typedef struct scheduler{
+    /** @brief whether or not a scheduler has started yet */
     bool started;
 
+    /** @brief the number of ticks since the scheduler has started */
     int num_ticks;
+    /** @brief the next tid to create */
     int next_tid;
+    /** @brief the next pid to create */
     int next_pid;
+    /** @brief the stack bot of a reaper thread */
     void *reaper_stack_bot;
+    /** @brief the stack top of a reaper thread */
     void *reaper_stack_top;
 
+    /** @brief the init pcb */
     pcb_t *init_pcb;
+    /** @brief the reaper pcb */
     tcb_t *reaper_tcb;
+    /** @brief the idle pcb */
     tcb_t *idle_tcb;
 
+    /** @brief the thread pool */
     tcb_pool_t thr_pool;
+    /** @brief the current running tcb */
     tcb_t *cur_tcb;
 } scheduler_t;
 

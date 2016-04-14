@@ -16,6 +16,7 @@
  * @brief Struct representing a singly linked linked list node
  */
 typedef struct stack {
+    /** @brief the internal linked list representation */
     ll_t *ll;
 } stack_t;
 

@@ -11,12 +11,16 @@
 
 #include <stdint.h>
 
+/** @brief defines a memory section struct */
 typedef struct mem_section_t {
+    /** @brief the starting virtual address */
     unsigned long v_addr_start;
+    /** @brief the length of the memory sectio n*/
     unsigned long len;
+    /** @brief the page directory flags */
     uint32_t pde_f;
+    /** @brief the page table flags */
     uint32_t pte_f;
-
 } mem_section_t;
 
 int ms_init(mem_section_t *ms, uint32_t addr,

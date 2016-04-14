@@ -17,8 +17,11 @@ typedef struct circular_buffer{
   uint32_t i_r;
   /** @brief the write index of the buffer */
   uint32_t i_w;
+  /** @brief the internal buffer */
   void **buf;
+  /** @brief the length of the buffer */
   uint32_t len;
+  /** @brief the number of elements in the buffer */
   uint32_t n;
 } circ_buf_t;
 

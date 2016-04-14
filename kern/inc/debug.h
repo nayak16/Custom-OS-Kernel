@@ -19,8 +19,6 @@
 #define DEBUG_PRINT(...) do{ } while ( false )
 #endif
 
-
-
 void print_page_directory(page_directory_t *pd, int s, int l, int v);
 void print_context(unsigned int *stack);
 void print_control_regs(void);

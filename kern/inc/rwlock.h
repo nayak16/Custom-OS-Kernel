@@ -11,7 +11,9 @@
 #include <cond.h>
 #include <stdbool.h>
 
+/** @brief defines a read */
 #define RWLOCK_READ  0
+/** @brief defines a write */
 #define RWLOCK_WRITE 1
 
 
