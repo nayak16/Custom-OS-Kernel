@@ -108,4 +108,12 @@ ensure that when the kernel is adding the idle, reaper, and init threads,
 and scheduler has not started, we don't enable interrupts when they
 should not be enabled.
 
+Easter Eggs:
+
+Run
+'cat shrek.txt'
+'cat donkey.txt'
+for a good time
+
+
 */
