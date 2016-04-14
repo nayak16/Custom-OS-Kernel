@@ -505,13 +505,6 @@ int fm_init(frame_manager_t *fm, uint32_t num_bins){
     return 0;
 }
 
-//TODO: implement or remove up to me
-void fm_destroy(frame_manager_t *fm){
-    if (fm == NULL) return;
-    panic("fm_destroy: TODO");
-    return;
-}
-
 /* Debugging purposes only */
 
 void frame_print(void *ptr){

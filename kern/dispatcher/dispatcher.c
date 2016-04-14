@@ -12,10 +12,6 @@
 
 #include <simics.h>
 
-void initial_mode_switch(tcb_t *tcb) {
-
-}
-
 
 /**
  * @brief Disables interrupts and does a context switch (defined below)
@@ -49,8 +45,8 @@ uint32_t context_switch(uint32_t old_esp, int target_tid) {
 
     /* Defer current TCB */
     if (scheduler_defer_current_tcb(&sched, old_esp) < 0) {
-        lprintf("Current tid tcb does not exist !!!");
-        MAGIC_BREAK;
+        panic("Cannot defer current running thread. \
+                Scheduler is corrupted and cannot context switch");
     }
 
     tcb_t *next_tcb;

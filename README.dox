@@ -7,31 +7,10 @@
 
 Same drill as last time.
 
-TODO LIST:
-implement rollbacks on resource failure
-<DONE> think about readline
-think about ZFOD and COW
-make all scheduler assigns atomic (xchng)
-<DONE> Make idle thread run runnable_pool is empty
-<DONE> Get rid of restore_context and instead return esp in exec and yield
-<DONE> Page directories should share same kernel page tables
-check for valid pointers in exec
-<DONE> Make vanish signal init if parent already died
-Use reject pointer to control reaper main descheduling
-Move all init/reaper init functions into scheduler_init (out of kernel)
-<DONE> Implement thread_fork
-<DONE> Implement swexn
-<DONE> Implement readfile: test "ls"
-<DONE> Only signal to parent pcb if last thread in task
-give back resources upon exception
-Look through all TODO comments
-<DONE> Yield to specific thread in mutex lock
-<DONE> Implement misbehave
-<DONE> Implement all exception handlers
-
-BUG LIST FUCK:
-fork_exit_bomb - page faults around 800
-fork_wait_bomb - memory leak problems
+BUG LIST:
+cho triple faults probabilistically. Interestingly, it's more likely to
+triple fault when it's the first program run in the shell. For example, if
+cho2 is run before cho, cho will succeed.
 
 Design Decision Rationales:
 
@@ -124,6 +103,15 @@ Additionally, after doing some research, a reaper thread has precedent. Java
 uses a reaper thread that wakes up at predetermined intervals to collect dead
 processes.
 
-Scheduler lock rationale - TODO
+Scheduler lock rationale - Threads modify the scheduler's data
+structures and when a context switch happens, the data structures are once
+again accessed. Thus, we need to prevent any context switch from
+happening while modifying these data structures, particularly a context
+switch triggered by a timer handler. For this reason, we disable and
+enable interrupts as part of the scheduler lock mechanism. However, we
+only enable and disable if the scheduler has been started. This is to
+ensure that when the kernel is adding the idle, reaper, and init threads,
+and scheduler has not started, we don't enable interrupts when they
+should not be enabled.
 
 */

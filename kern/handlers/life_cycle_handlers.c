@@ -3,7 +3,11 @@
  *
  *  @author Christopher Wei (cjwei)
  *  @author Aatish Nayak (aatishn)
- *  @bug Validation of syscall arguments
+ *
+ *  @bug If a pcb cannot load a new program into itself, the OS panics.
+ *  In actuality, we should be reversing the cleared vmm mappings and
+ *  returning to the calling thread. We did not have enough time left to
+ *  address this complex issue/failure.
  */
 
 #include <kern_internals.h>
@@ -168,10 +172,8 @@ int syscall_exec_c_handler(char *execname, char **argvec) {
 
     /* Load in new program */
     if (pcb_load_prog(cur_pcb, name_copy, argc, local_argv) < 0) {
-        // TODO: Figure out failure
-        lprintf("Failed to load program: %s", name_copy);
-        MAGIC_BREAK;
-        return -3;
+        panic("Cannot load in a new program into the pcb. The OS may \
+                have a problem with virtual memory");
     }
     /* Free all allocated local_argv args */
     for (i = 0; i < argc ; i++) {

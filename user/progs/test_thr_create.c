@@ -19,7 +19,6 @@
  *  @return 0
  */
 void* foo(void* i) {
-    MAGIC_BREAK;
     lprintf("Hello from child! %d", gettid());
     int tid = fork();
     lprintf("Good I shouldn't be allowed to fork %d", tid);

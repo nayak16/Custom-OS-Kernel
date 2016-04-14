@@ -533,7 +533,7 @@ int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
             uint32_t *new_pt = memalign(PAGE_SIZE, PT_SIZE);
             if (new_pt == NULL)
                 //TODO: roll back changes
-                return -1;
+                return -2;
             memset((void *)new_pt, 0, PAGE_SIZE);
             uint32_t flags = EXTRACT_FLAGS(entry);
             /* map page directory to new page table */
@@ -645,7 +645,7 @@ int pd_clear_user_space(page_directory_t *pd){
             pd->directory[i] = 0;
             /* Free each page table */
             uint32_t pt = REMOVE_FLAGS(entry);
-            if (pt == 0) MAGIC_BREAK;
+
             free((void*) pt);
         }
     }

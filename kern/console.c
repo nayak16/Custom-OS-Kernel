@@ -205,7 +205,6 @@ void set_hardware_cursor(int hpos){
  *  @return Void
  */
 void lpos_to_row_col(int lpos, int *row, int *col){
-  //TODO: more comprehensive pointer checking
   REQUIRES(row != NULL && col != NULL);
   REQUIRES(is_valid_lpos(lpos) == 0);
   *row = (lpos / CONSOLE_WIDTH);
@@ -279,7 +278,6 @@ int logical_to_hardware(int lpos, int hidden){
  */
 char *get_console_char(int row, int col){
   REQUIRES(in_bounds(row, col) == 0);
-  //TODO: make a nice ensures contract
   return ((char *)CONSOLE_MEM_BASE + 2*(row * CONSOLE_WIDTH + col));
 }
 
@@ -295,7 +293,6 @@ char *get_console_char(int row, int col){
  */
 char *get_console_color(int row, int col){
   REQUIRES(in_bounds(row, col) == 0);
-  //TODO: make a nice ensures contract
   return ((char *)CONSOLE_MEM_BASE + 2*(row * CONSOLE_WIDTH + col)) + 1;
 }
 
@@ -405,7 +402,6 @@ void putbytes( const char *s, int len ){
 
 
 void draw_char( int row, int col, int ch, int color ){
-  //TODO: check for valid character or color
   /* out of bounds draw calls have no effect */
   if (in_bounds(row, col) == 0){
     /* get console addresses for appropriate character and set them */

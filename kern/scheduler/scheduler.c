@@ -407,9 +407,10 @@ int scheduler_make_current_sleeping(scheduler_t *sched, int ticks) {
     if (sched->cur_tcb->status == SLEEPING) return -4;
     /* Set current tcb to RUNNABLE */
     sched->cur_tcb->status = SLEEPING;
+    /* Check for overflow (should not happen for several years) */
     if (sched->num_ticks + ticks < sched->num_ticks){
-        //TODO: handle this...
-        MAGIC_BREAK;
+        panic("You've been running ShrekOS for several continuous years \
+                Please restart your machine before continuing.");
     }
     sched->cur_tcb->t_wakeup = sched->num_ticks+ticks;
 
