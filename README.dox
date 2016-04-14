@@ -2,15 +2,9 @@
 
 @mainpage 15-410 Project 3
 
-@author Name1 (id1)
-@author Name2 (id2)
+@author Aatish Nayak (aatishn)
+@author Christopher Wei (cjwei)
 
-Same drill as last time.
-
-BUG LIST:
-cho triple faults probabilistically. Interestingly, it's more likely to
-triple fault when it's the first program run in the shell. For example, if
-cho2 is run before cho, cho will succeed.
 
 Design Decision Rationales:
 
