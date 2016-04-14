@@ -12,7 +12,7 @@
  *  @bug Not neccesarily a bug, but at some point we would like to abstract out
  *       the idea of a frame manager and a page directory and simply have a vmm
  *       object.
- *  @bug Upon failure, many of the vmm functions do not return resources
+ *  @bug vmm_clear_user_space does not handle errors
  */
 
 
@@ -111,7 +111,6 @@ int vmm_map_sections(page_directory_t *pd, mem_section_t *secs,
     }
 
     /* map each page to the corresponding physical page */
-    // TODO: handle error in for loop
     int i;
     uint32_t p_addr_start = p_addr;
     if (pd_begin_mapping(pd) < 0){
@@ -310,8 +309,12 @@ int vmm_clear_user_space(page_directory_t *pd){
     uint32_t sizes[num_frames];
 
     pd_dealloc_all_frames(pd, frames, sizes);
+
+    /* Note: I have not implemented any way to undo fm_dealloc calls so no
+     * errors are for here. If a frame is unable to be deallocated into the
+     * frame manager, it is still possible for the kernel to keep running albeit
+     * with less pages avaliable */
     for (i = 0; i < num_frames; i++){
-        //TODO
         fm_dealloc(&fm, frames[i]);
     }
 

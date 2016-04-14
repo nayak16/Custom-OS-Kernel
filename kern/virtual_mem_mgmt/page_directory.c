@@ -8,11 +8,17 @@
  *  updated along side the page directory whenever a frame is allocated on
  *  behalf of the page directory.
  *
+ *  In addition to the usual page directory interface, we have implemented a way
+ *  to essentially commit multiple mappings if all of them succeed or none at
+ *  all. This allows for ease of error handling when looping through a bunch of
+ *  pd_create/remove_mapping calls.
+ *
  *  @author Aatish Nayak (aatishn)
  *  @author Christopher Wei (cjwei)
  *  @bug No known bugs.
  */
 
+#include <stdbool.h>
 
 /* USER_MEM_START */
 #include <common_kern.h>
@@ -27,32 +33,30 @@
 
 /* access to flush_tlb */
 #include <special_reg_cntrl.h>
-
-
 #include <simics.h>
 
+/** @brief gets the [n]th bit of [v] */
 #define NTH_BIT(v,n) (((uint32_t)v >> n) & 1)
-/* number of total page table entries in the kernel space */
+/** @brief number of total page table entries in the kernel space */
 #define NUM_KERNEL_PTE (USER_MEM_START >> PAGE_SHIFT)
-/* number of page directory entries in the kernel space (number page tables) */
+/** @brief number of page directory entries in the kernel space (number page tables) */
 #define NUM_KERNEL_PDE (NUM_KERNEL_PTE / PT_NUM_ENTRIES)
 
+/** @brief number of bits in the offset */
 #define OFF_SHIFT PAGE_SHIFT
+/** @brief number of bits for the page directory offset */
 #define PDE_SHIFT 10
+/** @brief number of bits for the page table offset */
 #define PTE_SHIFT 10
 
-#define ENTRY_PRESENT 0
-#define ENTRY_NOT_PRESENT 1
-
-#define NEW_PAGE 0
-#define NOT_NEW_PAGE 1
-
-#define FALSE 0
-#define TRUE 1
-
+/** @brief Holds a single mapping task to be completed by the page directory
+ *         upon pd_commit_mapping or freed upon pd_abort_mapping */
 typedef struct mapping_task{
+    /** @brief Virtual address to map */
     uint32_t v_addr;
+    /** @brief Page table entry to map */
     uint32_t pte;
+    /** @brief A resource to free upon failure */
     void *resource;
 } mapping_task_t;
 
@@ -62,16 +66,15 @@ typedef struct mapping_task{
 uint32_t kernel_pde[NUM_KERNEL_PDE];
 
 /* @brief Whether or not the kernel has been initialized or not */
-int is_kernel_initialized = FALSE;
+bool is_kernel_initialized = false;
 
 /* Helper functions */
 
 /** @brief Finds from a pte or pde whether that entry is present
  *  @param v The pte/pte value
- *  @return ENTRY_PRESENT if present, ENTRY_NOT_PRESENT otherwise */
-int entry_present(uint32_t v){
-    if (NTH_BIT(v,PRESENT_FLAG_BIT) == 0) return ENTRY_NOT_PRESENT;
-    return ENTRY_PRESENT;
+ *  @return true if present otherwise false */
+bool entry_present(uint32_t v){
+    return (NTH_BIT(v,PRESENT_FLAG_BIT) != 0);
 }
 
 /** @brief Gets the privilege and access of a virtual address mapping
@@ -117,7 +120,7 @@ int pd_init_kernel(){
             return -1;
         }
     }
-    is_kernel_initialized = TRUE;
+    is_kernel_initialized = true;
     return 0;
 }
 
@@ -202,7 +205,7 @@ int pt_copy(uint32_t *pt_dest, uint32_t *pt_src, uint32_t pd_i,
         uint32_t entry = pt_src[i];
         uint32_t flags = entry & 0xFFF;
         /* copy over present mappings */
-        if (entry_present(entry) == ENTRY_PRESENT){
+        if (entry_present(entry)){
             void *p_addr = (void *)(*p_addr_p);
             *p_addr_p += PAGE_SIZE;
             /* calculate the virtual address of current page being copied so
@@ -234,12 +237,12 @@ int pd_get_mapping(page_directory_t *pd, uint32_t v_addr,
     uint32_t pde_i = (v_addr >> (OFF_SHIFT + PTE_SHIFT)) & 0x3FF;
     /* page table index = 2nd 10 bits of v_addr */
     uint32_t pte_i = (v_addr >> OFF_SHIFT) & 0x3FF;
-    if (entry_present(pd->directory[pde_i]) == ENTRY_NOT_PRESENT){
+    if (!entry_present(pd->directory[pde_i])){
         /* page directory entry not present */
         return -2;
     }
     uint32_t *pt = (uint32_t *)(REMOVE_FLAGS(pd->directory[pde_i]));
-    if (entry_present(pt[pte_i]) == ENTRY_NOT_PRESENT){
+    if (!entry_present(pt[pte_i])){
         /* directory exists but table does not */
         return -3;
     }
@@ -263,11 +266,11 @@ int pd_get_permissions(page_directory_t *pd, uint32_t v_addr,
     uint32_t pde_i = (v_addr >> (OFF_SHIFT + PTE_SHIFT)) & 0x3FF;
     /* page table index = 2nd 10 bits of v_addr */
     uint32_t pte_i = (v_addr >> OFF_SHIFT) & 0x3FF;
-    if (entry_present(pd->directory[pde_i]) == ENTRY_NOT_PRESENT){
+    if (!entry_present(pd->directory[pde_i])){
         return -2;
     }
     uint32_t *pt = (uint32_t *)(REMOVE_FLAGS(pd->directory[pde_i]));
-    if (entry_present(pt[pte_i]) == ENTRY_NOT_PRESENT){
+    if (!entry_present(pt[pte_i])){
         return -3;
     }
     uint32_t pd_priv, pd_access, pt_priv, pt_access,
@@ -306,13 +309,20 @@ int pd_is_user_readable(page_directory_t *pd, uint32_t v_addr){
     return (priv == 1);
 }
 
+/** @brief Begins a batch mapping
+ *  @param pd The page directory
+ *  @return 0 on success, negative integer code on failure
+ */
 int pd_begin_mapping(page_directory_t *pd){
     if (pd == NULL || pd->mapping_tasks == NULL) return -1;
     if (pd->batch_enabled) return -2;
     pd->batch_enabled = true;
     return 0;
 }
-
+/** @brief Aborts a batch mapping
+ *  @param pd The page directory
+ *  @return Void
+ */
 void pd_abort_mapping(page_directory_t *pd){
     mapping_task_t *task;
     while (ll_size(pd->mapping_tasks) > 0){
@@ -322,7 +332,13 @@ void pd_abort_mapping(page_directory_t *pd){
     }
     pd->batch_enabled = false;
 }
-
+/** @brief Commits a batch mapping
+ *
+ *  Requires that no mapping in the page directory's mapping_tasks will fail
+ *
+ *  @param pd The page directory
+ *  @return Void
+ */
 void pd_commit_mapping(page_directory_t *pd){
     mapping_task_t *task;
     while (ll_size(pd->mapping_tasks) > 0){
@@ -366,7 +382,7 @@ int pd_create_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t p_addr,
 
     void *resource = NULL;
 
-    if (entry_present(pd->directory[pde_i]) != ENTRY_PRESENT){
+    if (!entry_present(pd->directory[pde_i])){
         if ((pde_value = (uint32_t)memalign(PAGE_SIZE, PT_SIZE)) == 0)
             return -2;
         resource = (void *)(pde_value);
@@ -415,10 +431,10 @@ int pd_remove_mapping(page_directory_t *pd, uint32_t v_addr){
     pte_i = (v_addr >> OFF_SHIFT) & 0x3FF;
 
     /* check for present page directory entry */
-    if (entry_present(pd->directory[pde_i]) != ENTRY_PRESENT)
+    if (!entry_present(pd->directory[pde_i]))
         return -2;
     uint32_t *page_table = (uint32_t *)REMOVE_FLAGS(pd->directory[pde_i]);
-    if (entry_present(page_table[pte_i]) != ENTRY_PRESENT)
+    if (!entry_present(page_table[pte_i]))
         return -3;
     /* clear the mapping */
     if (pd->batch_enabled){
@@ -505,21 +521,35 @@ int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
     if (pd_dest == NULL || pd_src == NULL) return -1;
 
     /* copy the upper level page directory */
-    uint32_t i;
+    uint32_t i, j;
 
     uint32_t p_addr = p_addr_start;
+
+    uint32_t backup_directory[PD_NUM_ENTRIES];
+
     /* copy over non-kernel space */
     for (i = NUM_KERNEL_PDE; i < PD_NUM_ENTRIES; i++){
         /* for each present entry, create a new page table  */
         uint32_t entry = pd_src->directory[i];
-        if (entry_present(entry) == ENTRY_PRESENT){
+        if (entry_present(entry)){
             /* allocate a new page table */
             uint32_t *new_pt = memalign(PAGE_SIZE, PT_SIZE);
-            if (new_pt == NULL)
-                //TODO: roll back changes
-                return -1;
+            if (new_pt == NULL){
+                /* roll back changes and release resources */
+                for (j = i-1; j >= NUM_KERNEL_PDE; j--){
+                    if (entry_present(pd_dest->directory[j])){
+                        free((void *)(REMOVE_FLAGS(pd_dest->directory[j])));
+                    }
+                }
+                memcpy(&pd_dest->directory[NUM_KERNEL_PDE],
+                        &backup_directory[NUM_KERNEL_PDE],
+                        (i-NUM_KERNEL_PDE) * sizeof(uint32_t));
+                return -2;
+            }
             memset((void *)new_pt, 0, PAGE_SIZE);
             uint32_t flags = EXTRACT_FLAGS(entry);
+            /* save the old mapping in case of rollbacks */
+            backup_directory[i] = pd_dest->directory[i];
             /* map page directory to new page table */
             pd_dest->directory[i] = (uint32_t)new_pt | flags;
             pt_copy(new_pt, (uint32_t *)REMOVE_FLAGS(entry), i, &p_addr);
@@ -625,7 +655,7 @@ int pd_clear_user_space(page_directory_t *pd){
     int i;
     for (i = NUM_KERNEL_PDE; i < PD_NUM_ENTRIES; i++) {
         uint32_t entry = pd->directory[i];
-        if (entry_present(entry) == ENTRY_PRESENT){
+        if (entry_present(entry)){
             pd->directory[i] = 0;
             /* Free each page table */
             uint32_t pt = REMOVE_FLAGS(entry);
@@ -655,7 +685,7 @@ void pd_destroy(page_directory_t *pd) {
     /* destroy all non-kernel page tables */
     for (i = NUM_KERNEL_PDE ; i < PD_NUM_ENTRIES ; i++) {
         uint32_t entry = pd->directory[i];
-        if (entry_present(entry) == ENTRY_PRESENT){
+        if (entry_present(entry)){
             /* Free each page table */
             uint32_t pt = REMOVE_FLAGS(entry);
             free((void*) pt);
