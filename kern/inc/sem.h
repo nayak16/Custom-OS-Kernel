@@ -1,5 +1,8 @@
 /** @file sem.h
  *  @brief This file defines the interface to semaphores
+ *
+ *  @author Christopher Wei (cjwei)
+ *  @author Aatish Nayak (aatishn)
  */
 
 #ifndef SEM_H

@@ -1,5 +1,8 @@
-/** @file
- *
+/** @file dispatcher.h
+ *  @brief defines the interface for the dispatcher
+ *  @author Christopher Wei (cjwei)
+ *  @author Aatish Nayak (aatishn)
+ *  @bug No known bugs
  */
 
 

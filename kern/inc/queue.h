@@ -16,6 +16,7 @@
  * @brief Struct representing a singly linked linked list node
  */
 typedef struct queue {
+    /** @brief internal linked list */
     ll_t *ll;
 } queue_t;
 

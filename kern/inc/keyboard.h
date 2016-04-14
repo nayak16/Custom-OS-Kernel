@@ -11,6 +11,7 @@
 #include <mutex.h>
 #include <sem.h>
 
+/** @brief defines the keyboard struct */
 typedef struct keyboard {
     /** @brief the character buffer to be stored into */
     circ_buf_t *buf;

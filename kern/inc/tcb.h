@@ -13,7 +13,7 @@
 #include <pcb.h>
 
 #include <ureg.h>
-/* possible tcb statuses */
+/** @brief possible tcb statuses */
 #define UNINIT 0
 #define RUNNABLE 1
 #define WAITING 2
@@ -21,8 +21,11 @@
 #define RUNNING 4
 #define SLEEPING 5
 
+
+/** @brief number of registers saved in tcb */
 #define REGS_SIZE 18
 
+/** @brief the iret value indexes */
 #define SS_IDX 17
 #define ESP_IDX 16
 #define EFLAGS_IDX 15
@@ -30,6 +33,7 @@
 #define EIP_IDX 13
 #define ERRCODE_IDX 12
 
+/** @brief the saved context indexes */
 #define EAX_IDX 11
 #define ECX_IDX 10
 #define EDX_IDX 9

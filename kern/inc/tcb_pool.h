@@ -21,17 +21,24 @@
  * @brief Struct representing a thread pool
  */
 typedef struct tcb_pool {
+    /** @brief hash table for thread */
     ht_t threads;
+    /** @brief hash table for processes */
     ht_t processes;
 
+    /** @brief linked list of runnable threads */
     ll_t runnable_pool;
+    /** @brief linked list of waiting threads */
     ll_t waiting_pool;
+    /** @brief linke dlist of sleeping threads */
     ll_t sleeping_pool;
+    /** @brief linked list of zombie threads */
+    ll_t zombie_pool;
 
+    /** @brief semaphore for signaling reaper thread */
     sem_t zombies_sem;
 
-    ll_t zombie_pool;
-} tcb_pool_t;
+    } tcb_pool_t;
 
 int tcb_pool_init(tcb_pool_t *tp);
 int tcb_pool_add_runnable_tcb_safe(tcb_pool_t *tp, tcb_t *tcb);

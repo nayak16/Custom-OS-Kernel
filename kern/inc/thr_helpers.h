@@ -1,4 +1,4 @@
-/** @file virtual_mem_manager.h
+/** @file thr_helpers.h
  *  @brief Specifies interface for manipulating threads inside the
  *  kernel
  *

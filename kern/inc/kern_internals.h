@@ -1,5 +1,5 @@
-/** @file virtual_mem_manager.h
- *  @brief Specifies interface for virtual memory manipulation
+/** @file kern_internals.h
+ *  @brief Specifies the global variables shared across the kernel
  *
  *  @author Aatish Nayak (aatishn)
  *  @author Christopher Wei (cjwei)
