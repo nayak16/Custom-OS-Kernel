@@ -521,9 +521,12 @@ int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
     if (pd_dest == NULL || pd_src == NULL) return -1;
 
     /* copy the upper level page directory */
-    uint32_t i;
+    uint32_t i, j;
 
     uint32_t p_addr = p_addr_start;
+
+    uint32_t backup_directory[PD_NUM_ENTRIES];
+
     /* copy over non-kernel space */
     for (i = NUM_KERNEL_PDE; i < PD_NUM_ENTRIES; i++){
         /* for each present entry, create a new page table  */
@@ -531,11 +534,22 @@ int pd_deep_copy(page_directory_t *pd_dest, page_directory_t *pd_src,
         if (entry_present(entry)){
             /* allocate a new page table */
             uint32_t *new_pt = memalign(PAGE_SIZE, PT_SIZE);
-            if (new_pt == NULL)
-                //TODO: roll back changes
+            if (new_pt == NULL){
+                /* roll back changes and release resources */
+                for (j = i-1; j >= NUM_KERNEL_PDE; j--){
+                    if (entry_present(pd_dest->directory[j])){
+                        free((void *)(REMOVE_FLAGS(pd_dest->directory[j])));
+                    }
+                }
+                memcpy(&pd_dest->directory[NUM_KERNEL_PDE],
+                        &backup_directory[NUM_KERNEL_PDE],
+                        (i-NUM_KERNEL_PDE) * sizeof(uint32_t));
                 return -2;
+            }
             memset((void *)new_pt, 0, PAGE_SIZE);
             uint32_t flags = EXTRACT_FLAGS(entry);
+            /* save the old mapping in case of rollbacks */
+            backup_directory[i] = pd_dest->directory[i];
             /* map page directory to new page table */
             pd_dest->directory[i] = (uint32_t)new_pt | flags;
             pt_copy(new_pt, (uint32_t *)REMOVE_FLAGS(entry), i, &p_addr);
