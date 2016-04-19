@@ -1,4 +1,3 @@
-/* TODO: share wrapper macro between this file and exception handler */
 
 .macro save_context
     pusha

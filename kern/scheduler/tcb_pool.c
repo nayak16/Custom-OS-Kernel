@@ -536,6 +536,10 @@ int tcb_pool_make_zombie(tcb_pool_t *tp, int tid){
         return -3;
     }
 
+    /* Signal to reaper to reap zombie */
+    sem_signal(&(tp->zombies_sem));
+
+    /* Remove from whatever pool it was in */
     switch(tcb->status){
         case RUNNABLE:
         case RUNNING:
@@ -549,10 +553,9 @@ int tcb_pool_make_zombie(tcb_pool_t *tp, int tid){
             return -6;
     }
     tcb->status = ZOMBIE;
+    /* Put into zombie pool */
     if (ll_link_node_last(&(tp->zombie_pool), node) < 0) return -7;
 
-    /* Signal to reaper to reap zombie */
-    sem_signal(&(tp->zombies_sem));
     return 0;
 }
 

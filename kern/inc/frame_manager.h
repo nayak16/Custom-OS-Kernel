@@ -33,7 +33,6 @@ typedef struct frame_manager{
 int fm_alloc(frame_manager_t *fm, uint32_t num_pages, uint32_t *addr);
 int fm_dealloc(frame_manager_t *fm, uint32_t addr);
 int fm_init(frame_manager_t *fm, uint32_t num_bins);
-void fm_destroy(frame_manager_t *fm);
 void fm_print(frame_manager_t *fm);
 
 #endif /* _FRAME_MANAGER_H_ */

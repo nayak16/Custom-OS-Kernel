@@ -1,8 +1,7 @@
 /** @file kernel.c
  *  @brief An initial kernel.c
  *
- *  You should initialize things in kernel_main(),
- *  and then run stuff.
+ *  Entry Point for ShrekOS
  *
  *  @author Aatish Nayak (aatishn)
  *  @author Christopher Wei (cjwei)
@@ -43,8 +42,12 @@
 
 /* Debugging */
 #include <simics.h>                 /* lprintf() */
-#include <debug.h>
 
+/**
+ * @brief Max size of keyboard buffer
+ * We arrived at this value because it is the same value provided to us
+ * in the shell program
+ */
 #define KEYBOARD_BUFFER_SIZE 1024
 
 /* Global vars */
@@ -59,7 +62,6 @@ sched_mutex_t sched_lock;
  *
  *  @return Does not return
  */
-#include <thr_helpers.h>
 void reaper_main(){
     while(1){
         scheduler_reap(&sched);
@@ -75,6 +77,7 @@ void reaper_main(){
  */
 int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 {
+    lprintf("Welcome to ShrekOS");
     lprintf("Shrek is love, Shrek is life");
 
     /* install IDT entries for system calls */
@@ -86,6 +89,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* Install IDT entres for exceptions */
     install_exception_handlers();
 
+    /* Clear the console */
     clear_console();
 
     /* Init global heap lock */
@@ -106,7 +110,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* initialize a scheduler */
     scheduler_init(&sched, reaper_main);
 
-    scheduler_start(&sched); // enable intterupts
+    scheduler_start(&sched);
 
     while (1) {
         continue;

@@ -35,7 +35,6 @@ thread_fork:
 
     cmp $0, %eax // if (eax == 0)
     jne parent
-    // TODO: Is this right? What is ebp at start of stack frame
     // Move new_esp into esp/ebp reg
     movl %ebx, %esp
     movl %ebx, %ebp
