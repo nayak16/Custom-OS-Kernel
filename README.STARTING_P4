@@ -1,0 +1,21 @@
+To get started with P4:
+
+1. Make a copy of your P3 directory--or a new branch!  If you
+   are using git, you could do "git checkout -b p4".
+
+2. Move the update.sh from this directory so it replaces the update.sh
+   present in your new P4 directory.
+
+3. In your new P4 directory, run "make update".  You should see the
+   following updates, among others:
+   (a) 410kern/entry.c
+   (a) 410kern/malloc/*.c
+
+4. In theory "make" should work and your kernel should boot.  However,
+if your kernel requires large amounts of heap allocation to work before
+the shell can run, it might die a horrible death instead.  In that case,
+you will need to skip forward to the part of the attack plan that deals
+with per-core LMM pools.
+
+Don't forget that your README.dox for P4 should document your P4,
+not your P3!
