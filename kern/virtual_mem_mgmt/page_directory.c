@@ -31,6 +31,9 @@
 
 #include <page_directory.h>
 
+#include <smp/apic.h>
+#include <smp/mptable.h>
+
 /* access to flush_tlb */
 #include <special_reg_cntrl.h>
 #include <simics.h>
@@ -106,15 +109,17 @@ int pd_init_kernel(){
     pd_temp.directory = kernel_pde;
     pd_temp.batch_enabled = false;
 
-    /* present, rw enabled, supervisor mode, dont flush */
-    uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET);
-    /* present, rw enabled, supervisor mode */
-    uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONT_CARE);
+    /* present, rw enabled, supervisor mode, dont flush, cache enabled */
+    uint32_t pte_flags = NEW_FLAGS(SET,SET,UNSET,SET, UNSET);
+    /* present, rw enabled, supervisor mode, cache enabled */
+    uint32_t pde_flags = NEW_FLAGS(SET,SET,UNSET,DONT_CARE, UNSET);
     uint32_t i;
     /* for the first num_kernel_entries, set the vpn==ppn for direct map */
     /* Leave 0th page unmapped */
     for (i = 1; i < NUM_KERNEL_PTE; i++){
         uint32_t direct_addr = i << PAGE_SHIFT;
+        /* skip mapping for LAPIC region */
+        if (direct_addr == LAPIC_VIRT_BASE) continue;
         if (pd_create_mapping(&pd_temp, direct_addr, direct_addr,
                     pte_flags, pde_flags) < 0){
             return -1;
@@ -479,6 +484,13 @@ int pd_init(page_directory_t *pd){
         pd->directory = NULL;
         return -2;
     }
+    /* map the LAPIC region */
+    if (pd_create_mapping(pd, LAPIC_VIRT_BASE, (uint32_t)smp_lapic_base(),
+            NEW_FLAGS(SET,SET,UNSET,SET,SET),
+            NEW_FLAGS(SET,SET,UNSET,DONT_CARE,UNSET)) < 0){
+            return -1;
+        }
+
     pd->num_pages = 0;
     pd->batch_enabled = false;
     pd->mapping_tasks = malloc(sizeof(ll_t));

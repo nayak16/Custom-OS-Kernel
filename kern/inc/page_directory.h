@@ -29,6 +29,8 @@
 #define WRITE_THROUGH_FLAG_BIT 3
 /** @brief the global flag bit */
 #define GLOBAL_FLAG_BIT 8
+/** @brief the cached disabled bit */
+#define CACHE_DISABLED_BIT 4
 
 /* custom non-x86 flag bits */
 
@@ -44,10 +46,11 @@
  * rw - SET implies page is read writable, UNSET implies read only
  * md - SET implies user, UNSET implies supervisor
  * glb - SET implies global, UNSET implies local
+ * chc - SET implies cache disabled, UNSET implies cache enabled
  */
 /** @brief creates the flags with the given parameters */
-#define NEW_FLAGS(p,rw,md,glb) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
-    | (md << MODE_FLAG_BIT) | (glb << GLOBAL_FLAG_BIT))
+#define NEW_FLAGS(p,rw,md,glb,ch) ((p << PRESENT_FLAG_BIT) | (rw << RW_FLAG_BIT)\
+    | (md << MODE_FLAG_BIT) | (glb << GLOBAL_FLAG_BIT) | (ch << CACHE_DISABLED_BIT))
 
 /** @brief adds the user_start flag to a set of flags */
 #define ADD_USER_START_FLAG(flags) (flags | (SET << USER_START_FLAG_BIT))
@@ -60,15 +63,15 @@
 #define IS_USER_END(pte) ((pte >> USER_END_FLAG_BIT) & 1)
 
 /** @brief defines a user read only flags */
-#define USER_RO NEW_FLAGS(SET, UNSET, SET, UNSET)
+#define USER_RO NEW_FLAGS(SET, UNSET, SET, UNSET, UNSET)
 /** @brief defines a user read write flags */
-#define USER_WR NEW_FLAGS(SET, SET, SET, UNSET)
+#define USER_WR NEW_FLAGS(SET, SET, SET, UNSET, UNSET)
 
 
 /** @brief defines the default page directory entry flags */
-#define PDE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, DONT_CARE))
+#define PDE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, DONT_CARE, UNSET))
 /* @brief defines the default page table entry flags */
-#define PTE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, UNSET))
+#define PTE_FLAG_DEFAULT (NEW_FLAGS(SET, UNSET, SET, UNSET, UNSET))
 
 /** @brief defines the size of a page directory */
 #define PD_SIZE PAGE_SIZE

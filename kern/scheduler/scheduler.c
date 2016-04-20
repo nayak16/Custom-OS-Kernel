@@ -190,11 +190,11 @@ int scheduler_init(scheduler_t *sched, void (*reap_func)(void)){
     scheduler_add_reaper_proc(sched, reaper_pcb, reap_func);
 
     /* Set pdbr to init pd so pcb load prog loads into correct pd */
-    set_pdbr((uint32_t) pd_get_base_addr(&init_pcb->pd));
+    //set_pdbr((uint32_t) pd_get_base_addr(&init_pcb->pd));
     /* Load the init program into an init pcb */
-    pcb_load_prog(init_pcb, "init", 0, NULL);
+    //pcb_load_prog(init_pcb, "init", 0, NULL);
     /* Add init process to scheduler */
-    scheduler_add_init_process(sched, init_pcb);
+    //scheduler_add_init_process(sched, init_pcb);
     return 0;
 }
 

@@ -37,6 +37,11 @@
 #include <mutex.h>
 #include <queue.h>
 
+/* smp includes */
+#include <smp/mptable.h>
+#include <smp/apic.h>
+#include <smp/smp.h>
+
 /* Kernel global variables and internals */
 #include <kern_internals.h>
 
@@ -69,6 +74,11 @@ void reaper_main(){
 }
 
 
+void ap_temp_main(int cpu_num){
+    MAGIC_BREAK;
+    while(1);
+}
+
 /** @brief Kernel entrypoint.
  *
  *  This is the entrypoint for the kernel.
@@ -79,6 +89,11 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 {
     lprintf("Welcome to ShrekOS");
     lprintf("Shrek is love, Shrek is life");
+
+    if (smp_init(mbinfo) < 0){
+        panic("smp_init failed!");
+    }
+
 
     /* install IDT entries for system calls */
     install_syscall_handlers();
@@ -106,11 +121,12 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* Init the scheduler lock */
     sched_mutex_init(&sched_lock, &sched);
-
     /* initialize a scheduler */
     scheduler_init(&sched, reaper_main);
+    lprintf("Number of processors detected: %d", smp_num_cpus());
+    smp_boot(ap_temp_main);
 
-    scheduler_start(&sched);
+    //scheduler_start(&sched);
 
     while (1) {
         continue;
