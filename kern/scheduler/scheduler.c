@@ -163,17 +163,17 @@ int scheduler_init(scheduler_t *sched, void (*reap_func)(void)){
 
     /* Init tcb pool */
     if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
-
+    MAGIC_BREAK;
     pcb_t *idle_pcb = malloc(sizeof(pcb_t));
     pcb_init(idle_pcb);
 
     /* Create, init, and add reaper process */
-    pcb_t *reaper_pcb = malloc(sizeof(pcb_t));
-    pcb_init(reaper_pcb);
+    //pcb_t *reaper_pcb = malloc(sizeof(pcb_t));
+    //pcb_init(reaper_pcb);
 
     /* Create init program */
-    pcb_t *init_pcb = malloc(sizeof(pcb_t));
-    pcb_init(init_pcb);
+    //pcb_t *init_pcb = malloc(sizeof(pcb_t));
+    //pcb_init(init_pcb);
 
     /* Set pdbr to idle pd so pcb load prog loads to correct pd */
     set_pdbr((uint32_t) pd_get_base_addr(&idle_pcb->pd));
@@ -187,7 +187,7 @@ int scheduler_init(scheduler_t *sched, void (*reap_func)(void)){
     scheduler_add_idle_process(sched, idle_pcb);
 
     /* Add reaper process to scheduler */
-    scheduler_add_reaper_proc(sched, reaper_pcb, reap_func);
+    //scheduler_add_reaper_proc(sched, reaper_pcb, reap_func);
 
     /* Set pdbr to init pd so pcb load prog loads into correct pd */
     //set_pdbr((uint32_t) pd_get_base_addr(&init_pcb->pd));

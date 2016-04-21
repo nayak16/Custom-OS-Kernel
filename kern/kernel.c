@@ -74,7 +74,9 @@ void reaper_main(){
 }
 
 
-void ap_temp_main(int cpu_num){
+void ap_main(int cpu_num){
+    lprintf("I am core %d", cpu_num);
+    // TODO: Enable paging here?
     MAGIC_BREAK;
     while(1);
 }
@@ -124,7 +126,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     /* initialize a scheduler */
     scheduler_init(&sched, reaper_main);
     lprintf("Number of processors detected: %d", smp_num_cpus());
-    smp_boot(ap_temp_main);
+    smp_boot(ap_main);
 
     //scheduler_start(&sched);
 
