@@ -67,6 +67,9 @@ typedef struct mapping_task{
  * use the same page tables for the kernel in all page directories that are
  * ever created */
 uint32_t kernel_pde[NUM_KERNEL_PDE];
+/** @brief array of page tables for the zeroth page table of each CPU */
+uint32_t **kernel_zeroth_page_tables;
+
 
 /* @brief Whether or not the kernel has been initialized or not */
 bool is_kernel_initialized = false;
@@ -98,7 +101,7 @@ int entry_permissions(uint32_t v, uint32_t *priv, uint32_t *access){
  *
  *  @return 0 on success, negative integer code on failure
  */
-int pd_init_kernel(){
+int pd_init_kernel(int num_cores){
     if (is_kernel_initialized){
         panic("pd_init_kernel called twice!");
     }
@@ -125,6 +128,16 @@ int pd_init_kernel(){
             return -1;
         }
     }
+
+    uint32_t *zeroth_page = (uint32_t *)REMOVE_FLAGS(kernel_pde[0]);
+    kernel_zeroth_page_tables = malloc(sizeof(uint32_t *) * num_cores);
+    int core;
+    for (core = 0; core < num_cores; core++){
+        kernel_zeroth_page_tables[core] =
+            memalign(sizeof(uint32_t) * PT_NUM_ENTRIES, PAGE_SIZE);
+        memcpy(kernel_zeroth_page_tables[core], zeroth_page, PT_SIZE);
+    }
+
     is_kernel_initialized = true;
     return 0;
 }
@@ -133,13 +146,18 @@ int pd_init_kernel(){
  *  @param pd The page directory
  *  @return 0 on success -1 on failure
  */
-int initialize_kernel(page_directory_t *pd){
+int initialize_kernel(page_directory_t *pd, int core_num){
     if (pd == NULL) return -1;
     if (!is_kernel_initialized){
         panic("Kernel pages have not been preallocated..\
                 Call pd_init_kernel()");
     }
     memcpy(pd->directory, kernel_pde, sizeof(uint32_t)*NUM_KERNEL_PDE);
+    /* overwrite the 0th page directory entry with the core's own zeroth
+     * page table */
+    uint32_t flags = EXTRACT_FLAGS(pd->directory[0]);
+    pd->directory[0] = ADD_FLAGS(kernel_zeroth_page_tables[core_num],
+            flags);
     return 0;
 }
 
@@ -472,46 +490,64 @@ void *pd_get_base_addr(page_directory_t *pd){
  *  @param The page directory
  *  @return 0 on success, -1 on failure
  */
-int pd_init(page_directory_t *pd){
+int pd_init(page_directory_t *pd, int core_num){
     /* page align allocation and clear out all present bits */
     pd->directory = memalign(PAGE_SIZE, PD_SIZE);
     if (pd->directory == NULL){
         return -1;
     }
     memset(pd->directory, 0, PD_SIZE);
-    if (initialize_kernel(pd) < 0){
-        free(pd->directory);
-        pd->directory = NULL;
-        return -2;
-    }
-    /* map the LAPIC region */
-    if (pd_create_mapping(pd, LAPIC_VIRT_BASE, (uint32_t)smp_lapic_base(),
-            NEW_FLAGS(SET,SET,UNSET,SET,SET),
-            NEW_FLAGS(SET,SET,UNSET,DONT_CARE,UNSET)) < 0){
-            return -1;
-        }
-
     pd->num_pages = 0;
     pd->batch_enabled = false;
+
     pd->mapping_tasks = malloc(sizeof(ll_t));
-    if (pd->mapping_tasks == NULL) return -3;
+    if (pd->mapping_tasks == NULL){
+        free(pd->directory);
+        return -3;
+    }
+
     pd->p_addr_list = malloc(sizeof(ll_t));
     if (pd->p_addr_list == NULL){
+        free(pd->directory);
         free(pd->mapping_tasks);
         return -4;
     }
+
     if (ll_init(pd->p_addr_list) < 0){
+        free(pd->directory);
         free(pd->mapping_tasks);
         free(pd->p_addr_list);
         return -5;
     }
+
     if (ll_init(pd->mapping_tasks) < 0){
         ll_destroy(pd->p_addr_list);
+        free(pd->directory);
         free(pd->mapping_tasks);
         free(pd->p_addr_list);
         return -6;
     }
-
+    /* copy over the kernel page mappings */
+    if (initialize_kernel(pd, core_num) < 0){
+        ll_destroy(pd->p_addr_list);
+        ll_destroy(pd->mapping_tasks);
+        free(pd->directory);
+        free(pd->mapping_tasks);
+        free(pd->p_addr_list);
+        return -7;
+    }
+    //TODO check if this core's page table 0 has been duplicated yet
+    /* map the LAPIC region */
+    if (pd_create_mapping(pd, LAPIC_VIRT_BASE, (uint32_t)smp_lapic_base(),
+            NEW_FLAGS(SET,SET,UNSET,SET,SET),
+            NEW_FLAGS(SET,SET,UNSET,DONT_CARE,UNSET)) < 0){
+        ll_destroy(pd->p_addr_list);
+        ll_destroy(pd->mapping_tasks);
+        free(pd->directory);
+        free(pd->mapping_tasks);
+        free(pd->p_addr_list);
+        return -8;
+    }
     return 0;
 }
 

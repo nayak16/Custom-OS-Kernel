@@ -57,7 +57,7 @@ typedef struct pcb{
     mutex_t m;
 } pcb_t;
 
-int pcb_init(pcb_t *pcb);
+int pcb_init(pcb_t *pcb, int core_num);
 int pcb_set_running(pcb_t *pcb);
 int pcb_set_original_tid(pcb_t *pcb, int tid);
 int pcb_get_original_tid(pcb_t *pcb, int *tid);

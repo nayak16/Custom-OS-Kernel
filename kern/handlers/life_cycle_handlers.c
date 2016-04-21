@@ -21,6 +21,7 @@
 #include <x86/cr.h>
 #include <loader.h>
 #include <thr_helpers.h>
+#include <smp/smp.h>
 
 #include <simics.h>
 /**
@@ -55,7 +56,7 @@ int syscall_fork_c_handler(uint32_t *saved_regs){
     pcb_t *duplicate_pcb = malloc(sizeof(pcb_t));
     if(duplicate_pcb == NULL) return -4;
 
-    if (pcb_init(duplicate_pcb) < 0) {
+    if (pcb_init(duplicate_pcb, smp_get_cpu()) < 0) {
         /* Cleanup on failure */
         free(duplicate_pcb);
         return -5;

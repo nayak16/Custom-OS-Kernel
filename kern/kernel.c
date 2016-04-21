@@ -42,6 +42,9 @@
 #include <smp/apic.h>
 #include <smp/smp.h>
 
+#include <lmm/lmm.h>
+#include <malloc/malloc_internal.h>
+
 /* Kernel global variables and internals */
 #include <kern_internals.h>
 
@@ -75,9 +78,6 @@ void reaper_main(){
 
 
 void ap_main(int cpu_num){
-    lprintf("I am core %d", cpu_num);
-    // TODO: Enable paging here?
-    MAGIC_BREAK;
     while(1);
 }
 
@@ -96,6 +96,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
         panic("smp_init failed!");
     }
 
+    int num_cores = smp_num_cpus();
 
     /* install IDT entries for system calls */
     install_syscall_handlers();
@@ -118,16 +119,34 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     keyboard_init(&keyboard, KEYBOARD_BUFFER_SIZE);
     /* init frame manager */
     fm_init(&fm, 15);
+    MAGIC_BREAK;
     /* initialize pd kernel pages */
-    pd_init_kernel();
+    pd_init_kernel(num_cores);
 
     /* Init the scheduler lock */
     sched_mutex_init(&sched_lock, &sched);
     /* initialize a scheduler */
     scheduler_init(&sched, reaper_main);
-    lprintf("Number of processors detected: %d", smp_num_cpus());
-    smp_boot(ap_main);
 
+
+
+    //int core;
+    lprintf("Number of processors detected: %d", num_cores);
+    unsigned long heap_space_left = lmm_avail(&malloc_lmm, 0);
+    lprintf("Heap space remaining: %ld", (unsigned long) heap_space_left);
+    if (num_cores > 1){
+        unsigned long heap_size = heap_space_left/(num_cores-1);
+        int core;
+        for (core = 1; core < num_cores; core++){
+            void *smidge = lmm_alloc(&malloc_lmm, heap_size, 0);
+            lprintf("Allocating core %d %ld space starting at %p",
+                    core, heap_size, smidge);
+            if (smidge == NULL) panic("oopsies");
+            lmm_add_free(&core_malloc_lmm[core], smidge, heap_size);
+        }
+    }
+
+    smp_boot(ap_main);
     //scheduler_start(&sched);
 
     while (1) {

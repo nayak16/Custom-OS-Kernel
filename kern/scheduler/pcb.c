@@ -40,7 +40,7 @@
  * @return 0 on success, negative error code otherwise
  *
  */
-int pcb_init(pcb_t *pcb){
+int pcb_init(pcb_t *pcb, int core_num){
     if (pcb == NULL) return -1;
 
     /* Temp value before being added to scheduler */
@@ -51,7 +51,7 @@ int pcb_init(pcb_t *pcb){
     pcb->num_threads = 0;
 
     /* Initialize a pcb's page directory */
-    pd_init(&(pcb->pd));
+    pd_init(&(pcb->pd), core_num);
 
     /* Init the mutex that protects pcb access */
     mutex_init(&(pcb->m));

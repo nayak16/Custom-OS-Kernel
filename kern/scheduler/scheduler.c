@@ -20,6 +20,8 @@
 /* set_esp0 */
 #include <x86/cr.h>
 
+#include <smp/smp.h>
+
 #include <simics.h>
 
 
@@ -163,9 +165,8 @@ int scheduler_init(scheduler_t *sched, void (*reap_func)(void)){
 
     /* Init tcb pool */
     if (tcb_pool_init(&(sched->thr_pool)) < 0) return -2;
-    MAGIC_BREAK;
     pcb_t *idle_pcb = malloc(sizeof(pcb_t));
-    pcb_init(idle_pcb);
+    pcb_init(idle_pcb, smp_get_cpu());
 
     /* Create, init, and add reaper process */
     //pcb_t *reaper_pcb = malloc(sizeof(pcb_t));

@@ -124,8 +124,8 @@ typedef struct page_directory {
     bool batch_enabled;
 } page_directory_t;
 
-int pd_init(page_directory_t *pd);
-int pd_init_kernel(void);
+int pd_init(page_directory_t *pd, int core_num);
+int pd_init_kernel(int num_cores);
 int pd_get_mapping(page_directory_t *pd, uint32_t v_addr, uint32_t *pte);
 
 int pd_begin_mapping(page_directory_t *pd);
