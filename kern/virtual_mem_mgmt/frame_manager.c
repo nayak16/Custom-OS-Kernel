@@ -404,16 +404,17 @@ int fm_dealloc(frame_manager_t *fm, uint32_t p_addr){
  *  persist and should never be "deallocated" or "allocated".
  *
  *  @param fm The frame manager
- *  @param num_frames Number of user space pages to allocate
+ *  @param start Starting address to allocate
+ *  @param num_pages Number of pages to allocate
  *  @return 0 on success, negative integer code on failure
  */
-int fm_init_user_space(frame_manager_t *fm, uint32_t num_pages){
+int populate_fm(frame_manager_t *fm, uint32_t start, uint32_t num_pages){
     if (fm == NULL || num_pages == 0) return -1;
     mutex_lock(&fm->m);
     int i;
     uint32_t num_bins = fm->num_bins;
-    int pages_remaining = num_pages;
-    uint32_t p_addr = USER_MEM_START;
+    uint32_t pages_remaining = num_pages;
+    uint32_t p_addr = start;
 
     /* for each bin, starting with the largest bin, allocate as many frames as
      * possible */
@@ -459,17 +460,17 @@ int fm_init_user_space(frame_manager_t *fm, uint32_t num_pages){
  *  @param num_bins The number of bins it should have for its deallocated bin
  *  @return 0 on success, negative integer code on failure
  */
-int fm_init(frame_manager_t *fm, uint32_t num_bins){
+int fm_init(frame_manager_t *fm, uint32_t num_bins, uint32_t core_num, uint32_t num_cores){
     if (fm == NULL) return -1;
 
     int i = USER_MEM_START/PAGE_SIZE;
     int n = machine_phys_frames();
     uint32_t n_addressable = (0xFFFFFFFF - USER_MEM_START + 1)/PAGE_SIZE;
-    uint32_t num_frames;
+    uint32_t num_pages;
     /* not enough memory to store up to USER_MEM_START */
     if (n < i) return -1;
     n -= i;
-    num_frames = MIN(n, n_addressable);
+    num_pages = MIN(n, n_addressable);
     if (mutex_init(&(fm->m)) < 0) return -1;
 
     /* initialize hash tables */
@@ -498,7 +499,16 @@ int fm_init(frame_manager_t *fm, uint32_t num_bins){
     }
     fm->num_bins = num_bins;
 
-    if (fm_init_user_space(fm, num_frames) < 0){
+    /* Now, given the number of pages we have overall, figure out how mnay pages
+     * to allocate each core given the number of cores */
+
+    uint32_t pages_per_core = num_pages/num_cores;
+    uint32_t starting_addr = USER_MEM_START + (core_num * pages_per_core * PAGE_SIZE);
+    lprintf("Allocated %d out of %d pages starting at %p starting_addr",
+            (unsigned int)pages_per_core, (unsigned int)num_pages, (void *)starting_addr);
+
+    /* Populate the given fm with the chunk of pages allocated for this core */
+    if (populate_fm(fm, starting_addr, pages_per_core) < 0){
         panic("Could not initialize frame manager!");
     }
 

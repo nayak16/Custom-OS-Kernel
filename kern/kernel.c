@@ -93,6 +93,7 @@ void ap_main(int cpu_num){
     enable_interrupts();
     void* buf = malloc(sizeof(uint32_t) * PAGE_SIZE);
     lprintf("CPU %d allocated a buf starting at %p", smp_get_cpu(), buf);
+
     while(1);
 }
 
@@ -132,8 +133,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* initialize the keyboard buffer */
     keyboard_init(&keyboard, KEYBOARD_BUFFER_SIZE);
-    /* init frame manager */
-    fm_init(&fm, 15);
+
+    /* init frame manager for core0 with num_cores cores*/
+    fm_init(&fm, 15, 0, num_cores);
 
     /* initialize pd kernel pages */
     pd_init_kernel(num_cores);
