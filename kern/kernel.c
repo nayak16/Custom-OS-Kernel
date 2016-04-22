@@ -78,6 +78,7 @@ void reaper_main(){
 
 
 void ap_main(int cpu_num){
+
     while(1);
 }
 
@@ -117,9 +118,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     /* initialize the keyboard buffer */
     keyboard_init(&keyboard, KEYBOARD_BUFFER_SIZE);
-    /* init frame manager */
-    fm_init(&fm, 15);
-    MAGIC_BREAK;
+    /* init frame manager for core0 with num_cores cores*/
+    fm_init(&fm, 15, 0, num_cores);
     /* initialize pd kernel pages */
     pd_init_kernel(num_cores);
 
@@ -127,8 +127,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     sched_mutex_init(&sched_lock, &sched);
     /* initialize a scheduler */
     scheduler_init(&sched, reaper_main);
-
-
 
     //int core;
     lprintf("Number of processors detected: %d", num_cores);
