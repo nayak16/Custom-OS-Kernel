@@ -51,6 +51,12 @@ extern mutex_t heap_lock;
  */
 extern sched_mutex_t sched_lock;
 
+/**
+ * @brief Init value of APIC timer (configured using legacy PIT timer)
+ *
+ */
+extern uint32_t apic_calib_init_val;
+
 #endif /* _KERN_INTERNALS_H_ */
 
 

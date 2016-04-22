@@ -19,7 +19,8 @@
 #include <x86/idt.h>
 #include <x86/timer_defines.h>
 #include <x86/keyhelp.h>
-
+#include <smp/apic.h>
+#include <install_handlers.h>
 #include <idt_handlers.h>
 /* access to circ_buf_init */
 #include <circ_buffer.h>
@@ -73,6 +74,8 @@
 /** @brief bit mask used to clear top byte of 2 byte int*/
 #define FLAG_RESET_MASK 0x0F
 
+/** @brief User chosen LAPIC Entry in the IDT */
+#define IDT_LAPIC_ENTRY (IDT_USER_START+2)
 
 /** @brief installs an entry in the IDT
  *
@@ -241,21 +244,21 @@ int install_exception_handlers() {
 /** @brief installs timer and keyboard
  *  @return 0
  */
-int install_peripheral_handlers(){
+int install_legacy_peripheral_handlers(){
     char lsb, msb;
 
-    /* install IDT entry for timer*/
+    /* install IDT entry for the PIC timer*/
 
-    idt_install_entry((uint32_t)timer_handler, SEGSEL_KERNEL_CS,
+    idt_install_entry((uint32_t)pit_timer_handler, SEGSEL_KERNEL_CS,
         FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, TIMER_IDT_ENTRY, FLAG_INTERRUPT_GATE);
 
     /* setup timer */
 
-    outb(TIMER_SQUARE_WAVE, TIMER_MODE_IO_PORT);
+    outb(TIMER_MODE_IO_PORT, TIMER_SQUARE_WAVE);
     lsb = TIMER_CYCLES & C_BYTE_MASK;
     msb = (TIMER_CYCLES >> C_BYTE_WIDTH) & C_BYTE_MASK;
-    outb(lsb, TIMER_PERIOD_IO_PORT);
-    outb(msb, TIMER_PERIOD_IO_PORT);
+    outb(TIMER_PERIOD_IO_PORT, lsb);
+    outb(TIMER_PERIOD_IO_PORT, msb);
 
     /* install IDT entry for keyboard */
     idt_install_entry((uint32_t)keyboard_handler, SEGSEL_KERNEL_CS,
@@ -263,3 +266,16 @@ int install_peripheral_handlers(){
 
     return 0;
 }
+
+int install_lapic_timer(uint32_t init_val) {
+
+    /* install IDT entry for the LAPIC timer */
+    idt_install_entry((uint32_t)lapic_timer_handler, SEGSEL_KERNEL_CS,
+        FLAG_PRESENT_TRUE, FLAG_DPL_0, FLAG_D_32, IDT_LAPIC_ENTRY, FLAG_INTERRUPT_GATE);
+
+    lapic_write(LAPIC_LVT_TIMER, LAPIC_PERIODIC | IDT_LAPIC_ENTRY);
+    lapic_write(LAPIC_TIMER_INIT, init_val);
+    lapic_write(LAPIC_TIMER_DIV, LAPIC_X1);
+    return 0;
+}
+

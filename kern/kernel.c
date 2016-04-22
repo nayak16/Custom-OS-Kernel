@@ -60,6 +60,7 @@
 
 /* Global vars */
 scheduler_t sched;
+scheduler_t *sched_arr;
 mutex_t heap_lock;
 frame_manager_t fm;
 mutex_t console_lock;
@@ -70,6 +71,7 @@ sched_mutex_t sched_lock;
  *
  *  @return Does not return
  */
+// TODO: Change reaper_main to take in a scheduler argument not global
 void reaper_main(){
     while(1){
         scheduler_reap(&sched);
@@ -78,6 +80,19 @@ void reaper_main(){
 
 
 void ap_main(int cpu_num){
+    lprintf("I am cpu %d", cpu_num);
+    /* Spin until APIC is calibrated */
+    while(!apic_calib_init_val);
+
+    scheduler_init(&sched, reaper_main);
+
+    /* Configure APIC timer vals */
+    install_lapic_timer(apic_calib_init_val);
+
+    /* Turn on APIC Timer */
+    enable_interrupts();
+    void* buf = malloc(sizeof(uint32_t) * PAGE_SIZE);
+    lprintf("CPU %d allocated a buf starting at %p", smp_get_cpu(), buf);
     while(1);
 }
 
@@ -102,7 +117,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     install_syscall_handlers();
 
     /* install IDT entries for peripherals */
-    install_peripheral_handlers();
+    install_legacy_peripheral_handlers();
 
     /* Install IDT entres for exceptions */
     install_exception_handlers();
@@ -119,19 +134,23 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     keyboard_init(&keyboard, KEYBOARD_BUFFER_SIZE);
     /* init frame manager */
     fm_init(&fm, 15);
-    MAGIC_BREAK;
+
     /* initialize pd kernel pages */
     pd_init_kernel(num_cores);
+
+    /* Malloc space for a scheduler per core */
+    sched_arr = malloc(sizeof(scheduler_t) * num_cores);
+    if (sched_arr == NULL) {
+        panic("Not enough space to create a scheduler per core");
+    }
 
     /* Init the scheduler lock */
     sched_mutex_init(&sched_lock, &sched);
     /* initialize a scheduler */
     scheduler_init(&sched, reaper_main);
 
-
-
-    //int core;
     lprintf("Number of processors detected: %d", num_cores);
+    /* Initialize mem regions of all available cores */
     unsigned long heap_space_left = lmm_avail(&malloc_lmm, 0);
     lprintf("Heap space remaining: %ld", (unsigned long) heap_space_left);
     if (num_cores > 1){
@@ -145,10 +164,10 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
             lmm_add_free(&core_malloc_lmm[core], smidge, heap_size);
         }
     }
-
+    install_lapic_timer(-1);
     smp_boot(ap_main);
     //scheduler_start(&sched);
-
+    enable_interrupts();
     while (1) {
         continue;
     }

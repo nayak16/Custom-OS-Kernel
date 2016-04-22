@@ -110,8 +110,10 @@ void syscall_misbehave_handler(int mode);
 
 /* Hardware handlers */
 
-/** @brief peripheral wrapper for timer */
-void timer_handler(void);
+/** @brief peripheral wrapper for the PIC timer */
+void pit_timer_handler(void);
+/** @brief peripheral wrapper for the LAPIC timer */
+void lapic_timer_handler(void);
 /** @brief peripheral wrapper for keyboard */
 void keyboard_handler(void);
 

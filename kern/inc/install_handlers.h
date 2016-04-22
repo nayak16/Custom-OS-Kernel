@@ -12,7 +12,9 @@
 
 int install_syscall_handlers(void);
 
-int install_peripheral_handlers(void);
+int install_legacy_peripheral_handlers(void);
+
+int install_lapic_timer(uint32_t init_val);
 
 int install_exception_handlers(void);
 
